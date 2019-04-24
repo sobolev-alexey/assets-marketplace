@@ -1,6 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 import format from 'date-fns/format';
+import parse from 'date-fns/parse';
+import compareDesc from 'date-fns/compare_desc';
+import isFuture from 'date-fns/is_future';
+import isValid from 'date-fns/is_valid';
+import getTime from 'date-fns/get_time';
 import Card from '../card';
 import Loading from '../loading';
 
@@ -16,12 +21,15 @@ export default class extends React.Component {
       city: '',
       country: '',
       company: '',
-      assetID: '',
+      assetName: '',
+      assetDescription: '',
       assetType: '',
       assetLocation: '',
       assetLat: '',
       assetLon: '',
       assetPrice: '',
+      assetStart: '',
+      assetEnd: '',
       dataTypes: [{ id: '', name: '', unit: '' }],
     };
 
@@ -66,14 +74,21 @@ export default class extends React.Component {
   };
 
   async submit() {
-    if (!this.state.assetID) return alert('Please enter a asset ID. eg. company-32');
+    const startDate = parse(this.state.assetStart);
+    const endDate = parse(this.state.assetEnd);
+
+    if (!this.state.assetName) return alert('Please enter asset name');
     if (!this.state.assetType)
-      return alert('Specify type of asset. eg. Weather station or Wind Vein');
-    if (!this.state.city || !this.state.country) return alert('Enter city or country');
+      return alert('Specify type of asset');
+    if (!this.state.city || !this.state.country) return alert('Enter city and country');
     if (!this.state.assetLat || !this.state.assetLon)
-      return alert('Please enter a asset coordinates');
+      return alert('Please enter asset coordinates');
     if (!this.state.dataTypes || this.state.dataTypes.length < 1)
       return alert('You must have a valid data field');
+    if (!this.state.assetStart || !startDate || !isValid(startDate) || !isFuture(startDate))
+      return alert('Please enter a valid date/time when the offer starts');
+    if (!this.state.assetEnd || !endDate || !isValid(endDate) || compareDesc(startDate, endDate) !== 1)
+      return alert('Please enter a valid date/time when the offer ends');
 
     this.setState({ loading: true });
 
@@ -82,21 +97,26 @@ export default class extends React.Component {
         city: this.state.city,
         country: this.state.country,
       },
-      assetId: this.state.assetID,
+      assetName: this.state.assetName,
+      assetDescription: this.state.assetDescription,
       type: this.state.assetType,
       dataTypes: this.state.dataTypes,
       lat: parseFloat(this.state.assetLat),
       lon: parseFloat(this.state.assetLon),
       company: this.state.company,
       price: Number(this.state.assetPrice),
+      startDate: format(startDate, 'DD MMMM, YYYY H:mm a '),
+      endDate: format(endDate, 'DD MMMM, YYYY H:mm a '),
+      startTimestamp: getTime(startDate),
+      endTimestamp: getTime(endDate),
       date: format(Date.now(), 'DD MMMM, YYYY H:mm a ')
     };
 
-    const createDevive = await this.props.create(asset);
+    const createDevice = await this.props.create(asset);
 
-    if (createDevive.error) {
+    if (createDevice.error) {
       this.setState({ loading: false });
-      return alert(createDevive.error);
+      return alert(createDevice.error);
     }
 
     this.setState({
@@ -105,12 +125,15 @@ export default class extends React.Component {
       city: '',
       country: '',
       company: '',
-      assetID: '',
+      assetName: '',
+      assetDescription: '',
       assetType: '',
       assetLocation: '',
       assetLat: '',
       assetLon: '',
       assetPrice: '',
+      assetStart: '',
+      assetEnd: '',
       dataTypes: [{ id: '', name: '', unit: '' }],
     });
   };
@@ -122,19 +145,29 @@ export default class extends React.Component {
         {active && !loading ? (
           <Form>
             <Column>
-              <label>Asset ID:</label>
+              <label>Asset Name:</label>
               <Input
-                placeholder="eg. fitbit-x910"
+                placeholder="unique Asset Name"
                 type="text"
-                name="assetID"
-                value={this.state.assetID}
+                name="assetName"
+                value={this.state.assetName}
+                onChange={this.change}
+              />
+            </Column>
+            <Column>
+              <label>Asset Description:</label>
+              <Input
+                placeholder="asset description"
+                type="text"
+                name="assetDescription"
+                value={this.state.assetDescription}
                 onChange={this.change}
               />
             </Column>
             <Column>
               <label>Asset Type:</label>
               <Input
-                placeholder="eg. Weather Station"
+                placeholder="eg. network bandwidth"
                 type="text"
                 name="assetType"
                 value={this.state.assetType}
@@ -144,7 +177,7 @@ export default class extends React.Component {
             <Column>
               <label>Company:</label>
               <Input
-                placeholder="eg. Datacentrix.Biz or Private"
+                placeholder="eg. Orange"
                 type="text"
                 name="company"
                 value={this.state.company}
@@ -152,17 +185,47 @@ export default class extends React.Component {
               />
             </Column>
             <Column>
+              <label>Price of the asset:</label>
+              <Input
+                placeholder={50000}
+                type="number"
+                name="assetPrice"
+                value={this.state.assetPrice}
+                onChange={this.change}
+              />
+            </Column>
+            <Row>
+              <Column>
+                <label>Start Time:</label>
+                <Input
+                  type="datetime-local"
+                  name="assetStart"
+                  value={this.state.assetStart}
+                  onChange={this.change}
+                />
+              </Column>
+              <Column>
+                <label>End Time:</label>
+                <Input
+                  type="datetime-local"
+                  name="assetEnd"
+                  value={this.state.assetEnd}
+                  onChange={this.change}
+                />
+              </Column>
+            </Row>
+            <Column>
               <label>Location:</label>
               <Row>
                 <Input
-                  placeholder="eg. Berlin"
+                  placeholder="eg. London"
                   type="text"
                   name="city"
                   value={this.state.city}
                   onChange={this.change}
                 />
                 <Input
-                  placeholder="eg. Germany"
+                  placeholder="eg. UK"
                   type="text"
                   name="country"
                   value={this.state.country}
@@ -174,7 +237,7 @@ export default class extends React.Component {
               <Column>
                 <label>Latitude:</label>
                 <Input
-                  placeholder="eg. 52.312"
+                  placeholder="eg. 51.507"
                   type="number"
                   name="assetLat"
                   value={this.state.assetLat}
@@ -184,7 +247,7 @@ export default class extends React.Component {
               <Column>
                 <label>Longitude:</label>
                 <Input
-                  placeholder="eg. -12.221"
+                  placeholder="eg. 0.127"
                   type="number"
                   name="assetLon"
                   value={this.state.assetLon}
@@ -203,7 +266,7 @@ export default class extends React.Component {
                 <Small>
                   <label>Field ID:</label>
                   <Input
-                    placeholder="eg. temp"
+                    placeholder="eg. frequency"
                     type="text"
                     name="id"
                     value={this.state.dataTypes[i].id}
@@ -213,7 +276,7 @@ export default class extends React.Component {
                 <Small>
                   <label>Field Name:</label>
                   <Input
-                    placeholder="eg. Temperature"
+                    placeholder="eg. Frequency"
                     type="text"
                     name="name"
                     value={this.state.dataTypes[i].name}
@@ -224,7 +287,7 @@ export default class extends React.Component {
                 <Small>
                   <label>Field Unit:</label>
                   <Input
-                    placeholder="eg. c"
+                    placeholder="eg. Hz"
                     type="text"
                     name="unit"
                     value={this.state.dataTypes[i].unit}
@@ -236,16 +299,6 @@ export default class extends React.Component {
                 </Add>
               </Row>
             ))}
-            <Column>
-              <label>Price of the data stream:</label>
-              <Input
-                placeholder={50000}
-                type="number"
-                name="assetPrice"
-                value={this.state.assetPrice}
-                onChange={this.change}
-              />
-            </Column>
           </Form>
         ) : null}
         {loading && (

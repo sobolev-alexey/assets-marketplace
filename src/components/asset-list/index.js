@@ -13,7 +13,7 @@ export default props => (
         <AddCard create={props.create} />
       ) : (
         <End>{`You can create up to ${props.maxAssets ||
-          5} assets. Delete a asset to add another.`}</End>
+          100} assets. Delete a asset to add another.`}</End>
       )}
     </CardWrapper>
   </InfoCol>
