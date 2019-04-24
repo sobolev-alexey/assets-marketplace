@@ -1,0 +1,7 @@
+{
+  "apiKey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "authDomain": "XXXXXXXXXXXXX.firebaseapp.com",
+  "databaseURL": "https://XXXXXXXXXXXXX.firebaseio.com",
+  "projectId": "XXXXXXXXXXXXX",
+  "domain": "https://us-central1-XXXXXXXXXXXXX.cloudfunctions.net"
+}

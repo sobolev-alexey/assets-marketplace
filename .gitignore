@@ -1,0 +1,15 @@
+# dependencies
+/node_modules
+
+# build artifacts
+/build
+.firebase
+.firebaserc
+
+.DS_Store
+
+/src/config*.json
+
+*.log
+
+webpack-build-log.json
