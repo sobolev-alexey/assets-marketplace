@@ -1,64 +1,115 @@
 import React from 'react';
-import ReactGA from 'react-ga';
+// import ReactGA from 'react-ga';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import format from 'date-fns/format';
+// import Clipboard from 'react-clipboard.js';
+// import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { getZip } from '../../utils/zip';
+// import { getZip } from '../../utils/zip';
 import Card from './index.js';
 
-const trackDownload = ({ assetId }) => {
-  ReactGA.event({
-    category: 'Download script',
-    action: 'Download script',
-    label: `Asset ID ${assetId}`
-  });
-}
+// const trackDownload = ({ assetId }) => {
+//   ReactGA.event({
+//     category: 'Download script',
+//     action: 'Download script',
+//     label: `Asset ID ${assetId}`
+//   });
+// }
 
-const Heading = ({ assetId, type }, func) => (
+const Heading = ({ assetId, assetName, type }, func) => (
   <Full>
-    <AssetType>{type}</AssetType>
-    {assetId ? (
-      <Link to={`/asset/${assetId}`}>
-      <AssetId>{assetId.length > 20 ? `${assetId.substr(0, 20)}...` : assetId}</AssetId>
-      </Link>
-    ) : null}
+    <AssetCategory>Offer</AssetCategory>
+    {/* <Link to={`/asset/${assetId}`}> */}
+      <AssetId>{assetName.length > 20 ? `${assetName.substr(0, 20)}...` : assetName}</AssetId>
+    {/* </Link> */}
     <Delete onClick={() => func(assetId)}>
       <IconButton src="/static/icons/icon-delete.svg" />
     </Delete>
   </Full>
 );
 
-const Footer = (asset, provider) => (
-  <div onClick={() => trackDownload(asset) || getZip(asset, provider)}>
-    <FootRow>
-      <FooterButton>Download Publish Script</FooterButton>
-    </FootRow>
-  </div>
-);
+// const Footer = (asset, provider) => (
+//   <div onClick={() => trackDownload(asset) || getZip(asset, provider)}>
+//     <FootRow>
+//       <FooterButton>Download Publish Script</FooterButton>
+//     </FootRow>
+//   </div>
+// );
 
 const Asset = props => {
-  const { asset, settings: { provider } } = props;
+  // const [message, setMessage] = useState('');
+  const { asset } = props;
+
+  // function alert(message) {
+  //   setMessage(message);
+  //   setTimeout(() => setMessage(''), 1500)
+  // };
+
   return (
-    <Card header={Heading(asset, props.delete)} footer={Footer(asset, provider)}>
-      <RowHalf>
-        <RowIcon src="/static/icons/icon-small-location.svg" alt="" />
-        <RowDesc>Location</RowDesc>
-        <Data>
-          {asset.location.city && asset.location.country
-            ? `${asset.location.city}, ${asset.location.country}`
-            : '--'}
-        </Data>
-      </RowHalf>
-      <RowHalf>
-        <RowIcon src="/static/icons/icon-small-packet.svg" alt="" />
-        <RowDesc>Asset streams:</RowDesc>
-        <Data>{asset.dataTypes && asset.dataTypes.length}</Data>
+    <Card
+      header={Heading(asset, props.delete)}
+      // footer={Footer(asset, provider)}
+    >
+      <RowFull>
+        <RowDesc>Asset Description:</RowDesc>
+        <Data>{asset.assetDescription}</Data>
+      </RowFull>
+      <Row>
+        <RowHalf>
+          <RowDesc>Asset Type:</RowDesc>
+          <Data>{asset.type}</Data>
+        </RowHalf>
+        <RowHalf>
+          <RowDesc>Owner:</RowDesc>
+          <Data>{asset.company}</Data>
+        </RowHalf>
+      </Row>
+      <Row>
+        <RowHalf>
+          <RowDesc>Begin Time:</RowDesc>
+          <Data>{format(asset.startTimestamp, 'HH:mm - DD.MM.YY')}</Data>
+        </RowHalf>
+        <RowHalf>
+          <RowDesc>End Time:</RowDesc>
+          <Data>{format(asset.endTimestamp, 'HH:mm - DD.MM.YY')}</Data>
+        </RowHalf>
+      </Row>
+      <Row>
+        <RowHalf>
+          <RowDesc>Location</RowDesc>
+          <Data>
+            {asset.location.city && asset.location.country
+              ? `${asset.location.city}, ${asset.location.country}`
+              : '--'}
+          </Data>
+        </RowHalf>
+        <RowHalf>
+          <RowDesc>Price:</RowDesc>
+          <Data>{asset.price}</Data>
+        </RowHalf>
+      </Row>
+      {/* <RowHalf>
+        <RowDesc>Asset ID:</RowDesc>
+        <Clipboard
+          style={{ background: 'none', display: 'block' }}
+          data-clipboard-text={asset.assetId}
+          onSuccess={() => alert('Successfully Copied')}
+        >
+          <CopyBox>{asset.assetId && `${asset.assetId.substr(0, 15)}...`}</CopyBox>
+        </Clipboard>
       </RowHalf>
       <RowHalf>
         <RowIcon src="/static/icons/icon-key.svg" alt="" />
         <RowDesc>Asset secret key:</RowDesc>
-        <Data>{asset.sk}</Data>
+        <Clipboard
+          style={{ background: 'none', display: 'block' }}
+          data-clipboard-text={asset.sk}
+          onSuccess={() => alert('Successfully Copied')}
+        >
+          <CopyBox>{asset.sk && `${asset.sk.substr(0, 15)}...`}</CopyBox>
+        </Clipboard>
       </RowHalf>
+      <Alert message={message}>{message}</Alert> */}
     </Card>
   );
 };
@@ -69,12 +120,32 @@ const mapStateToProps = state => ({
 
 export default connect(mapStateToProps)(Asset);
 
-const RowHalf = styled.div`
-  padding: 20px 30px 14px;
+const Row = styled.div`
+  display: flex;
+  justify-content: space-between;
+  &:not(:last-of-type) {
+    margin-bottom: 5px;
+  }
+`;
+
+const RowFull = styled.div`
+  padding: 5px 30px;
   display: inline-block;
-  &:first-child {
-    width: 180px;
-    border-right: 1px solid #eaecee;
+  text-align: left;
+  width: 100%;
+
+  @media (max-width: 400px) {
+    border: none;
+    padding-left: 20px;
+    padding-right: 0;
+  }
+`;
+
+const RowHalf = styled.div`
+  padding: 5px 30px;
+  display: inline-block;
+  &:last-child {
+    text-align: right;
   }
 
   &:first-of-type {
@@ -93,31 +164,47 @@ const Data = styled.p`
   margin-top: 4px;
 `;
 
+// const CopyBox = styled(Data)`
+//   cursor: pointer;
+//   transition: all 0.3s ease;
+//   &:hover {
+//     opacity: 0.6;
+//   }
+// `;
+
 const RowDesc = styled.span`
-  margin-left: 5px;
+  ${'' /* margin-left: 5px; */}
   font: 12px/16px 'Nunito Sans', sans-serif;
   color: #808b92;
 `;
 
-const RowIcon = styled.img`
-  position: relative;
-  top: 1px;
-`;
+// const RowIcon = styled.img`
+//   position: relative;
+//   top: 1px;
+// `;
 
-const FootRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  &:not(:last-of-type) {
-    margin-bottom: 5px;
-  }
-`;
+// const FootRow = styled.div`
+//   display: flex;
+//   justify-content: space-between;
+//   &:not(:last-of-type) {
+//     margin-bottom: 5px;
+//   }
+// `;
 
-const AssetType = styled.span`
-  font: 12px/16px 'Nunito Sans', sans-serif;
+const AssetCategory = styled.span`
+  font: 16px 'Nunito Sans', sans-serif;
+  text-transform: uppercase;
   position: absolute;
   top: -8px;
   color: #808b92;
 `;
+
+// const AssetType = styled.span`
+//   font: 12px/16px 'Nunito Sans', sans-serif;
+//   position: absolute;
+//   top: -8px;
+//   color: #808b92;
+// `;
 
 const AssetId = styled.span`
   font-size: 24px;
@@ -150,14 +237,22 @@ const IconButton = styled.img`
   }
 `;
 
-const FooterButton = styled.button`
-  color: ${props => (props.grey ? `rgba(41, 41, 41, 0.4)` : `rgba(41, 41, 41, 0.9)`)};
-  padding: 5px 15px;
-  margin-right: -15px;
-  font-size: 90%;
-  background: transparent;
-  &:first-of-type {
-    margin-left: -15px;
-    margin-right: 0;
-  }
-`;
+// const FooterButton = styled.button`
+//   color: ${props => (props.grey ? `rgba(41, 41, 41, 0.4)` : `rgba(41, 41, 41, 0.9)`)};
+//   padding: 5px 15px;
+//   margin-right: -15px;
+//   font-size: 90%;
+//   background: transparent;
+//   &:first-of-type {
+//     margin-left: -15px;
+//     margin-right: 0;
+//   }
+// `;
+
+// const Alert = styled.span`
+//   font-size: 16px;
+//   line-height: 32px;
+//   color: #595959ff;
+//   opacity: ${props => (props.message ? 1 : 0)};
+//   transition: all 0.5s ease;
+// `;

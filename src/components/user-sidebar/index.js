@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Clipboard from 'react-clipboard.js';
+import Wallet from '../wallet';
 
 class UserSidebar extends React.Component {
   constructor(props) {
@@ -71,6 +72,11 @@ class UserSidebar extends React.Component {
             <Alert message={message}>{message}</Alert>
           </Details>
         )}
+        <Details>
+          <DetailRow>
+            <Wallet />
+          </DetailRow>
+        </Details>
         <Details>
           <DetailRow>
             <a

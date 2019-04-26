@@ -45,13 +45,16 @@ const generateNewAddress = (seed, checksum = false) => {
 };
 
 const sanatiseObject = (asset: any) => {
-  if (!asset.assetId) return 'Please enter a asset ID. eg. company-32';
+  if (!asset.assetName) return 'Please enter asset name';
   if (!asset.type) return 'Specify type of asset. eg. Weather station or Wind Vein';
   if (!asset.location || !asset.location.city || !asset.location.country)
-    return 'Enter city or country';
+    return 'Enter city and country';
   if (!asset.lat || !asset.lon) return 'Please enter a asset coordinates';
   if (!asset.dataTypes || asset.dataTypes.length < 1) return 'You must have a valid data fields';
   if (!asset.owner) return 'You must specify an owner';
+  if (!asset.startTimestamp) return 'Please enter a valid date/time when the offer starts';
+  if (!asset.endTimestamp) return 'Please enter a valid date/time when the offer ends';
+
   return false;
 };
 

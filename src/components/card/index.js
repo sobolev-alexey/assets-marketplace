@@ -14,13 +14,14 @@ const Card = styled.div`
   text-decoration: none;
   position: relative;
   padding-top: 20px;
+  margin-right: 50px;
   border: 1px solid #eaecee;
   border-radius: 6px;
   margin-bottom: 40px;
   background-color: #fff;
   cursor: pointer;
   transition: box-shadow 0.19s ease-out;
-  width: 500px;
+  width: 400px;
   @media (max-width: 1120px) {
     margin-bottom: 20px;
   }

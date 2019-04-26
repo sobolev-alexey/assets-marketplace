@@ -5,11 +5,11 @@ import styled from 'styled-components';
 import isEmpty from 'lodash-es/isEmpty';
 import Loading from '../loading';
 import { loadUser } from '../../store/user/actions';
-import { AssetContext } from '../../pages/asset';
+import { UserContext } from '../../pages/dashboard';
 import api from '../../utils/api';
 
 const Wallet = ({ loadUser, asset, wallet }) => {
-  const { userId, setErrorState, setNotification } = useContext(AssetContext);
+  const { userId } = useContext(UserContext);
   const [desc, setDesc] = useState('Loading wallet');
   const [walletLoading, setWalletLoading] = useState(false);
 
@@ -23,8 +23,6 @@ const Wallet = ({ loadUser, asset, wallet }) => {
     } else {
       setDesc('IOTA wallet balance:');
       setWalletLoading(false);
-      setErrorState(false);
-      setNotification('purchase');
     }
   }
 
@@ -90,7 +88,6 @@ const Balance = styled.span`
 const Block = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
 `;
 
 const Button = styled.button`

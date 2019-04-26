@@ -9,14 +9,14 @@ import getTime from 'date-fns/get_time';
 import Card from '../card';
 import Loading from '../loading';
 
-const Heading = state => <Header>New Asset</Header>;
+const Heading = type => <Header>New {type}</Header>;
 
 export default class extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       loading: false,
-      active: false,
+      active: true,
       submit: false,
       city: '',
       country: '',
@@ -30,12 +30,13 @@ export default class extends React.Component {
       assetPrice: '',
       assetStart: '',
       assetEnd: '',
+      assetActive: true,
       dataTypes: [{ id: '', name: '', unit: '' }],
     };
 
     this.addRow = this.addRow.bind(this);
     this.activate = this.activate.bind(this);
-    this.deactivate = this.deactivate.bind(this);
+    this.cancel = this.cancel.bind(this);
     this.remove = this.remove.bind(this);
     this.change = this.change.bind(this);
     this.changeRow = this.changeRow.bind(this);
@@ -52,8 +53,9 @@ export default class extends React.Component {
     this.setState({ active: true });
   }
 
-  deactivate() {
+  cancel() {
     this.setState({ active: false });
+    this.props.cancel();
   }
 
   remove(i) {
@@ -109,7 +111,8 @@ export default class extends React.Component {
       endDate: format(endDate, 'DD MMMM, YYYY H:mm a '),
       startTimestamp: getTime(startDate),
       endTimestamp: getTime(endDate),
-      date: format(Date.now(), 'DD MMMM, YYYY H:mm a ')
+      date: format(Date.now(), 'DD MMMM, YYYY H:mm a '),
+      active: this.state.assetActive
     };
 
     const createDevice = await this.props.create(asset);
@@ -134,6 +137,7 @@ export default class extends React.Component {
       assetPrice: '',
       assetStart: '',
       assetEnd: '',
+      assetActive: true,
       dataTypes: [{ id: '', name: '', unit: '' }],
     });
   };
@@ -141,184 +145,208 @@ export default class extends React.Component {
   render() {
     const { active, loading } = this.state;
     return (
-      <Card header={Heading(this.state)}>
-        {active && !loading ? (
-          <Form>
-            <Column>
-              <label>Asset Name:</label>
-              <Input
-                placeholder="unique Asset Name"
-                type="text"
-                name="assetName"
-                value={this.state.assetName}
-                onChange={this.change}
-              />
-            </Column>
-            <Column>
-              <label>Asset Description:</label>
-              <Input
-                placeholder="asset description"
-                type="text"
-                name="assetDescription"
-                value={this.state.assetDescription}
-                onChange={this.change}
-              />
-            </Column>
-            <Column>
-              <label>Asset Type:</label>
-              <Input
-                placeholder="eg. network bandwidth"
-                type="text"
-                name="assetType"
-                value={this.state.assetType}
-                onChange={this.change}
-              />
-            </Column>
-            <Column>
-              <label>Company:</label>
-              <Input
-                placeholder="eg. Orange"
-                type="text"
-                name="company"
-                value={this.state.company}
-                onChange={this.change}
-              />
-            </Column>
-            <Column>
-              <label>Price of the asset:</label>
-              <Input
-                placeholder={50000}
-                type="number"
-                name="assetPrice"
-                value={this.state.assetPrice}
-                onChange={this.change}
-              />
-            </Column>
-            <Row>
-              <Column>
-                <label>Start Time:</label>
-                <Input
-                  type="datetime-local"
-                  name="assetStart"
-                  value={this.state.assetStart}
-                  onChange={this.change}
-                />
-              </Column>
-              <Column>
-                <label>End Time:</label>
-                <Input
-                  type="datetime-local"
-                  name="assetEnd"
-                  value={this.state.assetEnd}
-                  onChange={this.change}
-                />
-              </Column>
-            </Row>
-            <Column>
-              <label>Location:</label>
-              <Row>
-                <Input
-                  placeholder="eg. London"
-                  type="text"
-                  name="city"
-                  value={this.state.city}
-                  onChange={this.change}
-                />
-                <Input
-                  placeholder="eg. UK"
-                  type="text"
-                  name="country"
-                  value={this.state.country}
-                  onChange={this.change}
-                />
-              </Row>
-            </Column>
-            <Row>
-              <Column>
-                <label>Latitude:</label>
-                <Input
-                  placeholder="eg. 51.507"
-                  type="number"
-                  name="assetLat"
-                  value={this.state.assetLat}
-                  onChange={this.change}
-                />
-              </Column>
-              <Column>
-                <label>Longitude:</label>
-                <Input
-                  placeholder="eg. 0.127"
-                  type="number"
-                  name="assetLon"
-                  value={this.state.assetLon}
-                  onChange={this.change}
-                />
-              </Column>
-            </Row>
-            <Row style={{ justifyContent: 'space-between' }}>
-              <Header>Data Fields:</Header>
-              <Add onClick={this.addRow}>
-                <IconButton src="/static/icons/icon-add.svg" />
-              </Add>
-            </Row>
-            {this.state.dataTypes.map((fields, i) => (
-              <Row key={i}>
-                <Small>
-                  <label>Field ID:</label>
-                  <Input
-                    placeholder="eg. frequency"
-                    type="text"
-                    name="id"
-                    value={this.state.dataTypes[i].id}
-                    onChange={e => this.changeRow(e, i)}
-                  />
-                </Small>
-                <Small>
-                  <label>Field Name:</label>
-                  <Input
-                    placeholder="eg. Frequency"
-                    type="text"
-                    name="name"
-                    value={this.state.dataTypes[i].name}
-                    onChange={e => this.changeRow(e, i)}
-                  />
-                </Small>
+      <React.Fragment>
+        {
+          active ? (
+            <Card header={Heading(this.props.type)}>
+              {!loading ? (
+                <Form>
+                  <Column>
+                    <label>Asset Name:</label>
+                    <Input
+                      placeholder="unique Asset Name"
+                      type="text"
+                      name="assetName"
+                      value={this.state.assetName}
+                      onChange={this.change}
+                    />
+                  </Column>
+                  <Column>
+                    <label>Asset Description:</label>
+                    <Input
+                      placeholder="asset description"
+                      type="text"
+                      name="assetDescription"
+                      value={this.state.assetDescription}
+                      onChange={this.change}
+                    />
+                  </Column>
+                  <Column>
+                    <label>Asset Type:</label>
+                    <select
+                      placeholder="eg. network bandwidth"
+                      type="text"
+                      name="assetType"
+                      value={this.state.assetType}
+                      onChange={this.change}
+                    >
+                      <option value=""></option>     
+                      <option value="frequency">Frequency</option>
+                      <option value="bandwidth">Bandwidth</option>
+                      <option value="volume">Volume</option>
+                      <option value="energy">Energy</option>
+                    </select>
+                  </Column>
+                  <Column>
+                    <label>Company:</label>
+                    <Input
+                      placeholder="eg. Orange"
+                      type="text"
+                      name="company"
+                      value={this.state.company}
+                      onChange={this.change}
+                    />
+                  </Column>
+                  <Column>
+                    <label>Price of the asset:</label>
+                    <Input
+                      placeholder={50000}
+                      type="number"
+                      name="assetPrice"
+                      value={this.state.assetPrice}
+                      onChange={this.change}
+                    />
+                  </Column>
+                  <Row>
+                    <Column>
+                      <label>Start Time:</label>
+                      <Input
+                        type="datetime-local"
+                        name="assetStart"
+                        value={this.state.assetStart}
+                        onChange={this.change}
+                      />
+                    </Column>
+                    <Column>
+                      <label>End Time:</label>
+                      <Input
+                        type="datetime-local"
+                        name="assetEnd"
+                        value={this.state.assetEnd}
+                        onChange={this.change}
+                      />
+                    </Column>
+                  </Row>
+                  <Column>
+                    <label>Location:</label>
+                    <Row>
+                      <Input
+                        placeholder="eg. London"
+                        type="text"
+                        name="city"
+                        value={this.state.city}
+                        onChange={this.change}
+                      />
+                      <Input
+                        placeholder="eg. UK"
+                        type="text"
+                        name="country"
+                        value={this.state.country}
+                        onChange={this.change}
+                      />
+                    </Row>
+                  </Column>
+                  <Row>
+                    <Column>
+                      <label>Latitude:</label>
+                      <Input
+                        placeholder="eg. 51.507"
+                        type="number"
+                        name="assetLat"
+                        value={this.state.assetLat}
+                        onChange={this.change}
+                      />
+                    </Column>
+                    <Column>
+                      <label>Longitude:</label>
+                      <Input
+                        placeholder="eg. 0.127"
+                        type="number"
+                        name="assetLon"
+                        value={this.state.assetLon}
+                        onChange={this.change}
+                      />
+                    </Column>
+                  </Row>
+                  <Row style={{ justifyContent: 'space-between' }}>
+                    <Header>Data Fields:</Header>
+                    <Add onClick={this.addRow}>
+                      <IconButton src="/static/icons/icon-add.svg" />
+                    </Add>
+                  </Row>
+                  {this.state.dataTypes.map((fields, i) => (
+                    <Row key={i}>
+                      <Small>
+                        <label>Field ID:</label>
+                        <Input
+                          placeholder="eg. frequency"
+                          type="text"
+                          name="id"
+                          value={this.state.dataTypes[i].id}
+                          onChange={e => this.changeRow(e, i)}
+                        />
+                      </Small>
+                      <Small>
+                        <label>Field Name:</label>
+                        <Input
+                          placeholder="eg. Frequency"
+                          type="text"
+                          name="name"
+                          value={this.state.dataTypes[i].name}
+                          onChange={e => this.changeRow(e, i)}
+                        />
+                      </Small>
 
-                <Small>
-                  <label>Field Unit:</label>
-                  <Input
-                    placeholder="eg. Hz"
-                    type="text"
-                    name="unit"
-                    value={this.state.dataTypes[i].unit}
-                    onChange={e => this.changeRow(e, i)}
-                  />
-                </Small>
-                <Add style={{ flex: 1 }} onClick={() => this.remove(i)}>
-                  <IconButton src="/static/icons/icon-delete.svg" />
-                </Add>
-              </Row>
-            ))}
-          </Form>
-        ) : null}
-        {loading && (
-          <LoadingBox>
-            <Loading color="#e2e2e2" size="130" />
-          </LoadingBox>
-        )}
-        {active ? (
-          <FootRow>
-            <FooterButton grey onClick={this.deactivate}>
-              Cancel
-            </FooterButton>
-            <FooterButton onClick={this.submit}>Submit</FooterButton>
-          </FootRow>
-        ) : (
-          <FootRow>
-            <FooterButton onClick={this.activate}>Add asset</FooterButton>
-          </FootRow>
-        )}
-      </Card>
+                      <Small>
+                        <label>Field Unit:</label>
+                        <Input
+                          placeholder="eg. Hz"
+                          type="text"
+                          name="unit"
+                          value={this.state.dataTypes[i].unit}
+                          onChange={e => this.changeRow(e, i)}
+                        />
+                      </Small>
+                      <Add style={{ flex: 1 }} onClick={() => this.remove(i)}>
+                        <IconButton src="/static/icons/icon-delete.svg" />
+                      </Add>
+                    </Row>
+                  ))}
+                  <Row id="assetActive">
+                    <input
+                      type="radio"
+                      id="active"
+                      name="assetActive"
+                      value={this.state.assetActive}
+                      onChange={this.change}
+                    />
+                    <label htmlFor="active">Active</label>
+                    <input
+                      type="radio"
+                      id="inactive"
+                      name="assetActive"
+                      onChange={this.change}
+                      value={!this.state.assetActive}
+                    />
+                    <label htmlFor="inactive">Inactive</label>
+                  </Row>
+                </Form>
+              ) : null}
+              {loading && (
+                <LoadingBox>
+                  <Loading color="#e2e2e2" size="130" />
+                </LoadingBox>
+              )}
+              <FootRow>
+                <FooterButton grey onClick={this.cancel}>
+                  Cancel
+                </FooterButton>
+                <FooterButton onClick={this.submit}>Submit</FooterButton>
+              </FootRow>
+            </Card>
+          ) : null
+        }
+      </React.Fragment>
     );
   }
 }
