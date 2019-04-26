@@ -1,6 +1,6 @@
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /assetSecrets {
+    match /secrets {
    		allow read, write: if false;
   	}
   	match /keys {
@@ -9,8 +9,18 @@ service cloud.firestore {
     match /settings {
       allow read, write: if false;
     }
-  	match /assets/{documents=**} {
-      // Allow reading of assets
+  	match /offers/{documents=**} {
+      // Allow reading of offers
+      allow read;
+      allow write: if request.auth.token.email.matches('.*@iota[.]org');
+   	}
+		match /requests/{documents=**} {
+      // Allow reading of requests
+      allow read;
+      allow write: if request.auth.token.email.matches('.*@iota[.]org');
+   	}
+		match /deals/{documents=**} {
+      // Allow reading of deals
       allow read;
       allow write: if request.auth.token.email.matches('.*@iota[.]org');
    	}

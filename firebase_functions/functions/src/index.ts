@@ -5,7 +5,7 @@ const { validateBundleSignatures } = require('@iota/bundle-validator');
 const {
   getKey,
   getSk,
-  getPurchase,
+  getAssignedAssets,
   getData,
   getAsset,
   getAssets,
@@ -17,20 +17,17 @@ const {
   setUser,
   setAsset,
   setPacket,
-  setPurchase,
-  setOwner,
+  assignAsset,
   setApiKey,
   setWallet,
   deleteAsset,
   toggleWhitelistAsset,
   updateBalance,
-  updateUserWalletAddressKeyIndex,
   getEmailSettings,
 } = require('./firebase');
 const {
   generateUUID,
   generateSeed,
-  generateNewAddress,
   sanatiseObject,
   findTx,
   faucet,
@@ -44,7 +41,7 @@ exports.newData = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     const packet = req.body;
     // Add asset key into the list
-    if (!packet || !packet.id || !packet.sk || !packet.packet) {
+    if (!packet || !packet.id || !packet.sk || !packet.packet || !packet.category) {
       console.error('newData failed. Packet: ', packet);
       return res.status(400).json({ error: 'Ensure all fields are included' });
     }
@@ -53,7 +50,7 @@ exports.newData = functions.https.onRequest((req, res) => {
       const asset = await getSk(packet.id);
       if (asset.sk === packet.sk) {
         return res.json({
-          success: await setPacket(packet.id, packet.packet),
+          success: await setPacket(packet.category, packet.id, packet.packet),
         });
       } else {
         console.error('newData failed. Key is incorrect', asset.sk, packet.sk);
@@ -71,40 +68,25 @@ exports.newAsset = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     const packet = req.body;
     // Add asset key into the list
-    if (!packet || !packet.id || !packet.asset || !packet.apiKey) {
+    if (!packet || !packet.asset || !packet.apiKey || !packet.category) {
       console.error('newAsset failed. Packet: ', packet);
       return res.status(400).json({ error: 'Ensure all fields are included' });
     }
     // Modify object to include
-    packet.asset.assetId = packet.id;
-    packet.asset.inactive = true;
+    packet.asset.assetId = generateUUID();
 
     try {
       const invalid = sanatiseObject(packet.asset);
-      const secretKey = generateSeed(15);
-      const seed = generateSeed();
-      const address = generateNewAddress(seed);
+      const secretKey = generateSeed(81);
       if (invalid) throw Error(invalid);
 
       const key = await getKey(<String>packet.apiKey);
-      const userAssets = await getUserAssets(key.uid);
-      const user = await getUser(key.uid);
-      if (!user.numberOfAssets) {
-        user.numberOfAssets = await getNumberOfAssets();
-      }
-      if (userAssets.length < user.numberOfAssets) {
-        const asset = await getAsset(<String>packet.id);
-        if (asset && asset.owner !== key.uid) {
-          return res.json({ error: `Asset with ID ${packet.id} already exists. Please specify new unique ID` });
-        }
-
-        return res.json({
-          success: await setAsset(packet.id, secretKey, address, seed, packet.asset),
-        });
-      } else {
-        console.error('newAsset failed. You have too many assets', userAssets.length);
-        return res.json({ error: 'You have too many assets. Please delete one to clear space' });
-      }
+      const user = await getUser(key.uid, true);
+      const seed = user.wallet.seed;
+      const address = user.wallet.address;
+      return res.json({
+        success: await setAsset(packet.category, packet.asset, secretKey, address, seed),
+      });
     } catch (e) {
       console.error('newAsset failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
@@ -117,7 +99,7 @@ exports.delete = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     const packet = req.body;
     // Add asset key into the list
-    if (!packet || !packet.assetId || !packet.apiKey) {
+    if (!packet || !packet.assetId || !packet.apiKey || !packet.category) {
       console.error('removeAsset failed. Packet: ', packet);
       return res.status(400).json({ error: 'Ensure all fields are included' });
     }
@@ -125,7 +107,7 @@ exports.delete = functions.https.onRequest((req, res) => {
     try {
       const { apiKey, assetId } = packet;
       const key = await getKey(<String>apiKey);
-      const asset = await getAsset(<String>assetId);
+      const asset = await getAsset(<String>packet.category, <String>assetId);
       if (!asset) {
         throw Error(`Asset doesn't exist`);
       }
@@ -158,9 +140,11 @@ exports.assets = functions.https.onRequest((req, res) => {
       if (params && params.userId && params.apiKey) {
         const { uid } = await getKey(<String>params.apiKey);
         if (params.userId === uid) {
-          const userAssets = await getUserAssets(params.userId);
-          const promises = await userAssets.map(async asset => {
-            const promise = await new Promise(async (resolve, reject) => {
+          const userOffers = await getUserAssets('offers', params.userId);
+          const userRequests = await getUserAssets('requests', params.userId);
+          
+          const processPromise = async asset => {
+            return await new Promise(async (resolve, reject) => {
               try {
                 const keyObj = await getSk(asset.assetId);
                 if (keyObj.sk) {
@@ -171,16 +155,29 @@ exports.assets = functions.https.onRequest((req, res) => {
                 reject({ error });
               }
             });
+          }
 
+          const offerPromises = await userOffers.map(async asset => {
+            const promise = await processPromise(asset);
             return { ...asset, sk: promise };
           });
 
-          const assets = await Promise.all(promises);
-          return res.json(assets);
+          const requestPromises = await userRequests.map(async asset => {
+            const promise = await processPromise(asset);
+            return { ...asset, sk: promise };
+          });
+
+          return res.json({
+            offers: await Promise.all(offerPromises),
+            requests: await Promise.all(requestPromises),
+          });
         }
         return res.status(403).json({ error: 'Access denied' });
       }
-      return res.json(await getAssets());
+      return res.json({
+        offers: await getAssets('offers'),
+        requests: await getAssets('requests'),
+      });
     } catch (e) {
       console.error('assets failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
@@ -193,13 +190,13 @@ exports.asset = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     const params = req.query;
     // Add asset key into the list
-    if (!params || !params.assetId) {
+    if (!params || !params.assetId || !params.category) {
       console.error('asset failed. Packet: ', params);
       return res.status(400).json({ error: 'Ensure all fields are included' });
     }
 
     try {
-      const asset = await getAsset(params.assetId);
+      const asset = await getAsset(params.category, params.assetId);
       if (!asset) {
         throw Error(`Asset doesn't exist`);
       }
@@ -219,19 +216,19 @@ exports.asset = functions.https.onRequest((req, res) => {
 exports.stream = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     const params = req.query;
-    if (!params || !params.assetId || !params.userId) {
+    if (!params || !params.assetId || !params.userId || !params.category) {
       console.error('stream failed. Params: ', params);
       return res.status(400).json({ error: 'Ensure all fields are included' });
     }
 
     try {
-      // Make sure purchase exists
-      const purchase = await getPurchase(<String>params.userId, <String>params.assetId);
+      // Make sure assignment exists
+      const purchase = await getAssignedAssets(<String>params.category, <String>params.userId, <String>params.assetId);
       if (!purchase) {
         return res.json({ success: false });
       }
       // Return data
-      return res.json(await getData(<String>params.assetId, params.time));
+      return res.json(await getData(<String>params.category, <String>params.assetId, params.time));
     } catch (e) {
       console.error('stream failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
@@ -248,7 +245,7 @@ exports.setupUser = functions.auth.user().onCreate(user => {
       // Try saving
       try {
         const apiKey = generateUUID();
-        const numberOfAssets = (await getNumberOfAssets()) || 5;
+        const numberOfAssets = 100;
 
         await setUser(user.uid, { apiKey, numberOfAssets });
         await setApiKey(apiKey, user.uid, user.email);
@@ -309,8 +306,8 @@ exports.user = functions.https.onRequest((req, res) => {
       }
       return res.json({ ...user });
     } catch (e) {
-      console.error('user failed. Error: ', e.message);
-      return res.status(403).json({ error: e.message });
+      console.error('user failed. Error: ', e);
+      return res.status(403).json({ error: e });
     }
   });
 });
@@ -374,17 +371,17 @@ exports.faucet = functions.https.onRequest((req, res) => {
   });
 });
 
-exports.purchaseStream = functions.https.onRequest((req, res) => {
+exports.makeDeal = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     // Check Fields
     const packet = req.body;
     if (!packet || !packet.userId || !packet.assetId) {
-      console.error('purchaseStream failed. Packet: ', packet);
+      console.error('makeDeal failed. Packet: ', packet);
       return res.status(400).json({ error: 'Malformed Request' });
     }
 
     try {
-      const asset = await getAsset(packet.assetId);
+      const asset = await getAsset('offers', packet.assetId);
       const wallet = await getUserWallet(packet.userId);
       const { iotaApiVersion, provider, defaultPrice } = await getSettings();
       let price = defaultPrice;
@@ -402,16 +399,16 @@ exports.purchaseStream = functions.https.onRequest((req, res) => {
       if (wallet && wallet.balance) {
         newWalletBalance = Number(wallet.balance) - Number(price);
         if (newWalletBalance < 0) {
-          console.error('purchaseStream failed. Not enough funds', packet);
+          console.error('makeDeal failed. Not enough funds', packet);
           return res.json({ error: 'Not enough funds or your new wallet is awaiting confirmation. Please try again in 5 min.' });
         }
       } else {
-        console.error('purchaseStream failed. Wallet not set', packet);
+        console.error('makeDeal failed. Wallet not set', packet);
         return res.json({ error: 'Wallet not set' });
       }
 
       const transactions = await purchaseData(packet.userId, asset.address, price);
-      console.log('purchaseStream', packet.userId, packet.assetId, transactions);
+      console.log('makeDeal', packet.userId, packet.assetId, transactions);
 
       if (transactions) {
         const hashes = transactions && transactions.map(transaction => transaction.hash);
@@ -421,12 +418,14 @@ exports.purchaseStream = functions.https.onRequest((req, res) => {
 
         // Make sure TX is valid
         if (!validateBundleSignatures(bundle)) {
-          console.error('purchaseStream failed. Transaction is invalid for: ', bundle);
+          console.error('makeDeal failed. Transaction is invalid for: ', bundle);
           res.status(403).json({ error: 'Transaction is Invalid' });
         }
 
-        await setPurchase(packet.userId, packet.assetId);
+        await assignAsset('deals', packet.userId, packet.assetId);
         await updateBalance(packet.userId, newWalletBalance);
+
+        // ToDo: update sellers wallet, add deal to sellers list 
         return res.json({ success: true });
       }
       return res.json({ error: 'Purchase failed. Insufficient balance of out of sync' });

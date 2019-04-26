@@ -1,14 +1,14 @@
 import api from './api';
 
-export const purchaseStream = (userId, assetId) => {
+export const makeDeal = (userId, assetId) => {
   return new Promise(async (resolve, reject) => {
     // Try purchase
     try {
-      const purchaseStreamResponse = await api.post('purchaseStream', { userId, assetId });
-      if (purchaseStreamResponse && purchaseStreamResponse.success) {
+      const makeDealResponse = await api.post('makeDeal', { userId, assetId });
+      if (makeDealResponse && makeDealResponse.success) {
         resolve();
       }
-      reject(purchaseStreamResponse && purchaseStreamResponse.error);
+      reject(makeDealResponse && makeDealResponse.error);
     } catch (error) {
       console.error('getBundleHashes error', error);
       reject(error);
@@ -16,9 +16,9 @@ export const purchaseStream = (userId, assetId) => {
   });
 }
 
-export const getData = async (userId, assetId, time) => {
+export const getData = async (category, userId, assetId, time) => {
   try {
-    const result = await getPackets(userId, assetId, time);
+    const result = await getPackets(category, userId, assetId, time);
     if (result.error) {
       console.error('getData error', result.error);
     }
@@ -29,9 +29,9 @@ export const getData = async (userId, assetId, time) => {
   }
 };
 
-const getPackets = (userId, assetId, time) => {
+const getPackets = (category, userId, assetId, time) => {
   return new Promise(async (resolve, reject) => {
-    const packets = await api.get('stream', { userId, assetId, time });
+    const packets = await api.get('stream', { category, userId, assetId, time });
     if (packets) {
       resolve(packets);
     } else {

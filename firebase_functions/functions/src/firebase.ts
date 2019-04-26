@@ -21,7 +21,7 @@ exports.getSk = async (assetId: string) => {
   // Get API key
   const doc = await admin
     .firestore()
-    .collection('assetSecrets')
+    .collection('secrets')
     .doc(assetId)
     .get();
   if (doc.exists) return doc.data();
@@ -29,32 +29,32 @@ exports.getSk = async (assetId: string) => {
   throw Error(`The asset doesn't exist.`);
 };
 
-exports.getPurchase = async (uid: string, asset: string) => {
-  // Get User's purchase
+exports.getAssignedAssets = async (collection: string, userId: string, assetId: string) => {
+  // Get User's assets
   const doc = await admin
     .firestore()
     .collection('users')
-    .doc(uid)
-    .collection('purchases')
-    .doc(asset)
+    .doc(userId)
+    .collection(collection)
+    .doc(assetId)
     .get();
-  // Check user's profile for purchase
+  // Check user's profile for assigned assets
   if (doc.exists) return doc.data();
-  console.log('Asset not purchased', uid, asset);
+  console.log('Assets not assigned', userId, assetId);
   return false;
 };
 
-exports.getData = async (asset: string, timestamp?: number) => {
+exports.getData = async (collection: string, assetId: string, timestamp?: number) => {
   const time = timestamp ? Number(timestamp) : Date.now();
   // Get data
   const querySnapshot = await admin
     .firestore()
-    .collection('assets')
-    .doc(asset)
+    .collection(collection)
+    .doc(assetId)
     .collection('data')
     .where('time', '<', time)
     .orderBy('time', 'desc')
-    .limit(20)
+    .limit(50)
     .get();
 
   if (querySnapshot.size === 0) return [];
@@ -64,18 +64,18 @@ exports.getData = async (asset: string, timestamp?: number) => {
     if (doc.exists) {
       return doc.data();
     } else {
-      console.log('getData failed.', asset, doc);
+      console.log('getData failed.', assetId, doc);
       return null;
     }
   });
 };
 
-exports.getAsset = async (asset: string) => {
+exports.getAsset = async (collection: string, assetId: string) => {
   // Get User's purchase
   const doc = await admin
     .firestore()
-    .collection('assets')
-    .doc(asset)
+    .collection(collection)
+    .doc(assetId)
     .get();
   // Check user's profile for purchase
   if (doc.exists) {
@@ -84,15 +84,15 @@ exports.getAsset = async (asset: string) => {
     delete result.owner;
     return result;
   }
-  console.log('getAsset failed.', asset, doc);
+  console.log('getAsset failed.', assetId, doc);
   return null;
 };
 
-exports.getAssets = async () => {
+exports.getAssets = async (collection: string) => {
   // Get data
   const querySnapshot = await admin
     .firestore()
-    .collection('assets')
+    .collection(collection)
     .get();
 
   const promises = [];
@@ -110,7 +110,7 @@ exports.getAssets = async () => {
           // Get data
           admin
             .firestore()
-            .collection('assets')
+            .collection(collection)
             .doc(result.assetId)
             .collection('data')
             .limit(2)
@@ -144,11 +144,11 @@ exports.getAssets = async () => {
     });
 };
 
-exports.getUserAssets = async (user: string) => {
+exports.getUserAssets = async (collection: string, user: string) => {
   // Get data
   const querySnapshot = await admin
     .firestore()
-    .collection('assets')
+    .collection(collection)
     .where('owner', '==', user)
     .get();
   // Check there is data
@@ -167,11 +167,11 @@ exports.getUserAssets = async (user: string) => {
   });
 };
 
-exports.setPacket = async (asset: string, packet: any) => {
+exports.setPacket = async (collection: string, asset: string, packet: any) => {
   // Save users API key and Seed
   await admin
     .firestore()
-    .collection('assets')
+    .collection(collection)
     .doc(asset)
     .collection('data')
     .doc()
@@ -180,43 +180,40 @@ exports.setPacket = async (asset: string, packet: any) => {
   return true;
 };
 
-exports.setUser = async (uid: string, obj: any) => {
+exports.setUser = async (userId: string, obj: any) => {
   // Save users API key and Seed
   await admin
     .firestore()
     .collection('users')
-    .doc(uid)
+    .doc(userId)
     .set(obj);
 
   return true;
 };
 
-exports.setAsset = async (assetId: string, sk: string, address: string, seed: string, asset: any) => {
+exports.setAsset = async (collection: string, asset: any, sk: string, address: string, seed: string) => {
   // Save users API key and Seed
   await admin
     .firestore()
-    .collection('assetSecrets')
-    .doc(assetId)
+    .collection('secrets')
+    .doc(asset.assetId)
     .set({ sk, seed });
 
   // Add public asset record
   await admin
     .firestore()
-    .collection('assets')
-    .doc(assetId)
+    .collection(collection)
+    .doc(asset.assetId)
     .set({ ...asset, address });
 
-  // Add asset to owners' purchases
+  // Add asset to owners' assignments
   await admin
     .firestore()
     .collection('users')
     .doc(asset.owner)
-    .collection('purchases')
-    .doc(assetId)
-    .set({
-      full: true,
-      time: Date.now(),
-    });
+    .collection(collection)
+    .doc(asset.assetId)
+    .set({ time: Date.now() });
 
   return true;
 };
@@ -234,44 +231,52 @@ exports.setApiKey = async (apiKey: string, uid: string, email: string) => {
   return true;
 };
 
-exports.setOwner = async (assetId: string, owner: string) => {
-  // Save new owner
-  await admin
-    .firestore()
-    .collection('assets')
-    .doc(assetId)
-    .set({ owner }, { merge: true });
-  return true;
-};
-
-exports.setPurchase = async (userId: string, assetId: string) => {
-  // Save new owner
+exports.assignAsset = async (collection: string, userId: string, assetId: string) => {
+  // Assign new asset
   await admin
     .firestore()
     .collection('users')
     .doc(userId)
-    .collection('purchases')
+    .collection(collection)
     .doc(assetId)
     .set({
-      full: true,
       time: Date.now(),
     });
   return true;
 };
 
-exports.deleteAsset = async (asset: any) => {
-  // Remove Asset
+exports.deleteAsset = async (collection: string, assetId: string, userId: string) => {
+  // Remove Asset if not in the list of deals
+  
+  let canDeleteAsset = true;
+  // Get deal
+    const dealsSnapshot = await admin
+    .firestore()
+    .collection('deals')
+    .get();
+
+    dealsSnapshot.docs.forEach(async deal => {
+      if (deal.exists) {
+        const data = deal.data();
+        if (data.assetId === assetId) {
+          canDeleteAsset = false;
+        }
+      }
+    });
+
+  if (!canDeleteAsset) return false;
+
   await admin
     .firestore()
-    .collection('assetSecrets')
-    .doc(asset)
+    .collection('secrets')
+    .doc(assetId)
     .delete();
 
   // Get asset data
   const querySnapshot = await admin
     .firestore()
-    .collection('assets')
-    .doc(asset)
+    .collection(collection)
+    .doc(assetId)
     .collection('data')
     .get();
 
@@ -279,8 +284,8 @@ exports.deleteAsset = async (asset: any) => {
     // Delete asset data
     await admin
       .firestore()
-      .collection('assets')
-      .doc(asset)
+      .collection(collection)
+      .doc(assetId)
       .collection('data')
       .doc(doc.id)
       .delete();
@@ -288,23 +293,32 @@ exports.deleteAsset = async (asset: any) => {
 
   await admin
     .firestore()
-    .collection('assets')
-    .doc(asset)
+    .collection(collection)
+    .doc(assetId)
     .delete();
+
+  await admin
+    .firestore()
+    .collection('users')
+    .doc(userId)
+    .collection(collection)
+    .doc(assetId)
+    .delete();
+
   return true;
 };
 
-exports.toggleWhitelistAsset = async (assetId: string, inactive: string) => {
+exports.toggleWhitelistAsset = async (collection: string, assetId: string, inactive: string) => {
   // Whitelist asset
   await admin
     .firestore()
-    .collection('assets')
+    .collection(collection)
     .doc(assetId)
     .set({ inactive: inactive === 'true' }, { merge: true });
   return true;
 };
 
-exports.getUser = async (userId: string) => {
+exports.getUser = async (userId: string, internal: boolean = false) => {
   // Get user
   const doc = await admin
     .firestore()
@@ -317,9 +331,8 @@ exports.getUser = async (userId: string) => {
     const result = doc.data();
     delete result.seed;
 
-    if (result.wallet) {
+    if (result.wallet && !internal) {
       delete result.wallet.seed;
-      delete result.wallet.address;
       delete result.wallet.keyIndex;
     }
     return result;

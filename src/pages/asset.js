@@ -9,7 +9,7 @@ import { loadUser } from '../store/user/actions';
 import { loadAsset } from '../store/asset/actions';
 import { userAuth } from '../utils/firebase';
 import { getAssetStreamJSON } from '../utils/helpers';
-import { purchaseStream } from '../utils/iota';
+import { makeDeal } from '../utils/iota';
 import AssetNav from '../components/asset-nav';
 import Modal from '../components/modal';
 import Sidebar from '../components/side-bar';
@@ -29,6 +29,7 @@ class Asset extends React.Component {
       error: false,
       fetching: false,
       purchase: false,
+      category: 'offers'
     };
 
     this.downloadAssetStreamJSON = this.downloadAssetStreamJSON.bind(this);
@@ -42,7 +43,7 @@ class Asset extends React.Component {
     const userId = (await userAuth()).uid;
     const { match: { params: { assetId } }, settings: { provider } } = this.props;
 
-    await this.props.loadAsset(assetId);
+    await this.props.loadAsset(this.state.category, assetId);
 
     if (typeof this.props.asset === 'string') {
       ReactGA.event({
@@ -98,7 +99,7 @@ class Asset extends React.Component {
     });
 
     this.setNotification('purchasing');
-    purchaseStream(userId, assetId)
+    makeDeal(userId, assetId)
       .then(async () => {
         await loadUser(userId);
         // Start Fetching data
@@ -133,7 +134,7 @@ class Asset extends React.Component {
   setDataEnd = flag => this.setState({ dataEnd: flag });
 
   render() {
-    const { userId, error, fetching, packets, streamLength, purchase } = this.state;
+    const { userId, error, fetching, packets, streamLength, purchase, category } = this.state;
     const { match: { params: { assetId } } } = this.props;
 
     return (
@@ -174,6 +175,7 @@ class Asset extends React.Component {
               packets={packets.length}
               ctx={this.ctx}
               client={this.client}
+              category={category}
             />
           )
         }
@@ -189,7 +191,7 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-  loadAsset: assetId => dispatch(loadAsset(assetId)),
+  loadAsset: (category, assetId) => dispatch(loadAsset(category, assetId)),
   loadUser: userId => dispatch(loadUser(userId)),
 });
 

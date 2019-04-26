@@ -12,6 +12,9 @@ import Sidebar from '../components/user-sidebar';
 import AssetList from '../components/asset-list';
 import Cookie from '../components/cookie';
 import Loading from '../components/loading';
+import AddCard from '../components/add-asset';
+
+export const UserContext = React.createContext({});
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -20,15 +23,23 @@ class Dashboard extends React.Component {
       assets: [],
       user: {},
       loading: false,
+      displayNewOfferForm: false,
+      displayNewRequestForm: false
     };
 
     this.checkLogin = this.checkLogin.bind(this);
     this.auth = this.auth.bind(this);
     this.getUser = this.getUser.bind(this);
     this.findAssets = this.findAssets.bind(this);
-    this.createAsset = this.createAsset.bind(this);
-    this.deleteAsset = this.deleteAsset.bind(this);
+    this.createOffer = this.createOffer.bind(this);
+    this.deleteOffer = this.deleteOffer.bind(this);
+    this.createRequest = this.createRequest.bind(this);
+    this.deleteRequest = this.deleteRequest.bind(this);
     this.logout = this.logout.bind(this);
+    this.showNewOfferForm = this.showNewOfferForm.bind(this);
+    this.hideNewOfferForm = this.hideNewOfferForm.bind(this);
+    this.showNewRequestForm = this.showNewRequestForm.bind(this);
+    this.hideNewRequestForm = this.hideNewRequestForm.bind(this);
   }
 
   async componentDidMount() {
@@ -87,7 +98,15 @@ class Dashboard extends React.Component {
     return this.setState({ assets, loading: false });
   };
 
-  createAsset(asset) {
+  createOffer(asset) {
+    this.create(asset, 'offers');
+  };
+
+  createRequest(asset) {
+    this.create(asset, 'requests');
+  };
+
+  create(asset, category) {
     const { userData } = this.props;
     // Assign to user
     asset.owner = this.state.user.uid;
@@ -97,8 +116,8 @@ class Dashboard extends React.Component {
     return new Promise(async (resolve) => {
       const packet = {
         apiKey: userData.apiKey,
-        id: asset.assetId,
         asset,
+        category
       };
 
       // Call server
@@ -111,12 +130,20 @@ class Dashboard extends React.Component {
       ReactGA.event({
         category: 'New asset',
         action: 'New asset',
-        label: `Asset ID ${asset.assetId}`
+        label: `Asset Name ${asset.assetName}`
       });
     });
   };
 
-  async deleteAsset(assetId) {
+  deleteOffer(assetId) {
+    this.delete(assetId, 'offers');
+  };
+
+  deleteRequest(assetId) {
+    this.delete(assetId, 'requests');
+  };
+
+  async delete(assetId, category) {
     ReactGA.event({
       category: 'Delete asset',
       action: 'Delete asset',
@@ -124,7 +151,12 @@ class Dashboard extends React.Component {
     });
     this.setState({ loading: true });
     const { userData } = this.props;
-    const data = await api.delete('delete', { apiKey: userData.apiKey, assetId });
+    const packet = {
+      apiKey: userData.apiKey,
+      assetId,
+      category
+    };
+    const data = await api.delete('delete', packet);
     if (data.success) {
       this.setState({
         loading: false,
@@ -151,8 +183,24 @@ class Dashboard extends React.Component {
       });
   };
 
+  showNewOfferForm() {
+    this.setState({ displayNewOfferForm: true });
+  }
+
+  hideNewOfferForm() {
+    this.setState({ displayNewOfferForm: false });
+  }
+
+  showNewRequestForm() {
+    this.setState({ displayNewRequestForm: true });
+  }
+
+  hideNewRequestForm() {
+    this.setState({ displayNewRequestForm: false });
+  }
+
   render() {
-    const { assets, user, loading } = this.state;
+    const { assets, user, loading, displayNewOfferForm, displayNewRequestForm } = this.state;
     const { userData } = this.props;
 
     return (
@@ -160,19 +208,57 @@ class Dashboard extends React.Component {
         <Cookie />
         <AssetNav user={user} logout={this.logout} />
         <Data>
-          <Sidebar assets={assets} user={user} userData={userData} />
+          <UserContext.Provider value={{ userId: user.uid }}>
+            <Sidebar assets={assets} user={user} userData={userData} />
+          </UserContext.Provider>
           {
             loading ? (
               <LoadingBox>
                 <Loading />
               </LoadingBox>
             ) : (
-              <AssetList
-                assets={assets}
-                maxAssets={userData.numberOfAssets}
-                create={this.createAsset}
-                delete={this.deleteAsset}
-              />
+              <AssetsWrapper>
+                <Offers>
+                  { 
+                    !displayNewOfferForm && 
+                    <AddOfferButton onClick={this.showNewOfferForm}>
+                      +Create Offer
+                    </AddOfferButton>
+                  }
+                  { 
+                    displayNewOfferForm && 
+                    <AddCard 
+                      create={this.createOffer} 
+                      cancel={this.hideNewOfferForm} 
+                      type="Offer"  
+                    /> 
+                  }
+                  <AssetList
+                    assets={assets}
+                    delete={this.deleteOffer}
+                  />
+                </Offers>
+                <Requests>
+                  { 
+                    !displayNewRequestForm && 
+                    <AddRequestButton onClick={this.showNewRequestForm}>
+                      +Create Request
+                    </AddRequestButton> 
+                  }
+                  { 
+                    displayNewRequestForm && 
+                    <AddCard
+                      create={this.createRequest} 
+                      cancel={this.hideNewRequestForm}
+                      type="Request"
+                    /> 
+                  }
+                  <AssetList
+                    assets={assets}
+                    delete={this.deleteRequest}
+                  />
+                </Requests>
+              </AssetsWrapper>
             )
           }
         </Data>
@@ -205,6 +291,19 @@ const Main = styled.main`
   height: 100vh;
 `;
 
+const AssetsWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`
+
+const Offers = styled.div`
+
+`
+
+const Requests = styled.div`
+
+`
+
 const Data = styled.section`
   background-image: linear-gradient(-189deg, #06236c 1%, #1449c6 95%);
   min-height: 90vh;
@@ -218,3 +317,11 @@ const Data = styled.section`
 const LoadingBox = styled.div`
   margin: auto;
 `;
+
+const AddOfferButton = styled.button`
+
+`
+
+const AddRequestButton = styled.button`
+
+`

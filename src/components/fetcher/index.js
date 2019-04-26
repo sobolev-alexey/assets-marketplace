@@ -6,7 +6,7 @@ import ReactGA from 'react-ga';
 import { getData } from '../../utils/iota';
 
 const Fetcher = ({
-  ctx, client, packets, lastFetchedTimestamp, assetId, userId,
+  ctx, client, packets, lastFetchedTimestamp, assetId, userId, category,
   setNotification, setPurchase, setStreamLength, setFetching, setDataEnd, saveData
 }) => {
   const [fetchedData, setFetchedData] = useState(packets);
@@ -14,7 +14,7 @@ const Fetcher = ({
   useEffect(() => {
     (async () => {
       try {
-        const data = await getData(userId, assetId, lastFetchedTimestamp);
+        const data = await getData(category, userId, assetId, lastFetchedTimestamp);
 
         if (data.success === false) {
           setPurchase(false);
