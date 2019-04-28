@@ -318,8 +318,8 @@ exports.settings = functions.https.onRequest((req, res) => {
       // Retrieve settings
       return res.json(await getSettings());
     } catch (e) {
-      console.error('settings failed. Error: ', e.message);
-      return res.status(403).json({ error: e.message });
+      console.error('settings failed. Error: ', e);
+      return res.status(403).json({ error: e });
     }
   });
 });

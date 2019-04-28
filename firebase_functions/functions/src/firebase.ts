@@ -367,23 +367,23 @@ exports.getSettings = async () => {
     .get();
   if (doc.exists) {
     const {
-      defaultPrice,
+      // defaultPrice,
       documentation,
       iotaApiVersion,
-      mapboxApiAccessToken,
-      mapboxStyles,
+      // mapboxApiAccessToken,
+      // mapboxStyles,
       provider,
-      recaptchaSiteKey,
+      // recaptchaSiteKey,
       tangleExplorer,
     } = doc.data();
     return {
-      defaultPrice,
+      // defaultPrice,
       documentation,
       iotaApiVersion,
-      mapboxApiAccessToken,
-      mapboxStyles,
+      // mapboxApiAccessToken,
+      // mapboxStyles,
       provider,
-      recaptchaSiteKey,
+      // recaptchaSiteKey,
       tangleExplorer,
     };
   }
