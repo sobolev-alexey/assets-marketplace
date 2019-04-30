@@ -3,7 +3,7 @@ import React from 'react';
 import styled from 'styled-components';
 import format from 'date-fns/format';
 // import Clipboard from 'react-clipboard.js';
-// import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 // import { getZip } from '../../utils/zip';
 import Card from './index.js';
@@ -16,15 +16,19 @@ import Card from './index.js';
 //   });
 // }
 
-const Heading = ({ assetId, assetName, type }, func) => (
+const Heading = ({ assetId, assetName, category }, func) => (
   <Full>
-    <AssetCategory>Offer</AssetCategory>
-    {/* <Link to={`/asset/${assetId}`}> */}
+    <AssetCategory>{category}</AssetCategory>
+    <Link to={`/deal/${assetId}`}>
       <AssetId>{assetName.length > 20 ? `${assetName.substr(0, 20)}...` : assetName}</AssetId>
-    {/* </Link> */}
-    <Delete onClick={() => func(assetId)}>
-      <IconButton src="/static/icons/icon-delete.svg" />
-    </Delete>
+    </Link>
+    {
+      func ? (
+        <Delete onClick={() => func(assetId)}>
+          <IconButton src="/static/icons/icon-delete.svg" />
+        </Delete>
+      ) : null
+    }
   </Full>
 );
 
@@ -50,10 +54,6 @@ const Asset = props => {
       header={Heading(asset, props.delete)}
       // footer={Footer(asset, provider)}
     >
-      <RowFull>
-        <RowDesc>Asset Description:</RowDesc>
-        <Data>{asset.assetDescription}</Data>
-      </RowFull>
       <Row>
         <RowHalf>
           <RowDesc>Asset Type:</RowDesc>
@@ -67,11 +67,11 @@ const Asset = props => {
       <Row>
         <RowHalf>
           <RowDesc>Begin Time:</RowDesc>
-          <Data>{format(asset.startTimestamp, 'HH:mm - DD.MM.YY')}</Data>
+          <Data>{format(Number(asset.startTimestamp), 'HH:mm - DD.MM.YY')}</Data>
         </RowHalf>
         <RowHalf>
           <RowDesc>End Time:</RowDesc>
-          <Data>{format(asset.endTimestamp, 'HH:mm - DD.MM.YY')}</Data>
+          <Data>{format(Number(asset.endTimestamp), 'HH:mm - DD.MM.YY')}</Data>
         </RowHalf>
       </Row>
       <Row>
@@ -88,6 +88,16 @@ const Asset = props => {
           <Data>{asset.price}</Data>
         </RowHalf>
       </Row>
+      <RowFull>
+        <RowDesc>Asset Description:</RowDesc>
+        <Data>
+          {
+            asset.assetDescription.length > 120 
+            ? `${asset.assetDescription.substr(0, 120)}...` 
+            : asset.assetDescription
+          }
+        </Data>
+      </RowFull>
       {/* <RowHalf>
         <RowDesc>Asset ID:</RowDesc>
         <Clipboard

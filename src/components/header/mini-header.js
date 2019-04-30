@@ -5,7 +5,8 @@ import { Link } from 'react-router-dom';
 
 const links = [
   { link: '', text: 'Home' },
-  { link: 'demo', text: 'Try the Marketplace' }
+  { link: 'demo', text: 'Marketplace' },
+  { link: 'dashboard', text: 'Dashboard' }
 ];
 
 const MiniHeader = props => (

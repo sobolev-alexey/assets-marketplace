@@ -2,6 +2,8 @@ import * as crypto from 'crypto';
 const axios = require('axios');
 const { composeAPI, createPrepareTransfers, generateAddress } = require('@iota/core');
 const { asTransactionObject } = require('@iota/transaction-converter');
+const Mam = require('@iota/mam');
+const { asciiToTrytes } = require('@iota/converter');
 const {
   getSettings,
   updateWalletAddressKeyIndex,
@@ -94,11 +96,11 @@ const transferFunds = async (receiveAddress, address, keyIndex, seed, value, upd
     const balance = balances && balances.length > 0 ? balances[0] : 0;
 
     // Depth or how far to go for tip selection entry point
-    const depth = 5
+    const depth = 5;
 
     // Difficulty of Proof-of-Work required to attach transaction to tangle.
     // Minimum value on mainnet & spamnet is `14`, `9` on devnet and other testnets.
-    const minWeightMagnitude = 9
+    const minWeightMagnitude = 9;
 
     if (balance === 0) {
       console.error('transferFunds. Insufficient balance', address, balances, userId);
@@ -203,6 +205,35 @@ const purchaseData = async (userId, receiveAddress, value) => {
   return transactions;
 };
 
+const initializeChannel = async (packet, secretKey) => {
+  const { provider } = await getSettings();
+  const mode = 'restricted';
+
+  // Initialise MAM State
+  let mamState = Mam.init(provider);
+
+  // Set channel mode
+  mamState = Mam.changeMode(mamState, mode, secretKey);
+
+  // Create MAM Payload - STRING OF TRYTES
+  const trytes = asciiToTrytes(JSON.stringify(packet));
+  const message = Mam.create(mamState, trytes);
+
+  // Save new mamState
+  mamState = message.state;
+
+  // Attach the payload
+  await Mam.attach(message.payload, message.address, 3, 9);
+
+  return { 
+    root: message.root,
+    secretKey: secretKey,
+    seed: message.state.seed,
+    next: message.state.channel.next_root,
+    start: message.state.channel.start,
+  };
+}
+
 module.exports = {
   generateUUID,
   generateNewAddress,
@@ -213,4 +244,5 @@ module.exports = {
   faucet,
   purchaseData,
   checkRecaptcha,
+  initializeChannel
 }

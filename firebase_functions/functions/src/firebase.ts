@@ -70,7 +70,7 @@ exports.getData = async (collection: string, assetId: string, timestamp?: number
   });
 };
 
-exports.getAsset = async (collection: string, assetId: string) => {
+exports.getAsset = async (collection: string, assetId: string, internal: boolean = false) => {
   // Get User's purchase
   const doc = await admin
     .firestore()
@@ -80,8 +80,9 @@ exports.getAsset = async (collection: string, assetId: string) => {
   // Check user's profile for purchase
   if (doc.exists) {
     const result = doc.data();
-    delete result.sk;
-    delete result.owner;
+    if (!internal) {
+      delete result.owner;
+    }
     return result;
   }
   console.log('getAsset failed.', assetId, doc);
@@ -191,13 +192,13 @@ exports.setUser = async (userId: string, obj: any) => {
   return true;
 };
 
-exports.setAsset = async (collection: string, asset: any, sk: string, address: string, seed: string) => {
+exports.setAsset = async (collection: string, asset: any, sk: string, address: string, seed: string, channelDetails: any) => {
   // Save users API key and Seed
   await admin
     .firestore()
     .collection('secrets')
     .doc(asset.assetId)
-    .set({ sk, seed });
+    .set({ sk, seed, channelDetails: { ...channelDetails }});
 
   // Add public asset record
   await admin
@@ -370,8 +371,8 @@ exports.getSettings = async () => {
       // defaultPrice,
       documentation,
       iotaApiVersion,
-      // mapboxApiAccessToken,
-      // mapboxStyles,
+      mapboxApiAccessToken,
+      mapboxStyles,
       provider,
       // recaptchaSiteKey,
       tangleExplorer,
@@ -380,8 +381,8 @@ exports.getSettings = async () => {
       // defaultPrice,
       documentation,
       iotaApiVersion,
-      // mapboxApiAccessToken,
-      // mapboxStyles,
+      mapboxApiAccessToken,
+      mapboxStyles,
       provider,
       // recaptchaSiteKey,
       tangleExplorer,
@@ -473,4 +474,28 @@ exports.getEmailSettings = async () => {
   }
   console.error('getEmailSettings failed. Setting does not exist', doc);
   throw Error(`The getEmailSettings setting doesn't exist.`);
+};
+
+exports.getMatchingAssets = async (collection: string, asset: any) => {
+  console.log('getMatchingAssets 1', asset);
+  // Get matching assets
+  // https://firebase.google.com/docs/firestore/query-data/queries
+  const querySnapshot = await admin.firestore()
+    .collection(collection)
+    .where('active', '==', true)
+    .where('type', '==', asset.type)
+    .where('location.city', '==', asset.location.city)
+    .orderBy('assetName', 'asc')
+    .get();
+
+  if (querySnapshot.size === 0) return [];
+
+  // Return data
+  return querySnapshot.docs.map(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      return data.owner !== asset.owner ? data : null;
+    }
+    return null;
+  });
 };

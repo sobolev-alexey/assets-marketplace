@@ -6,6 +6,7 @@ import HomePage from './pages/home';
 import DemoPage from './pages/demo';
 import AssetPage from './pages/asset';
 import DashboardPage from './pages/dashboard';
+import DealPage from './pages/deal';
 import WhitelistPage from './pages/whitelist';
 import FaucetPage from './pages/faucet';
 import { storeProjectSettings } from './store/settings/actions';
@@ -23,6 +24,7 @@ class Router extends Component {
             <Route path="/" component={HomePage} exact />
             <Route path="/demo" component={DemoPage} />
             <Route path="/dashboard" component={DashboardPage} />
+            <Route path="/deal/:assetId" component={DealPage} />
             <Route path="/asset/:assetId" component={AssetPage} />
             <Route path="/whitelist" component={WhitelistPage} />
             <Route path="/faucet" component={FaucetPage} />

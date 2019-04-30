@@ -20,7 +20,10 @@ class Dashboard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      assets: [],
+      assets: {
+        offers: [],
+        requests: []
+      },
       user: {},
       loading: false,
       displayNewOfferForm: false,
@@ -94,16 +97,20 @@ class Dashboard extends React.Component {
 
   async findAssets() {
     this.setState({ loading: true });
-    const assets = await api.get('assets', { userId: this.state.user.uid, apiKey: this.props.userData.apiKey }) || [];
+    const emptyAssets = {
+      offers: [],
+      requests: []
+    }
+    const assets = await api.get('assets', { userId: this.state.user.uid, apiKey: this.props.userData.apiKey }) || emptyAssets;
     return this.setState({ assets, loading: false });
   };
 
   createOffer(asset) {
-    this.create(asset, 'offers');
+    return this.create(asset, 'offers');
   };
 
   createRequest(asset) {
-    this.create(asset, 'requests');
+    return this.create(asset, 'requests');
   };
 
   create(asset, category) {
@@ -111,7 +118,7 @@ class Dashboard extends React.Component {
     // Assign to user
     asset.owner = this.state.user.uid;
     // Deactivate the Asset
-    asset.inactive = true;
+    // asset.inactive = true;
 
     return new Promise(async (resolve) => {
       const packet = {
@@ -124,23 +131,24 @@ class Dashboard extends React.Component {
       const data = await api.post('newAsset', packet);
       // Check success
       if (data.success) {
+        ReactGA.event({
+          category: 'New asset',
+          action: 'New asset',
+          label: `Asset Name ${asset.assetName}`
+        });
         this.findAssets();
+        this.setState({ displayNewOfferForm: false, displayNewRequestForm: false });
       }
       resolve(data);
-      ReactGA.event({
-        category: 'New asset',
-        action: 'New asset',
-        label: `Asset Name ${asset.assetName}`
-      });
     });
   };
 
   deleteOffer(assetId) {
-    this.delete(assetId, 'offers');
+    return this.delete(assetId, 'offers');
   };
 
   deleteRequest(assetId) {
-    this.delete(assetId, 'requests');
+    return this.delete(assetId, 'requests');
   };
 
   async delete(assetId, category) {
@@ -157,10 +165,12 @@ class Dashboard extends React.Component {
       category
     };
     const data = await api.delete('delete', packet);
+    const assets = this.state.assets;
+    assets[category] = [...assets[category].filter(asset => asset.assetId !== assetId)];
     if (data.success) {
       this.setState({
         loading: false,
-        assets: [...this.state.assets.filter(asset => asset.assetId !== assetId)],
+        assets,
       });
     } else {
       this.setState({
@@ -208,9 +218,14 @@ class Dashboard extends React.Component {
         <Cookie />
         <AssetNav user={user} logout={this.logout} />
         <Data>
-          <UserContext.Provider value={{ userId: user.uid }}>
-            <Sidebar assets={assets} user={user} userData={userData} />
-          </UserContext.Provider>
+          {
+            assets.offers && !isEmpty(assets.offers) && 
+            assets.requests && !isEmpty(assets.requests) ? (
+              <UserContext.Provider value={{ userId: user.uid }}>
+                <Sidebar assets={assets} user={user} userData={userData} />
+              </UserContext.Provider>
+            ) : null
+          }
           {
             loading ? (
               <LoadingBox>
@@ -218,46 +233,70 @@ class Dashboard extends React.Component {
               </LoadingBox>
             ) : (
               <AssetsWrapper>
-                <Offers>
-                  { 
-                    !displayNewOfferForm && 
-                    <AddOfferButton onClick={this.showNewOfferForm}>
-                      +Create Offer
-                    </AddOfferButton>
-                  }
-                  { 
-                    displayNewOfferForm && 
-                    <AddCard 
-                      create={this.createOffer} 
-                      cancel={this.hideNewOfferForm} 
-                      type="Offer"  
-                    /> 
-                  }
-                  <AssetList
-                    assets={assets}
-                    delete={this.deleteOffer}
-                  />
-                </Offers>
-                <Requests>
-                  { 
-                    !displayNewRequestForm && 
-                    <AddRequestButton onClick={this.showNewRequestForm}>
-                      +Create Request
-                    </AddRequestButton> 
-                  }
-                  { 
-                    displayNewRequestForm && 
-                    <AddCard
-                      create={this.createRequest} 
-                      cancel={this.hideNewRequestForm}
-                      type="Request"
-                    /> 
-                  }
-                  <AssetList
-                    assets={assets}
-                    delete={this.deleteRequest}
-                  />
-                </Requests>
+                {
+                  assets.offers && !isEmpty(assets.offers) ? (
+                    <React.Fragment>
+                      <Offers>
+                        { 
+                          !displayNewOfferForm && 
+                          <AddOfferButton onClick={this.showNewOfferForm}>
+                            +Create Offer
+                          </AddOfferButton>
+                        }
+                        { 
+                          displayNewOfferForm && 
+                          <AddCard 
+                            createAsset={this.createOffer} 
+                            cancel={this.hideNewOfferForm} 
+                            category="offers"  
+                          /> 
+                        }
+                        <AssetList
+                          assets={assets.offers.filter(asset => asset.active)}
+                          delete={this.deleteOffer}
+                        />
+                      </Offers>
+                      <Offers>
+                        <AssetList
+                          assets={assets.offers.filter(asset => !asset.active)}
+                          delete={this.deleteOffer}
+                        />
+                      </Offers>
+                    </React.Fragment>
+                  ) : null
+                }
+                {
+                  assets.requests && !isEmpty(assets.requests) ? (
+                    <React.Fragment>
+                      <Requests>
+                        { 
+                          !displayNewRequestForm && 
+                          <AddRequestButton onClick={this.showNewRequestForm}>
+                            +Create Request
+                          </AddRequestButton> 
+                        }
+                        { 
+                          displayNewRequestForm && 
+                          <AddCard
+                            createAsset={this.createRequest} 
+                            cancel={this.hideNewRequestForm}
+                            category="requests"
+                          /> 
+                        }
+                        <AssetList
+                          assets={assets.requests.filter(asset => asset.active)}
+                          delete={this.deleteRequest}
+                        />
+                      </Requests>
+                      <Requests>
+                        <AssetList
+                          assets={assets.requests.filter(asset => !asset.active)}
+                          delete={this.deleteRequest}
+                        />
+                      </Requests>
+                    </React.Fragment>
+                  ) : null
+                }
               </AssetsWrapper>
             )
           }

@@ -38,7 +38,6 @@ export const userAuth = async () => {
 export const allAssets = () => {
   return new Promise(async (resolve, reject) => {
     const assets = await api.get('assets');
-    const assetsWithData = assets && assets.filter(asset => asset.hasData);
-    resolve(assetsWithData || []);
+    resolve(assets);
   });
 };

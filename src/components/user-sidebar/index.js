@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Clipboard from 'react-clipboard.js';
+import isEmpty from 'lodash-es/isEmpty';
 import Wallet from '../wallet';
 
 class UserSidebar extends React.Component {
@@ -20,6 +21,16 @@ class UserSidebar extends React.Component {
     const { assets, user, userData } = this.props;
     const { message } = this.state;
 
+    let numberOfAssets = 0
+    if (!isEmpty(assets)) {
+      if (assets.offers) {
+        numberOfAssets += assets.offers.length;
+      }
+      if (assets.requests) {
+        numberOfAssets += assets.requests.length;
+      }
+    }
+
     return (
       <Sidebar>
         <Details>
@@ -27,9 +38,9 @@ class UserSidebar extends React.Component {
           <div>
             <DetailRow>
               <DetailKey>Number of Assets:</DetailKey>
-              <DetailValue>{assets && assets.length}</DetailValue>
+              <DetailValue>{numberOfAssets}</DetailValue>
             </DetailRow>
-            <DetailRow>
+            {/* <DetailRow>
               <DetailKey>Total Data Streams:</DetailKey>
               <DetailValue>
                 {
@@ -38,7 +49,7 @@ class UserSidebar extends React.Component {
                     : '--'
                 }
               </DetailValue>
-            </DetailRow>
+            </DetailRow> */}
             <DetailRow>
               <DetailKey>Owner:</DetailKey>
               <DetailValue>{user.displayName}</DetailValue>

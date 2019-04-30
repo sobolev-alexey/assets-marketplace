@@ -6,10 +6,12 @@ import compareDesc from 'date-fns/compare_desc';
 import isFuture from 'date-fns/is_future';
 import isValid from 'date-fns/is_valid';
 import getTime from 'date-fns/get_time';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import Card from '../card';
 import Loading from '../loading';
 
-const Heading = type => <Header>New {type}</Header>;
+const Heading = category => <Header>New {category}</Header>;
 
 export default class extends React.Component {
   constructor(props) {
@@ -28,8 +30,8 @@ export default class extends React.Component {
       assetLat: '',
       assetLon: '',
       assetPrice: '',
-      assetStart: '',
-      assetEnd: '',
+      assetStart: new Date(),
+      assetEnd: new Date(),
       assetActive: true,
       dataTypes: [{ id: '', name: '', unit: '' }],
     };
@@ -40,6 +42,7 @@ export default class extends React.Component {
     this.remove = this.remove.bind(this);
     this.change = this.change.bind(this);
     this.changeRow = this.changeRow.bind(this);
+    this.handleDateChange = this.handleDateChange.bind(this);
     this.submit = this.submit.bind(this);
   }
 
@@ -68,6 +71,10 @@ export default class extends React.Component {
   change(e) {
     this.setState({ [e.target.name]: e.target.value });
   };
+
+  handleDateChange(date, component) {
+    this.setState({ [component]: date });
+  }
 
   changeRow(e, i) {
     const dataTypes = this.state.dataTypes;
@@ -107,19 +114,20 @@ export default class extends React.Component {
       lon: parseFloat(this.state.assetLon),
       company: this.state.company,
       price: Number(this.state.assetPrice),
+      category: this.props.category,
       startDate: format(startDate, 'DD MMMM, YYYY H:mm a '),
       endDate: format(endDate, 'DD MMMM, YYYY H:mm a '),
       startTimestamp: getTime(startDate),
       endTimestamp: getTime(endDate),
-      date: format(Date.now(), 'DD MMMM, YYYY H:mm a '),
-      active: this.state.assetActive
+      creationDate: format(Date.now(), 'DD MMMM, YYYY H:mm a '),
+      active: this.state.assetActive === 'true'
     };
 
-    const createDevice = await this.props.create(asset);
+    const createAssetResult = await this.props.createAsset(asset);
 
-    if (createDevice.error) {
+    if (createAssetResult.error) {
       this.setState({ loading: false });
-      return alert(createDevice.error);
+      return alert(createAssetResult.error);
     }
 
     this.setState({
@@ -140,6 +148,7 @@ export default class extends React.Component {
       assetActive: true,
       dataTypes: [{ id: '', name: '', unit: '' }],
     });
+
   };
 
   render() {
@@ -148,7 +157,7 @@ export default class extends React.Component {
       <React.Fragment>
         {
           active ? (
-            <Card header={Heading(this.props.type)}>
+            <Card header={Heading(this.props.category)}>
               {!loading ? (
                 <Form>
                   <Column>
@@ -210,20 +219,32 @@ export default class extends React.Component {
                   <Row>
                     <Column>
                       <label>Start Time:</label>
-                      <Input
-                        type="datetime-local"
-                        name="assetStart"
-                        value={this.state.assetStart}
-                        onChange={this.change}
+                      <DatePicker
+                        showTimeSelect
+                        todayButton="Today"
+                        placeholderText="Click to select a date"
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        dateFormat="MMMM d, yyyy h:mm aa"
+                        timeCaption="time"
+                        minDate={new Date()}
+                        selected={this.state.assetStart}
+                        onChange={date => this.handleDateChange(date, 'assetStart')}
                       />
                     </Column>
                     <Column>
                       <label>End Time:</label>
-                      <Input
-                        type="datetime-local"
-                        name="assetEnd"
-                        value={this.state.assetEnd}
-                        onChange={this.change}
+                      <DatePicker
+                        showTimeSelect
+                        todayButton="Today"
+                        placeholderText="Click to select a date"
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        dateFormat="MMMM d, yyyy h:mm aa"
+                        timeCaption="time"
+                        minDate={new Date()}
+                        selected={this.state.assetEnd}
+                        onChange={date => this.handleDateChange(date, 'assetEnd')}
                       />
                     </Column>
                   </Row>
@@ -317,7 +338,7 @@ export default class extends React.Component {
                       type="radio"
                       id="active"
                       name="assetActive"
-                      value={this.state.assetActive}
+                      value={true}
                       onChange={this.change}
                     />
                     <label htmlFor="active">Active</label>
@@ -326,7 +347,7 @@ export default class extends React.Component {
                       id="inactive"
                       name="assetActive"
                       onChange={this.change}
-                      value={!this.state.assetActive}
+                      value={false}
                     />
                     <label htmlFor="inactive">Inactive</label>
                   </Row>

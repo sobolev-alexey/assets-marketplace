@@ -6,7 +6,7 @@ import BurgerMenu from '../components//header/burger';
 import MiniHeader from '../components/header/mini-header';
 import AssetList from '../components/asset-list';
 import Footer from '../components/footer';
-import Map from '../components/map';
+// import Map from '../components/map';
 import ScrollToTop from '../components/scroll-to-top';
 import Loading from '../components/loading';
 import Cookie from '../components/cookie';
@@ -20,11 +20,11 @@ const Header = ({ onAnchorClick }) => {
         <Tagline>Try the Data Marketplace</Tagline>
       </Shapes>
       <Info>
-        <Link to={'/demo/#map'} onClick={() => onAnchorClick('map')}>
-          <SubLink>{'Assets on the Map'.toUpperCase()}</SubLink>
+        <Link to={'/demo/#offers'} onClick={() => onAnchorClick('offers')}>
+          <SubLink>{'Offers'.toUpperCase()}</SubLink>
         </Link>
-        <Link to={'/demo/#list'} onClick={() => onAnchorClick('list')}>
-          <SubLink>{'Marketplace Assets'.toUpperCase()}</SubLink>
+        <Link to={'/demo/#requests'} onClick={() => onAnchorClick('requests')}>
+          <SubLink>{'Requests'.toUpperCase()}</SubLink>
         </Link>
       </Info>
     </Container>
@@ -35,8 +35,10 @@ export default class extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      anchor: null,
-      assets: [],
+      assets: {
+        offers: [],
+        requests: []
+      },
       loading: true,
     };
 
@@ -50,7 +52,10 @@ export default class extends React.Component {
   }
 
   onAnchorClick(anchor) {
-    this.setState({ anchor });
+    if (anchor) {
+      const target = document.querySelector(`#${anchor}`);
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   onScrollToTop() {
@@ -72,10 +77,24 @@ export default class extends React.Component {
             </LoadingBox>
           ) : (
             <React.Fragment>
-              <Map {...this.state} />
-              <AssetList {...this.state} />
+              {/* <Map {...this.state} assets={this.state.assets.offers} /> */}
               {
-                this.state.assets.length > 0 ? <ScrollToTop onClick={this.onScrollToTop} /> : null
+                this.state.assets.offers.length > 0 ? (
+                  <AssetsWrapper id="offers">
+                    <AssetList assets={this.state.assets.offers} />
+                  </AssetsWrapper>
+                ) : null
+              }
+              {
+                this.state.assets.requests.length > 0 ? (
+                  <AssetsWrapper id="requests">
+                    <AssetList assets={this.state.assets.requests} />
+                  </AssetsWrapper>
+                ) : null
+              }
+              {
+                this.state.assets.offers.length > 0 || this.state.assets.requests.length > 0 
+                ? <ScrollToTop onClick={this.onScrollToTop} /> : null
               }
             </React.Fragment>
           )
@@ -88,6 +107,11 @@ export default class extends React.Component {
 
 const Main = styled.div`
   overflow-x: hidden;
+`;
+
+const AssetsWrapper = styled.div`
+  display: flex;
+  width: 100%;
 `;
 
 const Container = styled.div`

@@ -24,6 +24,7 @@ const {
   toggleWhitelistAsset,
   updateBalance,
   getEmailSettings,
+  getMatchingAssets,
 } = require('./firebase');
 const {
   generateUUID,
@@ -34,6 +35,7 @@ const {
   initWallet,
   checkRecaptcha,
   purchaseData,
+  initializeChannel,
 } = require('./helpers');
 
 // Take in data from asset
@@ -80,12 +82,16 @@ exports.newAsset = functions.https.onRequest((req, res) => {
       const secretKey = generateSeed(81);
       if (invalid) throw Error(invalid);
 
-      const key = await getKey(<String>packet.apiKey);
-      const user = await getUser(key.uid, true);
+      const { uid } = await getKey(<String>packet.apiKey);
+      const user = await getUser(uid, true);
       const seed = user.wallet.seed;
       const address = user.wallet.address;
+
+      const channelDetails = await initializeChannel(packet.asset, secretKey);
+      console.log('channelDetails', channelDetails); 
+
       return res.json({
-        success: await setAsset(packet.category, packet.asset, secretKey, address, seed),
+        success: await setAsset(packet.category, packet.asset, secretKey, address, seed, channelDetails),
       });
     } catch (e) {
       console.error('newAsset failed. Error: ', e.message);
@@ -105,21 +111,21 @@ exports.delete = functions.https.onRequest((req, res) => {
     }
 
     try {
-      const { apiKey, assetId } = packet;
-      const key = await getKey(<String>apiKey);
-      const asset = await getAsset(<String>packet.category, <String>assetId);
+      const { apiKey, assetId, category } = packet;
+      const { uid } = await getKey(<String>apiKey);
+      const asset = await getAsset(<String>category, <String>assetId, true);
       if (!asset) {
         throw Error(`Asset doesn't exist`);
       }
-      if (asset.owner === key.uid) {
+      if (asset.owner === uid) {
         return res.json({
-          success: await deleteAsset(<String>assetId),
+          success: await deleteAsset(<String>category, <String>assetId, <String>uid),
         });
       } else {
         console.error(
           "removeAsset failed. You don't have permission to delete this asset",
           asset.owner,
-          key.uid
+          uid
         );
         throw Error(`You don't have permission to delete this asset`);
       }
@@ -431,6 +437,34 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
       return res.json({ error: 'Purchase failed. Insufficient balance of out of sync' });
     } catch (e) {
       console.error('purchaseData failed. Error: ', e, packet);
+      return res.status(403).json({ error: e.message });
+    }
+  });
+});
+
+// Query Asset Matches
+exports.match = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const params = req.query;
+      if (!params || !params.assetId) {
+        console.error('Get match failed. Params: ', params);
+        return res.status(400).json({ error: 'Ensure all fields are included' });
+      }
+
+      let asset = await getAsset('offers', params.assetId, true);
+      if (!asset) {
+        asset = await getAsset('requests', params.assetId, true);
+        if (!asset) {
+          return res.status(403).json({ error: 'Asset not found' });
+        }
+      }
+      const category = asset.category !== 'offers' ? 'offers' : 'requests';
+      const matchingAssets = await getMatchingAssets(category, asset);
+
+      return res.json({ success: true, [category]: matchingAssets });
+    } catch (e) {
+      console.error('match failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
     }
   });

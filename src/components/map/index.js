@@ -93,7 +93,7 @@ class Map extends React.Component {
         >
           <AssetCard
             to={`/asset/${popupInfo.assetId}`}
-            onClick={() => this.trackRedirect(popupInfo.assetId)}
+            onClick={() => this.trackRedirect(popupInfo.assetName)}
           >
             <CardHeader>
               <AssetType>
@@ -105,9 +105,9 @@ class Map extends React.Component {
                 <span>{popupInfo.location.city}</span>
               </AssetType>
               <AssetId>
-                {popupInfo.assetId.length > 12
-                  ? `${popupInfo.assetId.substring(0, 13)}...`
-                  : popupInfo.assetId}
+                {popupInfo.assetName.length > 12
+                  ? `${popupInfo.assetName.substring(0, 13)}...`
+                  : popupInfo.assetName}
               </AssetId>
             </CardHeader>
             <CardFooter>
