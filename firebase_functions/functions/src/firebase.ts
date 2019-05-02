@@ -29,6 +29,22 @@ exports.getSk = async (assetId: string) => {
   throw Error(`The asset doesn't exist.`);
 };
 
+exports.getMAMChannelDetails = async (assetId: string) => {
+  // Get MAM channel details
+  const doc = await admin
+    .firestore()
+    .collection('secrets')
+    .doc(assetId)
+    .get();
+
+  if (doc.exists) {
+    const result = doc.data();
+    return result.channelDetails;
+  }
+  console.log('getMAMChannelDetails failed.', assetId, doc);
+  return null;
+};
+
 exports.getAssignedAssets = async (collection: string, userId: string, assetId: string) => {
   // Get User's assets
   const doc = await admin
@@ -219,6 +235,36 @@ exports.setAsset = async (collection: string, asset: any, sk: string, address: s
   return true;
 };
 
+exports.setDeal = async (dealId: string, payload: any, channelDetails: any) => {
+  await admin
+    .firestore()
+    .collection('secrets')
+    .doc(dealId)
+    .set({ channelDetails: { ...channelDetails }});
+
+  // Add public asset record
+  await admin
+    .firestore()
+    .collection('deals')
+    .doc(dealId)
+    .set({ ...payload });
+
+  return true;
+};
+
+exports.assignDeal = async (userId: string, dealId: string, dealTimestamp: string, dealTime: string) => {
+  // Add deal to owners' deals list
+  await admin
+    .firestore()
+    .collection('users')
+    .doc(userId)
+    .collection('deals')
+    .doc(dealId)
+    .set({ dealTimestamp, dealTime });
+
+  return true;
+};
+
 exports.setApiKey = async (apiKey: string, uid: string, email: string) => {
   // Set API key in separate table
   await admin
@@ -232,17 +278,13 @@ exports.setApiKey = async (apiKey: string, uid: string, email: string) => {
   return true;
 };
 
-exports.assignAsset = async (collection: string, userId: string, assetId: string) => {
+exports.deactivateAsset = async (collection: string, assetId: string) => {
   // Assign new asset
   await admin
     .firestore()
-    .collection('users')
-    .doc(userId)
     .collection(collection)
     .doc(assetId)
-    .set({
-      time: Date.now(),
-    });
+    .set({ active: false }, { merge: true });
   return true;
 };
 
@@ -368,23 +410,19 @@ exports.getSettings = async () => {
     .get();
   if (doc.exists) {
     const {
-      // defaultPrice,
       documentation,
       iotaApiVersion,
       mapboxApiAccessToken,
       mapboxStyles,
       provider,
-      // recaptchaSiteKey,
       tangleExplorer,
     } = doc.data();
     return {
-      // defaultPrice,
       documentation,
       iotaApiVersion,
       mapboxApiAccessToken,
       mapboxStyles,
       provider,
-      // recaptchaSiteKey,
       tangleExplorer,
     };
   }
@@ -498,4 +536,12 @@ exports.getMatchingAssets = async (collection: string, asset: any) => {
     }
     return null;
   });
+};
+
+exports.updateChannelDetails = async (assetId: string, channelDetails: any) => {
+  await admin
+    .firestore()
+    .collection('secrets')
+    .doc(assetId)
+    .set({ channelDetails: { ...channelDetails }}, { merge: true });
 };

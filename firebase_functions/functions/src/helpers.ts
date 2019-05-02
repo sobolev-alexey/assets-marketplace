@@ -10,6 +10,7 @@ const {
   updateUserWalletAddressKeyIndex,
   getIotaWallet,
   getUserWallet,
+  getMAMChannelDetails,
 } = require('./firebase');
 
 const checkRecaptcha = async (captcha, emailSettings) => {
@@ -219,19 +220,58 @@ const initializeChannel = async (packet, secretKey) => {
   const trytes = asciiToTrytes(JSON.stringify(packet));
   const message = Mam.create(mamState, trytes);
 
-  // Save new mamState
-  mamState = message.state;
-
   // Attach the payload
   await Mam.attach(message.payload, message.address, 3, 9);
 
-  return { 
+  return {
+    secretKey,
     root: message.root,
-    secretKey: secretKey,
     seed: message.state.seed,
     next: message.state.channel.next_root,
     start: message.state.channel.start,
   };
+};
+
+const appendToChannel = async(assetId, channelPayload) => {
+  try {
+    const { provider } = await getSettings();
+    const { secretKey, next, start, seed, root } = await getMAMChannelDetails(assetId);
+    Mam.init(provider);
+
+    // Initialise MAM State
+    const mamState = {
+      seed,
+      subscribed: [],
+      channel: {
+        side_key: secretKey,
+        mode: 'restricted',
+        next_root: next,
+        security: 2,
+        start: start,
+        count: 1,
+        next_count: 1,
+        index: 0,
+      }
+    };
+
+    // Create MAM Payload - STRING OF TRYTES
+    const trytes = asciiToTrytes(JSON.stringify(channelPayload));
+    const message = Mam.create(mamState, trytes);
+
+    // Attach the payload
+    await Mam.attach(message.payload, message.address, 3, 9);
+
+    return {
+      secretKey,
+      root,
+      seed: message.state.seed,
+      next: message.state.channel.next_root,
+      start: message.state.channel.start,
+    };
+  } catch (error) {
+    console.log('MAM append error', error);
+    return null;
+  }
 }
 
 module.exports = {
@@ -244,5 +284,6 @@ module.exports = {
   faucet,
   purchaseData,
   checkRecaptcha,
-  initializeChannel
+  initializeChannel,
+  appendToChannel,
 }

@@ -9,7 +9,7 @@ import api from '../utils/api';
 import AssetNav from '../components/asset-nav';
 import LoginModal from '../components/login-modal';
 import Sidebar from '../components/user-sidebar';
-import AssetList from '../components/asset-list';
+import AssetList from '../components/asset-list/deal-page';
 import Cookie from '../components/cookie';
 import Loading from '../components/loading';
 
@@ -25,6 +25,8 @@ class Deal extends React.Component {
       },
       user: {},
       loading: false,
+      selectedOffer: null,
+      selectedRequest: null
     };
 
     this.checkLogin = this.checkLogin.bind(this);
@@ -32,6 +34,8 @@ class Deal extends React.Component {
     this.getUser = this.getUser.bind(this);
     this.findMatchingAssets = this.findMatchingAssets.bind(this);
     this.logout = this.logout.bind(this);
+    this.onSelect = this.onSelect.bind(this);
+    this.makeDeal = this.makeDeal.bind(this);
   }
 
   async componentWillReceiveProps(nextProps) {
@@ -116,8 +120,44 @@ class Deal extends React.Component {
       });
   };
 
+  onSelect(event) {
+    if (event.target && event.target.name) {
+      const category = event.target.name;
+      if (category === 'offers') {
+        this.setState({ selectedOffer: event.target.id });
+      } else if (category === 'requests') {
+        this.setState({ selectedRequest: event.target.id });
+      }
+    }
+  }
+
+  makeDeal() {
+    const { selectedOffer, selectedRequest } = this.state;
+    if (selectedOffer && selectedRequest) {
+      return new Promise(async (resolve) => {
+        const packet = {
+          apiKey: this.props.userData.apiKey,
+          offerId: selectedOffer, 
+          requestId: selectedRequest
+        };
+  
+        // Call server
+        const data = await api.post('makeDeal', packet);
+        // Check success
+        if (data.success) {
+          ReactGA.event({
+            category: 'Deal',
+            action: 'Deal',
+          });
+          console.log('makeDeal', data);
+        }
+        resolve(data);
+      });
+    }
+  }
+
   render() {
-    const { assets, user, loading } = this.state;
+    const { assets, user, loading, selectedOffer, selectedRequest } = this.state;
     const { userData } = this.props;
 
     return (
@@ -145,9 +185,15 @@ class Deal extends React.Component {
                     <Offers>
                       <AssetList
                         assets={assets.offers.filter(asset => asset && asset.active)}
-                        delete={this.deleteOffer}
+                        category="offers"
+                        onSelect={this.onSelect}
                       />
                     </Offers>
+                  ) : null
+                }
+                {
+                  selectedOffer && selectedRequest ? (
+                    <button onClick={this.makeDeal}>Deal</button>
                   ) : null
                 }
                 {
@@ -155,7 +201,8 @@ class Deal extends React.Component {
                     <Requests>
                       <AssetList
                         assets={assets.requests.filter(asset => asset && asset.active)}
-                        delete={this.deleteRequest}
+                        category="requests"
+                        onSelect={this.onSelect}
                       />
                     </Requests>
                   ) : null
@@ -219,11 +266,3 @@ const Data = styled.section`
 const LoadingBox = styled.div`
   margin: auto;
 `;
-
-const AddOfferButton = styled.button`
-
-`
-
-const AddRequestButton = styled.button`
-
-`

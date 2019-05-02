@@ -1,4 +1,5 @@
 import * as functions from 'firebase-functions';
+const format = require('date-fns/format');
 const cors = require('cors')({ origin: true });
 const { validateBundleSignatures } = require('@iota/bundle-validator');
 
@@ -12,12 +13,10 @@ const {
   getUserAssets,
   getNumberOfAssets,
   getUser,
-  getUserWallet,
   getSettings,
   setUser,
   setAsset,
   setPacket,
-  assignAsset,
   setApiKey,
   setWallet,
   deleteAsset,
@@ -25,6 +24,10 @@ const {
   updateBalance,
   getEmailSettings,
   getMatchingAssets,
+  setDeal,
+  assignDeal,
+  deactivateAsset,
+  updateChannelDetails,
 } = require('./firebase');
 const {
   generateUUID,
@@ -36,6 +39,7 @@ const {
   checkRecaptcha,
   purchaseData,
   initializeChannel,
+  appendToChannel,
 } = require('./helpers');
 
 // Take in data from asset
@@ -88,7 +92,7 @@ exports.newAsset = functions.https.onRequest((req, res) => {
       const address = user.wallet.address;
 
       const channelDetails = await initializeChannel(packet.asset, secretKey);
-      console.log('channelDetails', channelDetails); 
+      console.log('channelDetails', packet.category, packet.asset.assetId, channelDetails); 
 
       return res.json({
         success: await setAsset(packet.category, packet.asset, secretKey, address, seed, channelDetails),
@@ -381,29 +385,84 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     // Check Fields
     const packet = req.body;
-    if (!packet || !packet.userId || !packet.assetId) {
+    if (!packet || !packet.apiKey || !packet.offerId || !packet.requestId) {
       console.error('makeDeal failed. Packet: ', packet);
       return res.status(400).json({ error: 'Malformed Request' });
     }
 
     try {
-      const asset = await getAsset('offers', packet.assetId);
-      const wallet = await getUserWallet(packet.userId);
-      const { iotaApiVersion, provider, defaultPrice } = await getSettings();
-      let price = defaultPrice;
-      if (asset) {
-        if (asset.price) {
-          price = Number(asset.price);
-        } else if (asset.value) {
-          price = Number(asset.value);
-        }
-      } else {
-        return res.json({ error: `Asset doesn't exist` });
+/*
+      1. Get offer from ID
+      2. Get request from ID
+      
+      3. Get offer owner from offer
+      4. Get request offer from request
+
+      5. Get user from API key
+      6. check user is one of the owners
+
+      7. Get wallet from offer owner
+      8. Get wallet from request owner
+
+      9. Get lowest price between offer and request
+      10. Check wallet balance before purchasing
+
+      11. Transfer tokens from request owner to offer owner
+      12. Update user wallet balance
+      13. Update recipient (request/offer owner) wallet balance
+
+      14. Create new deal MAM channel
+      15. Add entry to the "deals" table, including MAM
+
+      16. Add new event to the offer MAM channel
+      17. Add new event to the request MAM channel
+
+      18. Set offer inactive
+      19. Set request inactive
+
+      20. Add deal to sellers deals list 
+      21. Add deal to purchasers deals list 
+*/
+      // 1. Get offer from ID
+      const offeredAsset = await getAsset('offers', packet.offerId, true);
+      // 2. Get request from ID
+      const requestedAsset = await getAsset('requests', packet.requestId, true);
+      
+      if (!offeredAsset || !requestedAsset) {
+          return res.status(403).json({ error: 'Asset not found' });
       }
 
+      // 3. Get offer owner from offer
+      const offerOwner = await getUser(offeredAsset.owner, true);
+
+      // 4. Get request offer from request
+      const requestOwner = await getUser(requestedAsset.owner, true);
+
+      // 5. Get user from API key
+      const { uid } = await getKey(<String>packet.apiKey);
+      const user = await getUser(uid, true);
+
+      // 6. check user is one of the owners
+      if (user.apiKey !== offerOwner.apiKey && user.apiKey !== requestOwner.apiKey) {
+        return res.status(403).json({ error: 'Current user is not the asset owner' });
+      }
+
+      // 7. Get wallet from offer owner
+      const offerOwnerWallet = offerOwner.wallet;
+      // 8. Get wallet from request owner
+      const requestOwnerWallet = requestOwner.wallet;
+      
+      if (!offerOwnerWallet || !offerOwnerWallet.address || !requestOwnerWallet || !requestOwnerWallet.address) {
+        return res.json({ error: 'Wallet not set' });
+      }
+
+      // 9. Get lowest price between offer and request
+      const price = offeredAsset.price < requestedAsset.price ? offeredAsset.price : requestedAsset.price;
+
+      // 10. Check wallet balance before purchasing
       let newWalletBalance;
-      if (wallet && wallet.balance) {
-        newWalletBalance = Number(wallet.balance) - Number(price);
+      if (requestOwnerWallet && requestOwnerWallet.balance) {
+        newWalletBalance = Number(requestOwnerWallet.balance) - Number(price);
         if (newWalletBalance < 0) {
           console.error('makeDeal failed. Not enough funds', packet);
           return res.json({ error: 'Not enough funds or your new wallet is awaiting confirmation. Please try again in 5 min.' });
@@ -413,28 +472,82 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
         return res.json({ error: 'Wallet not set' });
       }
 
-      const transactions = await purchaseData(packet.userId, asset.address, price);
-      console.log('makeDeal', packet.userId, packet.assetId, transactions);
+      // 11. Transfer tokens from request owner to offer owner
+      const transactions = await purchaseData(requestedAsset.owner, offerOwnerWallet.address, Number(price));
+      console.log('makeDeal', requestedAsset.owner, offeredAsset.owner, transactions);
 
-      if (transactions) {
-        const hashes = transactions && transactions.map(transaction => transaction.hash);
-
-        // Find TX on network and parse
-        const bundle = await findTx(hashes, provider, iotaApiVersion);
-
-        // Make sure TX is valid
-        if (!validateBundleSignatures(bundle)) {
-          console.error('makeDeal failed. Transaction is invalid for: ', bundle);
-          res.status(403).json({ error: 'Transaction is Invalid' });
-        }
-
-        await assignAsset('deals', packet.userId, packet.assetId);
-        await updateBalance(packet.userId, newWalletBalance);
-
-        // ToDo: update sellers wallet, add deal to sellers list 
-        return res.json({ success: true });
+      if (!transactions || transactions.length === 0) {
+        return res.json({ error: 'Purchase failed. Insufficient balance or out of sync' });
       }
-      return res.json({ error: 'Purchase failed. Insufficient balance of out of sync' });
+      const hashes = transactions && transactions.map(transaction => transaction.hash);
+
+      // Find TX on network and parse
+      const { iotaApiVersion, provider } = await getSettings();
+      const bundle = await findTx(hashes, provider, iotaApiVersion);
+
+      // Make sure TX is valid
+      if (!validateBundleSignatures(bundle)) {
+        console.error('makeDeal failed. Transaction is invalid for: ', bundle);
+        return res.status(403).json({ error: 'Transaction is Invalid' });
+      }
+
+      // 12. Update user wallet balance
+      await updateBalance(requestedAsset.owner, newWalletBalance);
+
+      // 13. Update recipient (request/offer owner) wallet balance
+      await updateBalance(offeredAsset.owner, Number(offerOwnerWallet.balance) + Number(price));
+
+      // 14. Create new deal MAM channel
+      const secretKey = generateSeed(81);
+      const dealTimestamp = Date.now();
+      const dealTime = format(dealTimestamp, 'DD MMMM, YYYY H:mm a ');
+      const payload = {
+        offer: offeredAsset,
+        request: requestedAsset,
+        dealTimestamp,
+        dealTime
+      }
+      const channelDetails = await initializeChannel(payload, secretKey);
+      console.log('deal channelDetails', payload, secretKey, channelDetails); 
+
+      // 15. Add entry to the "deals" table, including MAM
+      const dealId = generateUUID();
+      const dealAssetPayload = {
+        offerId: packet.offerId, 
+        requestId: packet.requestId, 
+        dealTimestamp, 
+        dealTime
+      }
+      await setDeal(dealId, dealAssetPayload, channelDetails);
+
+      const channelPayload = {
+        offerId: packet.offerId, 
+        requestId: packet.requestId,
+        dealId,
+        dealTimestamp, 
+        dealTime
+      };
+      // 16. Add new event to the offer MAM channel
+      const offerAppendResult = await appendToChannel(packet.offerId, channelPayload);
+      await updateChannelDetails(packet.offerId, offerAppendResult);
+
+      // 17. Add new event to the request MAM channel
+      const requestAppendResult = await appendToChannel(packet.requestId, channelPayload);
+      await updateChannelDetails(packet.requestId, requestAppendResult);
+
+      // 18. Set offer inactive
+      await deactivateAsset('offers', packet.offerId);
+
+      // 19. Set request inactive
+      await deactivateAsset('requests', packet.requestId);
+
+      // 20. Add deal to sellers deals list 
+      await assignDeal(offeredAsset.owner, dealId, dealTimestamp, dealTime);
+
+      // 21. Add deal to purchasers deals list 
+      await assignDeal(requestedAsset.owner, dealId, dealTimestamp, dealTime);
+
+      return res.json({ success: true });
     } catch (e) {
       console.error('purchaseData failed. Error: ', e, packet);
       return res.status(403).json({ error: e.message });
@@ -462,7 +575,11 @@ exports.match = functions.https.onRequest((req, res) => {
       const category = asset.category !== 'offers' ? 'offers' : 'requests';
       const matchingAssets = await getMatchingAssets(category, asset);
 
-      return res.json({ success: true, [category]: matchingAssets });
+      return res.json({
+        success: true,
+        [asset.category]: [asset],
+        [category]: matchingAssets
+      });
     } catch (e) {
       console.error('match failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
