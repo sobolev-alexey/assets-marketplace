@@ -21,7 +21,7 @@ exports.getSk = async (assetId: string) => {
   // Get API key
   const doc = await admin
     .firestore()
-    .collection('secrets')
+    .collection('mam')
     .doc(assetId)
     .get();
   if (doc.exists) return doc.data();
@@ -33,14 +33,11 @@ exports.getMAMChannelDetails = async (assetId: string) => {
   // Get MAM channel details
   const doc = await admin
     .firestore()
-    .collection('secrets')
+    .collection('mam')
     .doc(assetId)
     .get();
 
-  if (doc.exists) {
-    const result = doc.data();
-    return result.channelDetails;
-  }
+  if (doc.exists) return doc.data();
   console.log('getMAMChannelDetails failed.', assetId, doc);
   return null;
 };
@@ -212,7 +209,7 @@ exports.setAsset = async (collection: string, asset: any, channelDetails: any) =
   // Save users API key and Seed
   await admin
     .firestore()
-    .collection('secrets')
+    .collection('mam')
     .doc(asset.assetId)
     .set({ ...channelDetails });
 
@@ -238,9 +235,9 @@ exports.setAsset = async (collection: string, asset: any, channelDetails: any) =
 exports.setDeal = async (dealId: string, payload: any, channelDetails: any) => {
   await admin
     .firestore()
-    .collection('secrets')
+    .collection('mam')
     .doc(dealId)
-    .set({ channelDetails: { ...channelDetails }});
+    .set({ ...channelDetails });
 
   // Add public asset record
   await admin
@@ -311,7 +308,7 @@ exports.deleteAsset = async (collection: string, assetId: string, userId: string
 
   await admin
     .firestore()
-    .collection('secrets')
+    .collection('mam')
     .doc(assetId)
     .delete();
 
@@ -496,7 +493,6 @@ exports.getEmailSettings = async () => {
 };
 
 exports.getMatchingAssets = async (collection: string, asset: any) => {
-  console.log('getMatchingAssets 1', asset);
   // Get matching assets
   // https://firebase.google.com/docs/firestore/query-data/queries
   const querySnapshot = await admin.firestore()
@@ -510,19 +506,13 @@ exports.getMatchingAssets = async (collection: string, asset: any) => {
   if (querySnapshot.size === 0) return [];
 
   // Return data
-  return querySnapshot.docs.map(doc => {
-    if (doc.exists) {
-      const data = doc.data();
-      return data.owner !== asset.owner ? data : null;
-    }
-    return null;
-  });
+  return querySnapshot.docs.map(doc => doc.data());
 };
 
 exports.updateChannelDetails = async (assetId: string, channelDetails: any) => {
   await admin
     .firestore()
-    .collection('secrets')
+    .collection('mam')
     .doc(assetId)
-    .set({ channelDetails: { ...channelDetails }}, { merge: true });
+    .set({ ...channelDetails }, { merge: true });
 };

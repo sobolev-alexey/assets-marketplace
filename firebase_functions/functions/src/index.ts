@@ -92,9 +92,15 @@ exports.newAsset = functions.https.onRequest((req, res) => {
 
       const channelDetails = await initializeChannel(packet.asset, secretKey);
       console.log('newAsset channelDetails', packet.category, packet.asset.assetId, channelDetails); 
+      await setAsset(packet.category, packet.asset, channelDetails);
+
+      const matchingAssets = await getMatchingAssets(packet.category, packet.asset);
+      console.log('newAsset matchingAssets', packet.asset.assetId, matchingAssets);
 
       return res.json({
-        success: await setAsset(packet.category, packet.asset, channelDetails),
+        success: true,
+        assetId: packet.asset.assetId,
+        matchingAssets
       });
     } catch (e) {
       console.error('newAsset failed. Error: ', e.message);
@@ -149,37 +155,9 @@ exports.assets = functions.https.onRequest((req, res) => {
       if (params && params.userId && params.apiKey) {
         const { uid } = await getKey(<String>params.apiKey);
         if (params.userId === uid) {
-          const userOffers = await getUserAssets('offers', params.userId);
-          const userRequests = await getUserAssets('requests', params.userId);
-          
-          const processPromise = async asset => {
-            return await new Promise(async (resolve, reject) => {
-              try {
-                const keyObj = await getSk(asset.assetId);
-                if (keyObj.sk) {
-                  resolve(keyObj.sk);
-                }
-                reject({ error: 'Error' });
-              } catch (error) {
-                reject({ error });
-              }
-            });
-          }
-
-          const offerPromises = await userOffers.map(async asset => {
-            const promise = await processPromise(asset);
-            return { ...asset, sk: promise };
-          });
-
-          const requestPromises = await userRequests.map(async asset => {
-            const promise = await processPromise(asset);
-            return { ...asset, sk: promise };
-          });
-
-          return res.json({
-            offers: await Promise.all(offerPromises),
-            requests: await Promise.all(requestPromises),
-          });
+          const offers = await getUserAssets('offers', params.userId);
+          const requests = await getUserAssets('requests', params.userId);
+          return res.json({ offers, requests });
         }
         return res.status(403).json({ error: 'Access denied' });
       }
