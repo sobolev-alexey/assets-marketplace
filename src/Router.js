@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { HashRouter, Switch, Route } from 'react-router-dom';
 import { CookiesProvider } from 'react-cookie';
 import HomePage from './pages/home';
-import DemoPage from './pages/demo';
+import MarketplacePage from './pages/marketplace';
 import AssetPage from './pages/asset';
 import DashboardPage from './pages/dashboard';
 import DealPage from './pages/deal';
@@ -22,7 +22,7 @@ class Router extends Component {
         <HashRouter>
           <Switch>
             <Route path="/" component={HomePage} exact />
-            <Route path="/demo" component={DemoPage} />
+            <Route path="/marketplace" component={MarketplacePage} />
             <Route path="/dashboard" component={DashboardPage} />
             <Route path="/deal/:assetId" component={DealPage} />
             <Route path="/asset/:assetId" component={AssetPage} />

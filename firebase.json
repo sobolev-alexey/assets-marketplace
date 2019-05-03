@@ -50,8 +50,8 @@
         "type": 301
       },
       {
-        "source": "/demo",
-        "destination": "/#/demo",
+        "source": "/marketplace",
+        "destination": "/#/marketplace",
         "type": 301
       },
       {

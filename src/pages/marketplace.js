@@ -2,7 +2,7 @@ import React from 'react';
 import ReactGA from 'react-ga';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
-import BurgerMenu from '../components//header/burger';
+import BurgerMenu from '../components/header/burger';
 import MiniHeader from '../components/header/mini-header';
 import AssetList from '../components/asset-list';
 import Footer from '../components/footer';
@@ -16,14 +16,14 @@ const Header = ({ onAnchorClick }) => {
   return (
     <Container>
       <Shapes>
-        <Shape1 src="/static/shapes/demo/shape-5.svg" alt="Background shape" />
-        <Tagline>Try the Data Marketplace</Tagline>
+        <Shape1 src="/static/shapes/marketplace/shape-5.svg" alt="Background shape" />
+        <Tagline>Assets Marketplace</Tagline>
       </Shapes>
       <Info>
-        <Link to={'/demo/#offers'} onClick={() => onAnchorClick('offers')}>
+        <Link to={'/marketplace/#offers'} onClick={() => onAnchorClick('offers')}>
           <SubLink>{'Offers'.toUpperCase()}</SubLink>
         </Link>
-        <Link to={'/demo/#requests'} onClick={() => onAnchorClick('requests')}>
+        <Link to={'/marketplace/#requests'} onClick={() => onAnchorClick('requests')}>
           <SubLink>{'Requests'.toUpperCase()}</SubLink>
         </Link>
       </Info>
@@ -46,7 +46,7 @@ export default class extends React.Component {
   }
 
   async componentDidMount() {
-    ReactGA.pageview('/demo');
+    ReactGA.pageview('/marketplace');
     const assets = await allAssets();
     this.setState({ assets, loading: false });
   }
@@ -128,7 +128,7 @@ const Container = styled.div`
   }
 
   @media (max-width: 660px) {
-    background-image: url(/static/shapes/demo/shape-header-hero.svg);
+    background-image: url(/static/shapes/marketplace/shape-header-hero.svg);
     background-repeat: no-repeat;
     background-size: 448px 209px;
     padding: 48px 0;
@@ -249,7 +249,7 @@ const Tagline = styled.h2`
 const Shapes = styled.div`
   width: 60%;
 
-  background-image: url(/static/shapes/demo/shape-header-hero-text.svg);
+  background-image: url(/static/shapes/marketplace/shape-header-hero-text.svg);
   background-repeat: no-repeat;
   background-size: 439px 269px;
   background-position-x: 187px;

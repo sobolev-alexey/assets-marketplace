@@ -6,7 +6,7 @@ import Wallet from '../wallet';
 
 const AssetNav = ({ asset }) => (
   <Main>
-    <Back to={'/demo'}>
+    <Back to={'/marketplace'}>
       <img src="/static/icons/icon-arrow-back-dark.svg" alt="Icon arrow" />
     </Back>
 

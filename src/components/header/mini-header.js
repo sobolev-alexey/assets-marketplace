@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const links = [
   { link: '', text: 'Home' },
-  { link: 'demo', text: 'Marketplace' },
+  { link: 'marketplace', text: 'Marketplace' },
   { link: 'dashboard', text: 'Dashboard' }
 ];
 
