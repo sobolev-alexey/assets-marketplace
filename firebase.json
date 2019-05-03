@@ -65,6 +65,16 @@
         "type": 301
       },
       {
+        "source": "/deal/:assetId",
+        "destination": "/#/deal/:assetId",
+        "type": 301
+      },
+      {
+        "source": "/history/:assetId",
+        "destination": "/#/history/:assetId",
+        "type": 301
+      },
+      {
         "source": "/faucet",
         "destination": "/#/faucet",
         "type": 301
