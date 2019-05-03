@@ -3,9 +3,17 @@ import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import Loading from '../loading';
 
-export default ({ notification, show, error = null, purchasePrice = null, callback = null }) => {
+export default ({
+  notification, 
+  show, 
+  error = null, 
+  purchasePrice = null, 
+  callback = null, 
+  category = null,
+  assetId = null
+}) => {
   const backButton = (
-    <Link to={'/demo'}>
+    <Link to={'/dashboard'}>
       <Button type="button" className="btn btn-accent txt-bold modal-trigger">
         Go back
       </Button>
@@ -17,6 +25,20 @@ export default ({ notification, show, error = null, purchasePrice = null, callba
       Purchase Access for {purchasePrice} IOTA
     </Button>
   );
+
+  const closeButton = (
+    <Button type="button" className="btn btn-accent txt-bold modal-trigger" onClick={callback}>
+      Close
+    </Button>
+  );
+
+  const seeMatchButton = (
+    <Link to={`/deal/${assetId}`}>
+    <Button type="button" className="btn btn-accent txt-bold modal-trigger">
+      See Match!
+    </Button>
+  </Link>
+  )
 
   const icon = (
     <img
@@ -33,13 +55,13 @@ export default ({ notification, show, error = null, purchasePrice = null, callba
       loading: true
     },
     purchasing: {
-      heading: 'Purchasing Stream',
+      heading: 'Purchasing Asset',
       body: 'You are doing Proof of Work to attach this purchase to the network.',
       loading: true
     },
     fetching: {
       heading: 'Success!',
-      body: 'Your purchase was successful. Fetching MAM stream and decoding data.',
+      body: 'Your purchase was successful',
       loading: true
     },
     noAsset: {
@@ -58,6 +80,11 @@ export default ({ notification, show, error = null, purchasePrice = null, callba
       heading: 'Stream Read Failure',
       body: 'No data found',
     },
+    assetMatchFound: {
+      heading: 'Match Found!',
+      body: `We found a matching asset for the ${category} you just created`,
+      button: seeMatchButton,
+    },
     dataReadingFailure: {
       heading: 'Data reading error',
       body: 'Asset data can not be fully retrieved.',
@@ -67,14 +94,24 @@ export default ({ notification, show, error = null, purchasePrice = null, callba
       heading: 'Purchase Failed',
     },
     purchase: {
-      heading: 'Purchase asset stream',
-      body: `You can purchase access to this asset's data stream by clicking below.`,
+      heading: 'Purchase asset',
+      body: `You can purchase this asset by clicking below.`,
       button: purchaseButton,
       icon
     },
+    dealMade: {
+      heading: 'Purchase completed',
+      body: 'Asset was successfully purchased.',
+      button: closeButton
+    },
+    generalError: {
+      heading: 'Error',
+      body: 'Error',
+      button: closeButton
+    }
   };
 
-  const content = notifications[notification];
+  const content = notification ? notifications[notification] : {};
 
   return (
     <Modal className="access-modal-wrapper" show={show}>

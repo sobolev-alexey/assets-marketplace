@@ -13,6 +13,7 @@ import AssetList from '../components/asset-list';
 import Cookie from '../components/cookie';
 import Loading from '../components/loading';
 import AddCard from '../components/add-asset';
+import Modal from '../components/modal';
 
 export const UserContext = React.createContext({});
 
@@ -27,7 +28,11 @@ class Dashboard extends React.Component {
       user: {},
       loading: false,
       displayNewOfferForm: false,
-      displayNewRequestForm: false
+      displayNewRequestForm: false,
+      showModal: false,
+      notification: null,
+      error: false,
+      assetDetails: {}
     };
 
     this.checkLogin = this.checkLogin.bind(this);
@@ -43,6 +48,7 @@ class Dashboard extends React.Component {
     this.hideNewOfferForm = this.hideNewOfferForm.bind(this);
     this.showNewRequestForm = this.showNewRequestForm.bind(this);
     this.hideNewRequestForm = this.hideNewRequestForm.bind(this);
+    this.notificationCallback = this.notificationCallback.bind(this);
   }
 
   async componentDidMount() {
@@ -133,8 +139,31 @@ class Dashboard extends React.Component {
           label: `Asset Name ${asset.assetName}`
         });
         this.findAssets();
-        this.setState({ displayNewOfferForm: false, displayNewRequestForm: false });
+        this.setState({ 
+          displayNewOfferForm: false, 
+          displayNewRequestForm: false
+        });
+
+        if (data.matchingAssets && data.matchingAssets.length > 0) {
+          this.setState({ 
+            showModal: true, 
+            error: false,
+            notification: 'assetMatchFound',
+            assetDetails: {
+              category, assetId: data.assetId
+            }
+          });
+        }
+      } else if (data.error) {
+        this.setState({
+          showModal: true, 
+          error: data.error, 
+          notification: 'generalError', 
+          loading: false,
+          assetDetails: {}
+        });
       }
+      
       resolve(data);
     });
   };
@@ -170,6 +199,9 @@ class Dashboard extends React.Component {
       });
     } else {
       this.setState({
+        showModal: true, 
+        error: data.error, 
+        notification: 'generalError',
         loading: false,
       });
     }
@@ -205,6 +237,15 @@ class Dashboard extends React.Component {
     this.setState({ displayNewRequestForm: false });
   }
 
+  notificationCallback() {
+    this.setState({       
+      showModal: false,
+      notification: null,
+      error: false,
+      assetDetails: {},
+    });
+  }
+
   render() {
     const { assets, user, loading, displayNewOfferForm, displayNewRequestForm } = this.state;
     const { userData } = this.props;
@@ -214,14 +255,9 @@ class Dashboard extends React.Component {
         <Cookie />
         <AssetNav user={user} logout={this.logout} />
         <Data>
-          {
-            assets.offers && !isEmpty(assets.offers) && 
-            assets.requests && !isEmpty(assets.requests) ? (
-              <UserContext.Provider value={{ userId: user.uid }}>
-                <Sidebar assets={assets} user={user} userData={userData} />
-              </UserContext.Provider>
-            ) : null
-          }
+          <UserContext.Provider value={{ userId: user.uid }}>
+            <Sidebar assets={assets} user={user} userData={userData} />
+          </UserContext.Provider>
           {
             loading ? (
               <LoadingBox>
@@ -299,6 +335,14 @@ class Dashboard extends React.Component {
           auth={this.auth}
           show={isEmpty(user)}
           loading={loading}
+        />
+        <Modal
+          show={this.state.showModal || !isEmpty(this.state.error)}
+          notification={this.state.notification}
+          error={this.state.error}
+          category={this.state.assetDetails.category}
+          assetId={this.state.assetDetails.assetId}
+          callback={this.state.notification === 'generalError' ? this.notificationCallback : null}
         />
       </Main>
     );

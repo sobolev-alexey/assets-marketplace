@@ -8,6 +8,7 @@ import { loadUser, logout } from '../store/user/actions';
 import api from '../utils/api';
 import AssetNav from '../components/asset-nav';
 import LoginModal from '../components/login-modal';
+import Modal from '../components/modal';
 import Sidebar from '../components/user-sidebar';
 import AssetList from '../components/asset-list/deal-page';
 import Cookie from '../components/cookie';
@@ -36,6 +37,7 @@ class Deal extends React.Component {
     this.logout = this.logout.bind(this);
     this.onSelect = this.onSelect.bind(this);
     this.makeDeal = this.makeDeal.bind(this);
+    this.notificationCallback = this.notificationCallback.bind(this);
   }
 
   async componentWillReceiveProps(nextProps) {
@@ -130,6 +132,8 @@ class Deal extends React.Component {
 
   makeDeal() {
     const { selectedOffer, selectedRequest } = this.state;
+    this.setState({ loading: true });
+
     if (selectedOffer && selectedRequest) {
       return new Promise(async (resolve) => {
         const packet = {
@@ -146,11 +150,33 @@ class Deal extends React.Component {
             category: 'Deal',
             action: 'Deal',
           });
-          console.log('makeDeal', data);
+
+          this.setState({ 
+            showModal: true, 
+            error: false,
+            notification: 'dealMade',
+            loading: false
+          });
+        } else if (data.error) {
+          this.setState({
+            showModal: true, 
+            error: data.error, 
+            notification: 'generalError', 
+            loading: false,
+          });
         }
+
         resolve(data);
       });
     }
+  }
+
+  notificationCallback() {
+    this.setState({       
+      showModal: false,
+      notification: null,
+      error: false,
+    });
   }
 
   render() {
@@ -212,6 +238,12 @@ class Deal extends React.Component {
           auth={this.auth}
           show={isEmpty(user)}
           loading={loading}
+        />
+        <Modal
+          show={this.state.showModal || !isEmpty(this.state.error)}
+          notification={this.state.notification}
+          error={this.state.error}
+          callback={this.notificationCallback}
         />
       </Main>
     );
