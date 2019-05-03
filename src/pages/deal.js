@@ -73,9 +73,6 @@ class Deal extends React.Component {
       .auth()
       .signInWithPopup(provider)
       .then(result => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        // const token = result.credential.accessToken;
-        // The signed-in user info.
         const user = result.user;
         this.setState({ user });
         this.getUser();
@@ -193,7 +190,7 @@ class Deal extends React.Component {
                 }
                 {
                   selectedOffer && selectedRequest ? (
-                    <button onClick={this.makeDeal}>Deal</button>
+                    <Button onClick={this.makeDeal}>Deal</Button>
                   ) : null
                 }
                 {
@@ -265,4 +262,23 @@ const Data = styled.section`
 
 const LoadingBox = styled.div`
   margin: auto;
+`;
+
+const Button = styled.button`
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font: 15px 'Nunito Sans', sans-serif;
+  letter-spacing: 0.47px;
+  padding: 20px 38px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.38px;
+  padding: 12px 21px;
+  margin: 15px 0 0;
+  box-shadow: 0 10px 20px 0 #0a2056;
+  font-weight: 700;
+  background-color: #009fff;
 `;

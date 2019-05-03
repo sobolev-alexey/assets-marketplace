@@ -115,10 +115,6 @@ class Dashboard extends React.Component {
 
   create(asset, category) {
     const { userData } = this.props;
-    // Assign to user
-    asset.owner = this.state.user.uid;
-    // Deactivate the Asset
-    // asset.inactive = true;
 
     return new Promise(async (resolve) => {
       const packet = {
@@ -236,12 +232,12 @@ class Dashboard extends React.Component {
                 {
                   assets.offers && !isEmpty(assets.offers) ? (
                     <React.Fragment>
-                      <Offers>
+                      <ActiveAssets>
                         { 
                           !displayNewOfferForm && 
-                          <AddOfferButton onClick={this.showNewOfferForm}>
+                          <Button onClick={this.showNewOfferForm}>
                             +Create Offer
-                          </AddOfferButton>
+                          </Button>
                         }
                         { 
                           displayNewOfferForm && 
@@ -255,25 +251,24 @@ class Dashboard extends React.Component {
                           assets={assets.offers.filter(asset => asset.active)}
                           delete={this.deleteOffer}
                         />
-                      </Offers>
-                      <Offers>
+                      </ActiveAssets>
+                      <InactiveAssets>
                         <AssetList
                           assets={assets.offers.filter(asset => !asset.active)}
-                          delete={this.deleteOffer}
                         />
-                      </Offers>
+                      </InactiveAssets>
                     </React.Fragment>
                   ) : null
                 }
                 {
                   assets.requests && !isEmpty(assets.requests) ? (
                     <React.Fragment>
-                      <Requests>
+                      <ActiveAssets>
                         { 
                           !displayNewRequestForm && 
-                          <AddRequestButton onClick={this.showNewRequestForm}>
+                          <Button onClick={this.showNewRequestForm}>
                             +Create Request
-                          </AddRequestButton> 
+                          </Button> 
                         }
                         { 
                           displayNewRequestForm && 
@@ -287,13 +282,12 @@ class Dashboard extends React.Component {
                           assets={assets.requests.filter(asset => asset.active)}
                           delete={this.deleteRequest}
                         />
-                      </Requests>
-                      <Requests>
+                      </ActiveAssets>
+                      <InactiveAssets>
                         <AssetList
                           assets={assets.requests.filter(asset => !asset.active)}
-                          delete={this.deleteRequest}
                         />
-                      </Requests>
+                      </InactiveAssets>
                     </React.Fragment>
                   ) : null
                 }
@@ -335,12 +329,14 @@ const AssetsWrapper = styled.div`
   flex-direction: column;
 `
 
-const Offers = styled.div`
+const ActiveAssets = styled.div`
 
 `
 
-const Requests = styled.div`
-
+const InactiveAssets = styled.div`
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
 `
 
 const Data = styled.section`
@@ -357,10 +353,21 @@ const LoadingBox = styled.div`
   margin: auto;
 `;
 
-const AddOfferButton = styled.button`
-
-`
-
-const AddRequestButton = styled.button`
-
-`
+const Button = styled.button`
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font: 15px 'Nunito Sans', sans-serif;
+  letter-spacing: 0.47px;
+  padding: 20px 38px;
+  border-radius: 100px;
+  text-transform: uppercase;
+  color: #fff;
+  font-size: 12px;
+  letter-spacing: 0.38px;
+  padding: 12px 21px;
+  margin: 15px 0 0;
+  box-shadow: 0 10px 20px 0 #0a2056;
+  font-weight: 700;
+  background-color: #009fff;
+`;

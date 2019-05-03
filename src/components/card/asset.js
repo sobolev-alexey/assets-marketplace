@@ -1,20 +1,9 @@
 import React from 'react';
-// import ReactGA from 'react-ga';
 import styled from 'styled-components';
 import format from 'date-fns/format';
-// import Clipboard from 'react-clipboard.js';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-// import { getZip } from '../../utils/zip';
 import Card from './index.js';
-
-// const trackDownload = ({ assetId }) => {
-//   ReactGA.event({
-//     category: 'Download script',
-//     action: 'Download script',
-//     label: `Asset ID ${assetId}`
-//   });
-// }
 
 const Heading = ({ assetId, assetName, category }, func) => (
   <Full>
@@ -32,28 +21,11 @@ const Heading = ({ assetId, assetName, category }, func) => (
   </Full>
 );
 
-// const Footer = (asset, provider) => (
-//   <div onClick={() => trackDownload(asset) || getZip(asset, provider)}>
-//     <FootRow>
-//       <FooterButton>Download Publish Script</FooterButton>
-//     </FootRow>
-//   </div>
-// );
-
 const Asset = props => {
-  // const [message, setMessage] = useState('');
   const { asset } = props;
 
-  // function alert(message) {
-  //   setMessage(message);
-  //   setTimeout(() => setMessage(''), 1500)
-  // };
-
   return (
-    <Card
-      header={Heading(asset, props.delete)}
-      // footer={Footer(asset, provider)}
-    >
+    <Card header={Heading(asset, props.delete)}>
       <Row>
         <RowHalf>
           <RowDesc>Asset Type:</RowDesc>
@@ -88,38 +60,20 @@ const Asset = props => {
           <Data>{asset.price}</Data>
         </RowHalf>
       </Row>
-      <RowFull>
-        <RowDesc>Asset Description:</RowDesc>
-        <Data>
-          {
-            asset.assetDescription.length > 120 
-            ? `${asset.assetDescription.substr(0, 120)}...` 
-            : asset.assetDescription
-          }
-        </Data>
-      </RowFull>
-      {/* <RowHalf>
-        <RowDesc>Asset ID:</RowDesc>
-        <Clipboard
-          style={{ background: 'none', display: 'block' }}
-          data-clipboard-text={asset.assetId}
-          onSuccess={() => alert('Successfully Copied')}
-        >
-          <CopyBox>{asset.assetId && `${asset.assetId.substr(0, 15)}...`}</CopyBox>
-        </Clipboard>
-      </RowHalf>
-      <RowHalf>
-        <RowIcon src="/static/icons/icon-key.svg" alt="" />
-        <RowDesc>Asset secret key:</RowDesc>
-        <Clipboard
-          style={{ background: 'none', display: 'block' }}
-          data-clipboard-text={asset.sk}
-          onSuccess={() => alert('Successfully Copied')}
-        >
-          <CopyBox>{asset.sk && `${asset.sk.substr(0, 15)}...`}</CopyBox>
-        </Clipboard>
-      </RowHalf>
-      <Alert message={message}>{message}</Alert> */}
+      {
+        asset.assetDescription ? (
+          <RowFull>
+            <RowDesc>Asset Description:</RowDesc>
+            <Data>
+              {
+                asset.assetDescription.length > 120 
+                ? `${asset.assetDescription.substr(0, 120)}...` 
+                : asset.assetDescription
+              }
+            </Data>
+          </RowFull>
+        ) : null
+      }
     </Card>
   );
 };
@@ -174,32 +128,10 @@ const Data = styled.p`
   margin-top: 4px;
 `;
 
-// const CopyBox = styled(Data)`
-//   cursor: pointer;
-//   transition: all 0.3s ease;
-//   &:hover {
-//     opacity: 0.6;
-//   }
-// `;
-
 const RowDesc = styled.span`
-  ${'' /* margin-left: 5px; */}
   font: 12px/16px 'Nunito Sans', sans-serif;
   color: #808b92;
 `;
-
-// const RowIcon = styled.img`
-//   position: relative;
-//   top: 1px;
-// `;
-
-// const FootRow = styled.div`
-//   display: flex;
-//   justify-content: space-between;
-//   &:not(:last-of-type) {
-//     margin-bottom: 5px;
-//   }
-// `;
 
 const AssetCategory = styled.span`
   font: 16px 'Nunito Sans', sans-serif;
@@ -208,13 +140,6 @@ const AssetCategory = styled.span`
   top: -8px;
   color: #808b92;
 `;
-
-// const AssetType = styled.span`
-//   font: 12px/16px 'Nunito Sans', sans-serif;
-//   position: absolute;
-//   top: -8px;
-//   color: #808b92;
-// `;
 
 const AssetId = styled.span`
   font-size: 24px;
@@ -246,23 +171,3 @@ const IconButton = styled.img`
     opacity: 0.4;
   }
 `;
-
-// const FooterButton = styled.button`
-//   color: ${props => (props.grey ? `rgba(41, 41, 41, 0.4)` : `rgba(41, 41, 41, 0.9)`)};
-//   padding: 5px 15px;
-//   margin-right: -15px;
-//   font-size: 90%;
-//   background: transparent;
-//   &:first-of-type {
-//     margin-left: -15px;
-//     margin-right: 0;
-//   }
-// `;
-
-// const Alert = styled.span`
-//   font-size: 16px;
-//   line-height: 32px;
-//   color: #595959ff;
-//   opacity: ${props => (props.message ? 1 : 0)};
-//   transition: all 0.5s ease;
-// `;

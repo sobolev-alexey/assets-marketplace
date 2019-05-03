@@ -77,7 +77,7 @@ const AssetID = styled.span`
 `;
 
 const RightHeader = styled.div`
-  margin: 5px 30px 0 30px;
+  margin: 0 30px;
   display: block;
   width: 150px;
   text-align: right;
