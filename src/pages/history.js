@@ -86,8 +86,10 @@ class History extends React.Component {
   };
 
   async getHistory(assetId) {
+    const { userData } = this.props;
     this.setState({ loading: true });
-    const transactions = await api.get('history', { assetId });
+    const transactions = await api.post('history', { assetId, apiKey: userData.apiKey });
+    console.log('history', transactions);
     return this.setState({ transactions, loading: false });
   };
 
