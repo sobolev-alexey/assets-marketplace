@@ -3,7 +3,7 @@ const axios = require('axios');
 const { composeAPI, createPrepareTransfers, generateAddress } = require('@iota/core');
 const { asTransactionObject } = require('@iota/transaction-converter');
 const Mam = require('@iota/mam');
-const { asciiToTrytes } = require('@iota/converter');
+const { asciiToTrytes, trytesToAscii } = require('@iota/converter');
 const {
   getSettings,
   updateWalletAddressKeyIndex,
@@ -231,7 +231,7 @@ const initializeChannel = async (packet, secretKey) => {
   };
 };
 
-const appendToChannel = async(assetId, channelPayload) => {
+const appendToChannel = async (assetId, channelPayload) => {
   try {
     const { provider } = await getSettings();
     const { secretKey, next, start, seed, root } = await getMAMChannelDetails(assetId);
@@ -273,6 +273,21 @@ const appendToChannel = async(assetId, channelPayload) => {
   }
 }
 
+const fetchChannel = async ({ root, secretKey }) => {
+  try {
+    const { provider } = await getSettings();
+    Mam.init(provider);
+
+    // Output syncronously once fetch is completed
+    const response = await Mam.fetch(root, 'restricted', secretKey);
+    const result = response.messages.map(message => JSON.parse(trytesToAscii(message)));
+    return result;
+  } catch (error) {
+    console.log('MAM fetch error', error);
+    return null;
+  }
+}
+
 module.exports = {
   generateUUID,
   generateNewAddress,
@@ -285,4 +300,5 @@ module.exports = {
   checkRecaptcha,
   initializeChannel,
   appendToChannel,
+  fetchChannel,
 }

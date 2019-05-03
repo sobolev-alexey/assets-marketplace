@@ -28,6 +28,8 @@ const {
   assignDeal,
   deactivateAsset,
   updateChannelDetails,
+  getDealsForAsset,
+  getChannelDetailsForAsset,
 } = require('./firebase');
 const {
   generateUUID,
@@ -40,6 +42,7 @@ const {
   purchaseData,
   initializeChannel,
   appendToChannel,
+  fetchChannel,
 } = require('./helpers');
 
 // Take in data from asset
@@ -548,6 +551,47 @@ exports.match = functions.https.onRequest((req, res) => {
       });
     } catch (e) {
       console.error('match failed. Error: ', e.message);
+      return res.status(403).json({ error: e.message });
+    }
+  });
+});
+
+// Query Asset Transaction History
+exports.history = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const packet = req.body;
+      if (!packet || !packet.apiKey || !packet.assetId) {
+        console.error('history failed. Packet: ', packet);
+        return res.status(400).json({ error: 'Malformed Request' });
+      }
+
+      let asset = await getAsset('offers', packet.assetId, true);
+      if (!asset) {
+        asset = await getAsset('requests', packet.assetId, true);
+        if (!asset) {
+          return res.status(403).json({ error: 'Asset not found' });
+        }
+      }
+
+      const user = await getKey(<String>packet.apiKey);
+      if (user.uid !== asset.owner) {
+        return res.status(403).json({ error: 'Current user is not the asset owner' });
+      }
+
+      const channelDetails = await getChannelDetailsForAsset(packet.assetId);
+      console.log('channelDetails', channelDetails, packet.assetId);
+
+      const deals = await fetchChannel(channelDetails);
+      console.log('fetchChannel', deals);
+
+      return res.json({
+        success: true,
+        channelDetails,
+        deals
+      });
+    } catch (e) {
+      console.error('history failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
     }
   });

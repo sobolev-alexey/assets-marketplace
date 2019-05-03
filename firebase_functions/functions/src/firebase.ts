@@ -516,3 +516,36 @@ exports.updateChannelDetails = async (assetId: string, channelDetails: any) => {
     .doc(assetId)
     .set({ ...channelDetails }, { merge: true });
 };
+
+exports.getDealsForAsset = async (asset: any) => {
+  const queryBuilder = admin.firestore().collection('deals');
+  let query
+
+  if (asset.category === 'offers') {
+    query = queryBuilder.where('offerId', '==', asset.assetId);
+  } else if (asset.category === 'requests') {
+    query = queryBuilder.where('requestId', '==', asset.assetId);
+  }
+  
+  const querySnapshot = await query.get();
+
+  if (querySnapshot.size === 0) return [];
+
+  // Return data
+  return querySnapshot.docs.map(doc => doc.data());
+};
+
+exports.getChannelDetailsForAsset = async (assetId: string) => {
+  // Get User's wallet
+  const doc = await admin
+    .firestore()
+    .collection('mam')
+    .doc(assetId)
+    .get();
+
+  if (doc.exists) {
+    return doc.data();
+  }
+  console.log('getChannelDetailsForAsset failed.', assetId);
+  throw Error(`The channel doesn't exist.`);
+};
