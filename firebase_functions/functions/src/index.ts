@@ -78,24 +78,23 @@ exports.newAsset = functions.https.onRequest((req, res) => {
       console.error('newAsset failed. Packet: ', packet);
       return res.status(400).json({ error: 'Ensure all fields are included' });
     }
-    // Modify object to include
-    packet.asset.assetId = generateUUID();
 
     try {
       const invalid = sanatiseObject(packet.asset);
-      const secretKey = generateSeed(81);
       if (invalid) throw Error(invalid);
 
+      const secretKey = generateSeed(81);
       const { uid } = await getKey(<String>packet.apiKey);
-      const user = await getUser(uid, true);
-      const seed = user.wallet.seed;
-      const address = user.wallet.address;
+
+      // Modify object to include
+      packet.asset.assetId = generateUUID();
+      packet.asset.owner = uid;
 
       const channelDetails = await initializeChannel(packet.asset, secretKey);
-      console.log('channelDetails', packet.category, packet.asset.assetId, channelDetails); 
+      console.log('newAsset channelDetails', packet.category, packet.asset.assetId, channelDetails); 
 
       return res.json({
-        success: await setAsset(packet.category, packet.asset, secretKey, address, seed, channelDetails),
+        success: await setAsset(packet.category, packet.asset, channelDetails),
       });
     } catch (e) {
       console.error('newAsset failed. Error: ', e.message);
@@ -390,58 +389,33 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
       return res.status(400).json({ error: 'Malformed Request' });
     }
 
+    const debug = packet.debug === true;
+
     try {
-/*
-      1. Get offer from ID
-      2. Get request from ID
-      
-      3. Get offer owner from offer
-      4. Get request offer from request
-
-      5. Get user from API key
-      6. check user is one of the owners
-
-      7. Get wallet from offer owner
-      8. Get wallet from request owner
-
-      9. Get lowest price between offer and request
-      10. Check wallet balance before purchasing
-
-      11. Transfer tokens from request owner to offer owner
-      12. Update user wallet balance
-      13. Update recipient (request/offer owner) wallet balance
-
-      14. Create new deal MAM channel
-      15. Add entry to the "deals" table, including MAM
-
-      16. Add new event to the offer MAM channel
-      17. Add new event to the request MAM channel
-
-      18. Set offer inactive
-      19. Set request inactive
-
-      20. Add deal to sellers deals list 
-      21. Add deal to purchasers deals list 
-*/
+debug && console.log(100, packet.apiKey, packet.offerId, packet.requestId);
       // 1. Get offer from ID
       const offeredAsset = await getAsset('offers', packet.offerId, true);
       // 2. Get request from ID
       const requestedAsset = await getAsset('requests', packet.requestId, true);
       
+debug && console.log(122, offeredAsset, requestedAsset);      
       if (!offeredAsset || !requestedAsset) {
           return res.status(403).json({ error: 'Asset not found' });
       }
 
+debug && console.log(133, offeredAsset.owner, requestedAsset.owner); 
       // 3. Get offer owner from offer
       const offerOwner = await getUser(offeredAsset.owner, true);
 
       // 4. Get request offer from request
       const requestOwner = await getUser(requestedAsset.owner, true);
 
+debug && console.log(144, offerOwner, requestOwner); 
       // 5. Get user from API key
       const { uid } = await getKey(<String>packet.apiKey);
       const user = await getUser(uid, true);
 
+debug && console.log(155, user, uid); 
       // 6. check user is one of the owners
       if (user.apiKey !== offerOwner.apiKey && user.apiKey !== requestOwner.apiKey) {
         return res.status(403).json({ error: 'Current user is not the asset owner' });
@@ -452,6 +426,7 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
       // 8. Get wallet from request owner
       const requestOwnerWallet = requestOwner.wallet;
       
+debug && console.log(188, offerOwnerWallet, requestOwnerWallet); 
       if (!offerOwnerWallet || !offerOwnerWallet.address || !requestOwnerWallet || !requestOwnerWallet.address) {
         return res.json({ error: 'Wallet not set' });
       }
@@ -459,6 +434,7 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
       // 9. Get lowest price between offer and request
       const price = offeredAsset.price < requestedAsset.price ? offeredAsset.price : requestedAsset.price;
 
+debug && console.log(1100, price); 
       // 10. Check wallet balance before purchasing
       let newWalletBalance;
       if (requestOwnerWallet && requestOwnerWallet.balance) {
@@ -472,6 +448,7 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
         return res.json({ error: 'Wallet not set' });
       }
 
+debug && console.log(1111, newWalletBalance); 
       // 11. Transfer tokens from request owner to offer owner
       const transactions = await purchaseData(requestedAsset.owner, offerOwnerWallet.address, Number(price));
       console.log('makeDeal', requestedAsset.owner, offeredAsset.owner, transactions);
@@ -479,24 +456,28 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
       if (!transactions || transactions.length === 0) {
         return res.json({ error: 'Purchase failed. Insufficient balance or out of sync' });
       }
+debug && console.log(1112, transactions.length); 
       const hashes = transactions && transactions.map(transaction => transaction.hash);
 
       // Find TX on network and parse
       const { iotaApiVersion, provider } = await getSettings();
       const bundle = await findTx(hashes, provider, iotaApiVersion);
 
+debug && console.log(1113, bundle); 
       // Make sure TX is valid
       if (!validateBundleSignatures(bundle)) {
         console.error('makeDeal failed. Transaction is invalid for: ', bundle);
         return res.status(403).json({ error: 'Transaction is Invalid' });
       }
 
+debug && console.log(1120, 'payment completed'); 
       // 12. Update user wallet balance
       await updateBalance(requestedAsset.owner, newWalletBalance);
 
       // 13. Update recipient (request/offer owner) wallet balance
       await updateBalance(offeredAsset.owner, Number(offerOwnerWallet.balance) + Number(price));
 
+debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price)); 
       // 14. Create new deal MAM channel
       const secretKey = generateSeed(81);
       const dealTimestamp = Date.now();
@@ -507,8 +488,9 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
         dealTimestamp,
         dealTime
       }
+debug && console.log(1150, payload); 
       const channelDetails = await initializeChannel(payload, secretKey);
-      console.log('deal channelDetails', payload, secretKey, channelDetails); 
+      console.log('deal channelDetails', payload, channelDetails); 
 
       // 15. Add entry to the "deals" table, including MAM
       const dealId = generateUUID();
@@ -518,6 +500,7 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
         dealTimestamp, 
         dealTime
       }
+debug && console.log(1151, dealId, dealAssetPayload); 
       await setDeal(dealId, dealAssetPayload, channelDetails);
 
       const channelPayload = {
@@ -527,26 +510,31 @@ exports.makeDeal = functions.https.onRequest((req, res) => {
         dealTimestamp, 
         dealTime
       };
+debug && console.log(1160, channelPayload); 
       // 16. Add new event to the offer MAM channel
       const offerAppendResult = await appendToChannel(packet.offerId, channelPayload);
       await updateChannelDetails(packet.offerId, offerAppendResult);
 
+debug && console.log(1170, packet.offerId, offerAppendResult); 
       // 17. Add new event to the request MAM channel
       const requestAppendResult = await appendToChannel(packet.requestId, channelPayload);
       await updateChannelDetails(packet.requestId, requestAppendResult);
 
+debug && console.log(1180, packet.requestId, requestAppendResult); 
       // 18. Set offer inactive
       await deactivateAsset('offers', packet.offerId);
 
       // 19. Set request inactive
       await deactivateAsset('requests', packet.requestId);
 
+debug && console.log(2000, dealId); 
       // 20. Add deal to sellers deals list 
       await assignDeal(offeredAsset.owner, dealId, dealTimestamp, dealTime);
 
       // 21. Add deal to purchasers deals list 
       await assignDeal(requestedAsset.owner, dealId, dealTimestamp, dealTime);
 
+debug && console.log(2100, offeredAsset.owner, requestedAsset.owner, dealId); 
       return res.json({ success: true });
     } catch (e) {
       console.error('purchaseData failed. Error: ', e, packet);

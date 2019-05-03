@@ -208,20 +208,20 @@ exports.setUser = async (userId: string, obj: any) => {
   return true;
 };
 
-exports.setAsset = async (collection: string, asset: any, sk: string, address: string, seed: string, channelDetails: any) => {
+exports.setAsset = async (collection: string, asset: any, channelDetails: any) => {
   // Save users API key and Seed
   await admin
     .firestore()
     .collection('secrets')
     .doc(asset.assetId)
-    .set({ sk, seed, channelDetails: { ...channelDetails }});
+    .set({ ...channelDetails });
 
   // Add public asset record
   await admin
     .firestore()
     .collection(collection)
     .doc(asset.assetId)
-    .set({ ...asset, address });
+    .set({ ...asset });
 
   // Add asset to owners' assignments
   await admin
@@ -314,25 +314,6 @@ exports.deleteAsset = async (collection: string, assetId: string, userId: string
     .collection('secrets')
     .doc(assetId)
     .delete();
-
-  // Get asset data
-  const querySnapshot = await admin
-    .firestore()
-    .collection(collection)
-    .doc(assetId)
-    .collection('data')
-    .get();
-
-  querySnapshot.docs.forEach(async doc => {
-    // Delete asset data
-    await admin
-      .firestore()
-      .collection(collection)
-      .doc(assetId)
-      .collection('data')
-      .doc(doc.id)
-      .delete();
-  });
 
   await admin
     .firestore()
