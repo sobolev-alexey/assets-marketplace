@@ -188,14 +188,9 @@ class Deal extends React.Component {
         <Cookie />
         <AssetNav user={user} logout={this.logout} />
         <Data>
-          {
-            (assets.offers && !isEmpty(assets.offers)) || 
-            (assets.requests && !isEmpty(assets.requests)) ? (
-              <UserContext.Provider value={{ userId: user.uid }}>
-                <Sidebar assets={assets} user={user} userData={userData} />
-              </UserContext.Provider>
-            ) : null
-          }
+          <UserContext.Provider value={{ userId: user.uid }}>
+            <Sidebar assets={assets} user={user} userData={userData} />
+          </UserContext.Provider>
           {
             loading ? (
               <LoadingBox>

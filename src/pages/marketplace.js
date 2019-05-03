@@ -64,6 +64,9 @@ export default class extends React.Component {
   }
 
   render() {
+    const offers = this.state.assets.offers.filter(asset => asset && asset.active);
+    const requests = this.state.assets.requests.filter(asset => asset && asset.active);
+
     return (
       <Main id="main">
         <Cookie />
@@ -79,21 +82,21 @@ export default class extends React.Component {
             <React.Fragment>
               {/* <Map {...this.state} assets={this.state.assets.offers} /> */}
               {
-                this.state.assets.offers.length > 0 ? (
+                offers.length > 0 ? (
                   <AssetsWrapper id="offers">
-                    <AssetList assets={this.state.assets.offers} />
+                    <AssetList assets={offers} />
                   </AssetsWrapper>
                 ) : null
               }
               {
-                this.state.assets.requests.length > 0 ? (
+                requests.length > 0 ? (
                   <AssetsWrapper id="requests">
-                    <AssetList assets={this.state.assets.requests} />
+                    <AssetList assets={requests} />
                   </AssetsWrapper>
                 ) : null
               }
               {
-                this.state.assets.offers.length > 0 || this.state.assets.requests.length > 0 
+                offers.length > 0 || requests.length > 0 
                 ? <ScrollToTop onClick={this.onScrollToTop} /> : null
               }
             </React.Fragment>

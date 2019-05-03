@@ -268,6 +268,7 @@ class Dashboard extends React.Component {
                 {
                   assets.offers && !isEmpty(assets.offers) ? (
                     <React.Fragment>
+                      Active Offers
                       <ActiveAssets>
                         { 
                           !displayNewOfferForm && 
@@ -288,6 +289,7 @@ class Dashboard extends React.Component {
                           delete={this.deleteOffer}
                         />
                       </ActiveAssets>
+                      Inactive Offers
                       <InactiveAssets>
                         <AssetList
                           assets={assets.offers.filter(asset => !asset.active)}
@@ -299,6 +301,7 @@ class Dashboard extends React.Component {
                 {
                   assets.requests && !isEmpty(assets.requests) ? (
                     <React.Fragment>
+                      Active Requests
                       <ActiveAssets>
                         { 
                           !displayNewRequestForm && 
@@ -319,6 +322,7 @@ class Dashboard extends React.Component {
                           delete={this.deleteRequest}
                         />
                       </ActiveAssets>
+                      Inactive Requests
                       <InactiveAssets>
                         <AssetList
                           assets={assets.requests.filter(asset => !asset.active)}
