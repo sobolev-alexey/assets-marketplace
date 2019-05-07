@@ -16,6 +16,8 @@ import AddCard from '../components/add-asset';
 import Modal from '../components/modal';
 
 export const UserContext = React.createContext({});
+export const AssetContext = React.createContext({});
+export const ModifyAssetContext = React.createContext({});
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -26,13 +28,15 @@ class Dashboard extends React.Component {
         requests: []
       },
       user: {},
+      deals: [],
       loading: false,
       displayNewOfferForm: false,
       displayNewRequestForm: false,
       showModal: false,
       notification: null,
       error: false,
-      assetDetails: {}
+      assetDetails: {},
+      assetToModify: {}
     };
 
     this.checkLogin = this.checkLogin.bind(this);
@@ -40,10 +44,12 @@ class Dashboard extends React.Component {
     this.getUser = this.getUser.bind(this);
     this.findAssets = this.findAssets.bind(this);
     this.createOffer = this.createOffer.bind(this);
-    this.deleteOffer = this.deleteOffer.bind(this);
+    this.deleteAsset = this.deleteAsset.bind(this);
     this.createRequest = this.createRequest.bind(this);
-    this.deleteRequest = this.deleteRequest.bind(this);
     this.logout = this.logout.bind(this);
+    // this.modify = this.modify.bind(this);
+    this.getDeals = this.getDeals.bind(this);
+    this.showHistory = this.showHistory.bind(this);
     this.showNewOfferForm = this.showNewOfferForm.bind(this);
     this.hideNewOfferForm = this.hideNewOfferForm.bind(this);
     this.showNewRequestForm = this.showNewRequestForm.bind(this);
@@ -99,6 +105,7 @@ class Dashboard extends React.Component {
   async getUser() {
     await this.props.loadUser(this.state.user.uid);
     await this.findAssets();
+    await this.getDeals();
   };
 
   async findAssets() {
@@ -168,15 +175,7 @@ class Dashboard extends React.Component {
     });
   };
 
-  deleteOffer(assetId) {
-    return this.delete(assetId, 'offers');
-  };
-
-  deleteRequest(assetId) {
-    return this.delete(assetId, 'requests');
-  };
-
-  async delete(assetId, category) {
+  async deleteAsset(assetId, category) {
     ReactGA.event({
       category: 'Delete asset',
       action: 'Delete asset',
@@ -246,6 +245,23 @@ class Dashboard extends React.Component {
     });
   }
 
+  showHistory(assetId) {
+    this.props.history.push(`/history/${assetId}`);
+  }
+
+  async getDeals() {
+    const { userData } = this.props;
+    this.setState({ loading: true });
+    const deals = await api.get('deals', { apiKey: userData.apiKey });
+    console.log('deals', deals);
+    return this.setState({ deals, loading: false });
+  };
+
+  // modify(assetId, category) {
+  //   const asset = this.state.assets[category].find(asset => asset.assetId === assetId);
+  //   this.setState({ assetToModify: asset });
+  // }
+
   render() {
     const { assets, user, loading, displayNewOfferForm, displayNewRequestForm } = this.state;
     const { userData } = this.props;
@@ -264,74 +280,84 @@ class Dashboard extends React.Component {
                 <Loading />
               </LoadingBox>
             ) : (
-              <AssetsWrapper>
-                {
-                  assets.offers && !isEmpty(assets.offers) ? (
-                    <React.Fragment>
-                      Active Offers
-                      <ActiveAssets>
-                        { 
-                          !displayNewOfferForm && 
-                          <Button onClick={this.showNewOfferForm}>
-                            +Create Offer
-                          </Button>
-                        }
-                        { 
-                          displayNewOfferForm && 
-                          <AddCard 
-                            createAsset={this.createOffer} 
-                            cancel={this.hideNewOfferForm} 
-                            category="offers"  
-                          /> 
-                        }
-                        <AssetList
-                          assets={assets.offers.filter(asset => asset.active)}
-                          delete={this.deleteOffer}
-                        />
-                      </ActiveAssets>
-                      Inactive Offers
-                      <InactiveAssets>
-                        <AssetList
-                          assets={assets.offers.filter(asset => !asset.active)}
-                        />
-                      </InactiveAssets>
-                    </React.Fragment>
-                  ) : null
-                }
-                {
-                  assets.requests && !isEmpty(assets.requests) ? (
-                    <React.Fragment>
-                      Active Requests
-                      <ActiveAssets>
-                        { 
-                          !displayNewRequestForm && 
-                          <Button onClick={this.showNewRequestForm}>
-                            +Create Request
-                          </Button> 
-                        }
-                        { 
-                          displayNewRequestForm && 
-                          <AddCard
-                            createAsset={this.createRequest} 
-                            cancel={this.hideNewRequestForm}
-                            category="requests"
-                          /> 
-                        }
-                        <AssetList
-                          assets={assets.requests.filter(asset => asset.active)}
-                          delete={this.deleteRequest}
-                        />
-                      </ActiveAssets>
-                      Inactive Requests
-                      <InactiveAssets>
-                        <AssetList
-                          assets={assets.requests.filter(asset => !asset.active)}
-                        />
-                      </InactiveAssets>
-                    </React.Fragment>
-                  ) : null
-                }
-              </AssetsWrapper>
+              <AssetContext.Provider
+                value={{
+                  deleteAsset: this.deleteAsset, 
+                  history: this.showHistory,
+                  // modify: this.modify
+                }}
+              >
+                <ModifyAssetContext.Provider
+                  value={{ ...this.state.assetToModify }}
+                >
+                  <AssetsWrapper>
+                    { 
+                      !displayNewOfferForm && 
+                      <Button onClick={this.showNewOfferForm}>
+                        +Create Offer
+                      </Button>
+                    }
+                    { 
+                      displayNewOfferForm && 
+                      <AddCard 
+                        createAsset={this.createOffer} 
+                        cancel={this.hideNewOfferForm} 
+                        category="offers"  
+                      /> 
+                    }
+                    {
+                      assets.offers && !isEmpty(assets.offers) ? (
+                        <React.Fragment>
+                          Active Offers
+                          <ActiveAssets>
+                            <AssetList
+                              assets={assets.offers.filter(asset => asset.active)}
+                            />
+                          </ActiveAssets>
+                          Inactive Offers
+                          <InactiveAssets>
+                            <AssetList
+                              assets={assets.offers.filter(asset => !asset.active)}
+                            />
+                          </InactiveAssets>
+                        </React.Fragment>
+                      ) : null
+                    }
+                    { 
+                      !displayNewRequestForm && 
+                      <Button onClick={this.showNewRequestForm}>
+                        +Create Request
+                      </Button> 
+                    }
+                    { 
+                      displayNewRequestForm && 
+                      <AddCard
+                        createAsset={this.createRequest} 
+                        cancel={this.hideNewRequestForm}
+                        category="requests"
+                      /> 
+                    }
+                    {
+                      assets.requests && !isEmpty(assets.requests) ? (
+                        <React.Fragment>
+                          Active Requests
+                          <ActiveAssets>
+                            <AssetList
+                              assets={assets.requests.filter(asset => asset.active)}
+                            />
+                          </ActiveAssets>
+                          Inactive Requests
+                          <InactiveAssets>
+                            <AssetList
+                              assets={assets.requests.filter(asset => !asset.active)}
+                            />
+                          </InactiveAssets>
+                        </React.Fragment>
+                      ) : null
+                    }
+                  </AssetsWrapper>
+                </ModifyAssetContext.Provider>
+              </AssetContext.Provider>
             )
           }
         </Data>
@@ -382,9 +408,7 @@ const ActiveAssets = styled.div`
 `
 
 const InactiveAssets = styled.div`
-  opacity: 0.5;
-  pointer-events: none;
-  cursor: default;
+  opacity: 0.7;
 `
 
 const Data = styled.section`

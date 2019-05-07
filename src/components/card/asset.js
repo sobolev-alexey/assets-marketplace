@@ -1,31 +1,57 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import styled from 'styled-components';
 import format from 'date-fns/format';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { AssetContext } from '../../pages/dashboard';
 import Card from './index.js';
 
-const Heading = ({ assetId, assetName, category }, func) => (
-  <Full>
-    <AssetCategory>{category}</AssetCategory>
-    <Link to={`/deal/${assetId}`}>
-      <AssetId>{assetName.length > 20 ? `${assetName.substr(0, 20)}...` : assetName}</AssetId>
-    </Link>
-    {
-      func ? (
-        <Delete onClick={() => func(assetId)}>
-          <IconButton src="/static/icons/icon-delete.svg" />
-        </Delete>
-      ) : null
-    }
-  </Full>
-);
+const Heading = ({ assetId, active, assetName, category }) => {
+  const { deleteAsset } = useContext(AssetContext);
+  return (
+    <Full>
+      <AssetCategory>{category}</AssetCategory>
+      <Link to={`/deal/${assetId}`}>
+        <AssetId>{assetName.length > 20 ? `${assetName.substr(0, 20)}...` : assetName}</AssetId>
+      </Link>
+      {
+        active && deleteAsset ? (
+          <Delete onClick={() => deleteAsset(assetId, category)}>
+            <IconButton src="/static/icons/icon-delete.svg" />
+          </Delete>
+        ) : null
+      }
+    </Full>
+  );
+}
+
+const Footer = ({ assetId, active, category }) => {
+  const { history, modify } = useContext(AssetContext);
+  if (!history) return null;
+
+  return (
+    <React.Fragment>
+      <FootRow>
+        <FooterButton onClick={() => history(assetId)}>
+          History
+        </FooterButton>
+        {
+          modify && active && (
+            <FooterButton onClick={() => modify(assetId, category)}>
+              Modify
+            </FooterButton>
+          )
+        }
+      </FootRow>
+    </React.Fragment>
+  );
+}
 
 const Asset = props => {
   const { asset } = props;
 
   return (
-    <Card header={Heading(asset, props.delete)}>
+    <Card header={Heading(asset, props.delete)} footer={Footer(asset)}>
       <Row>
         <RowHalf>
           <RowDesc>Asset Type:</RowDesc>
@@ -36,16 +62,20 @@ const Asset = props => {
           <Data>{asset.company}</Data>
         </RowHalf>
       </Row>
-      <Row>
-        <RowHalf>
-          <RowDesc>Begin Time:</RowDesc>
-          <Data>{format(Number(asset.startTimestamp), 'HH:mm - DD.MM.YY')}</Data>
-        </RowHalf>
-        <RowHalf>
-          <RowDesc>End Time:</RowDesc>
-          <Data>{format(Number(asset.endTimestamp), 'HH:mm - DD.MM.YY')}</Data>
-        </RowHalf>
-      </Row>
+      {
+        asset.startTimestamp && asset.endTimestamp ? (      
+          <Row>
+            <RowHalf>
+              <RowDesc>Begin Time:</RowDesc>
+              <Data>{format(Number(asset.startTimestamp), 'HH:mm - DD.MM.YY')}</Data>
+            </RowHalf>
+            <RowHalf>
+              <RowDesc>End Time:</RowDesc>
+              <Data>{format(Number(asset.endTimestamp), 'HH:mm - DD.MM.YY')}</Data>
+            </RowHalf>
+          </Row>
+        ) : null
+      }
       <Row>
         <RowHalf>
           <RowDesc>Location</RowDesc>
@@ -169,5 +199,27 @@ const IconButton = styled.img`
   transition: all 0.3s ease;
   &:hover {
     opacity: 0.4;
+  }
+`;
+
+const FootRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  cursor: default;
+  &:not(:last-of-type) {
+    margin-bottom: 5px;
+  }
+`;
+
+const FooterButton = styled.button`
+  color: rgba(41, 41, 41, 0.9);
+  padding: 5px 15px;
+  margin-right: -15px;
+  font-size: 90%;
+  background: transparent;
+  cursor: pointer;
+  &:first-of-type {
+    margin-left: -15px;
+    margin-right: 0;
   }
 `;

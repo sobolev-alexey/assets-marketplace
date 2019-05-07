@@ -94,10 +94,13 @@ export default class extends React.Component {
       return alert('Please enter asset coordinates');
     if (!this.state.dataTypes || this.state.dataTypes.length < 1)
       return alert('You must have a valid data field');
-    if (!this.state.assetStart || !startDate || !isValid(startDate) || !isFuture(startDate))
-      return alert('Please enter a valid date/time when the offer starts');
-    if (!this.state.assetEnd || !endDate || !isValid(endDate) || compareDesc(startDate, endDate) !== 1)
-      return alert('Please enter a valid date/time when the offer ends');
+
+    if (this.props.category === 'requests') {
+      if (!this.state.assetStart || !startDate || !isValid(startDate) || !isFuture(startDate))
+        return alert('Please enter a valid date/time when the offer starts');
+      if (!this.state.assetEnd || !endDate || !isValid(endDate) || compareDesc(startDate, endDate) !== 1)
+        return alert('Please enter a valid date/time when the offer ends');
+    }  
 
     this.setState({ loading: true });
 
@@ -115,13 +118,16 @@ export default class extends React.Component {
       company: this.state.company,
       price: Number(this.state.assetPrice),
       category: this.props.category,
-      startDate: format(startDate, 'DD MMMM, YYYY H:mm a '),
-      endDate: format(endDate, 'DD MMMM, YYYY H:mm a '),
-      startTimestamp: getTime(startDate),
-      endTimestamp: getTime(endDate),
       creationDate: format(Date.now(), 'DD MMMM, YYYY H:mm a '),
       active: this.state.assetActive === 'true'
     };
+
+    if (this.props.category === 'requests') {
+      asset.startDate = format(startDate, 'DD MMMM, YYYY H:mm a ');
+      asset.endDate = format(endDate, 'DD MMMM, YYYY H:mm a ');
+      asset.startTimestamp = getTime(startDate);
+      asset.endTimestamp = getTime(endDate);
+    }
 
     const createAssetResult = await this.props.createAsset(asset);
 
@@ -216,38 +222,42 @@ export default class extends React.Component {
                       onChange={this.change}
                     />
                   </Column>
-                  <Row>
-                    <Column>
-                      <label>Start Time:</label>
-                      <DatePicker
-                        showTimeSelect
-                        todayButton="Today"
-                        placeholderText="Click to select a date"
-                        timeFormat="HH:mm"
-                        timeIntervals={15}
-                        dateFormat="MMMM d, yyyy h:mm aa"
-                        timeCaption="time"
-                        minDate={new Date()}
-                        selected={this.state.assetStart}
-                        onChange={date => this.handleDateChange(date, 'assetStart')}
-                      />
-                    </Column>
-                    <Column>
-                      <label>End Time:</label>
-                      <DatePicker
-                        showTimeSelect
-                        todayButton="Today"
-                        placeholderText="Click to select a date"
-                        timeFormat="HH:mm"
-                        timeIntervals={15}
-                        dateFormat="MMMM d, yyyy h:mm aa"
-                        timeCaption="time"
-                        minDate={new Date()}
-                        selected={this.state.assetEnd}
-                        onChange={date => this.handleDateChange(date, 'assetEnd')}
-                      />
-                    </Column>
-                  </Row>
+                  {
+                    this.props.category === 'requests' ? (   
+                      <Row>
+                        <Column>
+                          <label>Start Time:</label>
+                          <DatePicker
+                            showTimeSelect
+                            todayButton="Today"
+                            placeholderText="Click to select a date"
+                            timeFormat="HH:mm"
+                            timeIntervals={15}
+                            dateFormat="MMMM d, yyyy h:mm aa"
+                            timeCaption="time"
+                            minDate={new Date()}
+                            selected={this.state.assetStart}
+                            onChange={date => this.handleDateChange(date, 'assetStart')}
+                          />
+                        </Column>
+                        <Column>
+                          <label>End Time:</label>
+                          <DatePicker
+                            showTimeSelect
+                            todayButton="Today"
+                            placeholderText="Click to select a date"
+                            timeFormat="HH:mm"
+                            timeIntervals={15}
+                            dateFormat="MMMM d, yyyy h:mm aa"
+                            timeCaption="time"
+                            minDate={new Date()}
+                            selected={this.state.assetEnd}
+                            onChange={date => this.handleDateChange(date, 'assetEnd')}
+                          />
+                        </Column>
+                      </Row>
+                    ) : null
+                  }
                   <Column>
                     <label>Location:</label>
                     <Row>

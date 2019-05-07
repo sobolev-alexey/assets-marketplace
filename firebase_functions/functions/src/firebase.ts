@@ -257,7 +257,7 @@ exports.assignDeal = async (userId: string, dealId: string, dealTimestamp: strin
     .doc(userId)
     .collection('deals')
     .doc(dealId)
-    .set({ dealTimestamp, dealTime });
+    .set({ dealId, dealTimestamp, dealTime });
 
   return true;
 };
@@ -549,3 +549,67 @@ exports.getChannelDetailsForAsset = async (assetId: string) => {
   console.log('getChannelDetailsForAsset failed.', assetId);
   throw Error(`The channel doesn't exist.`);
 };
+
+
+exports.reactivateOffers = async () => {
+  // Get inactive offers
+  const querySnapshot = await admin.firestore()
+    .collection('offers')
+    .where('active', '==', false)
+    .where('endTimestamp', '<', Date.now())
+    .get();
+
+  if (querySnapshot.size === 0) return true;
+
+  const assetIds = querySnapshot.docs.map(doc => doc.data().assetId);
+  assetIds.forEach(async assetId => {
+    await admin.firestore()
+    .collection('offers')
+    .doc(assetId)
+    .set({ active: true }, { merge: true });
+  });
+
+  return true;
+};
+
+exports.cancelRunningDeal = async (dealId: string, offerId: string) => {
+  // Update deal asset
+  await admin
+    .firestore()
+    .collection('deals')
+    .doc(dealId)
+    .set({ cancelled: true, cancelTime: Date.now() }, { merge: true });
+
+  // Update offer asset
+  await admin
+    .firestore()
+    .collection('offers')
+    .doc(offerId)
+    .set({ active: true }, { merge: true });
+
+  return true;
+};
+
+exports.getDealsForUser = async (userId: string) => {
+  // Get User's deals
+  const querySnapshot = await admin
+    .firestore()
+    .collection('users')
+    .doc(userId)
+    .collection('deals')
+    .get();
+
+  if (querySnapshot.size === 0) return [];
+
+  // Return data
+  return querySnapshot.docs.map(doc => {
+    if (doc.exists) {
+      return doc.data();
+    } else {
+      console.log('getDealsForUser failed.', userId, doc);
+      return null;
+    }
+  });
+};
+
+

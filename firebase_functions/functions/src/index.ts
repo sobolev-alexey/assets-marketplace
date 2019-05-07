@@ -30,6 +30,9 @@ const {
   updateChannelDetails,
   getDealsForAsset,
   getChannelDetailsForAsset,
+  reactivateOffers,
+  cancelRunningDeal,
+  getDealsForUser,
 } = require('./firebase');
 const {
   generateUUID,
@@ -154,6 +157,8 @@ exports.delete = functions.https.onRequest((req, res) => {
 exports.assets = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
+      await reactivateOffers();
+
       const params = req.query;
       if (params && params.userId && params.apiKey) {
         const { uid } = await getKey(<String>params.apiKey);
@@ -409,7 +414,7 @@ debug && console.log(155, user, uid);
       
 debug && console.log(188, offerOwnerWallet, requestOwnerWallet); 
       if (!offerOwnerWallet || !offerOwnerWallet.address || !requestOwnerWallet || !requestOwnerWallet.address) {
-        return res.json({ error: 'Wallet not set' });
+        return res.json({ error: `Asset owners' wallet not set` });
       }
 
       // 9. Get lowest price between offer and request
@@ -426,7 +431,7 @@ debug && console.log(1100, price);
         }
       } else {
         console.error('makeDeal failed. Wallet not set', packet);
-        return res.json({ error: 'Wallet not set' });
+        return res.json({ error: `Asset requesters' wallet not set` });
       }
 
 debug && console.log(1111, newWalletBalance); 
@@ -461,35 +466,42 @@ debug && console.log(1120, 'payment completed');
 debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price)); 
       // 14. Create new deal MAM channel
       const secretKey = generateSeed(81);
+      const dealId = generateUUID();
       const dealTimestamp = Date.now();
       const dealTime = format(dealTimestamp, 'DD MMMM, YYYY H:mm a ');
       const payload = {
         offer: offeredAsset,
         request: requestedAsset,
+        offerId: packet.offerId, 
+        requestId: packet.requestId, 
+        dealId,
         dealTimestamp,
-        dealTime
+        dealTime,
+        price,
+        startDate: requestedAsset.startDate,
+        endDate: requestedAsset.endDate,
+        startTimestamp: requestedAsset.startTimestamp,
+        endTimestamp: requestedAsset.endTimestamp,
       }
 debug && console.log(1150, payload); 
       const channelDetails = await initializeChannel(payload, secretKey);
       console.log('deal channelDetails', payload, channelDetails); 
 
       // 15. Add entry to the "deals" table, including MAM
-      const dealId = generateUUID();
-      const dealAssetPayload = {
-        offerId: packet.offerId, 
-        requestId: packet.requestId, 
-        dealTimestamp, 
-        dealTime
-      }
-debug && console.log(1151, dealId, dealAssetPayload); 
-      await setDeal(dealId, dealAssetPayload, channelDetails);
+debug && console.log(1151, dealId, payload); 
+      await setDeal(dealId, payload, channelDetails);
 
       const channelPayload = {
         offerId: packet.offerId, 
         requestId: packet.requestId,
         dealId,
         dealTimestamp, 
-        dealTime
+        dealTime,
+        price,
+        startDate: requestedAsset.startDate,
+        endDate: requestedAsset.endDate,
+        startTimestamp: requestedAsset.startTimestamp,
+        endTimestamp: requestedAsset.endTimestamp,
       };
 debug && console.log(1160, channelPayload); 
       // 16. Add new event to the offer MAM channel
@@ -528,6 +540,8 @@ debug && console.log(2100, offeredAsset.owner, requestedAsset.owner, dealId);
 exports.match = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
+      await reactivateOffers();
+
       const params = req.query;
       if (!params || !params.assetId) {
         console.error('Get match failed. Params: ', params);
@@ -560,33 +574,34 @@ exports.match = functions.https.onRequest((req, res) => {
 exports.history = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
-      const packet = req.body;
-      if (!packet || !packet.apiKey || !packet.assetId) {
-        console.error('history failed. Packet: ', packet);
+      const params = req.query;
+      if (!params || !params.apiKey || !params.assetId) {
+        console.error('history failed. Params: ', params);
         return res.status(400).json({ error: 'Malformed Request' });
       }
 
-      let asset = await getAsset('offers', packet.assetId, true);
+      let asset = await getAsset('offers', params.assetId, true);
       if (!asset) {
-        asset = await getAsset('requests', packet.assetId, true);
+        asset = await getAsset('requests', params.assetId, true);
         if (!asset) {
           return res.status(403).json({ error: 'Asset not found' });
         }
       }
 
-      const user = await getKey(<String>packet.apiKey);
+      const user = await getKey(<String>params.apiKey);
       if (user.uid !== asset.owner) {
         return res.status(403).json({ error: 'Current user is not the asset owner' });
       }
 
-      const channelDetails = await getChannelDetailsForAsset(packet.assetId);
-      console.log('channelDetails', channelDetails, packet.assetId);
+      const channelDetails = await getChannelDetailsForAsset(params.assetId);
+      console.log('channelDetails', channelDetails, params.assetId);
 
       const deals = await fetchChannel(channelDetails);
       console.log('fetchChannel', deals);
 
       return res.json({
         success: true,
+        asset,
         channelDetails,
         deals
       });
@@ -596,3 +611,124 @@ exports.history = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+// Get list of active deals
+exports.deals = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const params = req.query;
+      if (!params || !params.apiKey) {
+        console.error('deals failed. Params: ', params);
+        return res.status(400).json({ error: 'Malformed Request' });
+      }
+
+      const user = await getKey(<String>params.apiKey);
+      const dealEntries = await getDealsForUser(user.uid);
+
+      const promises = await dealEntries.map(async ({ dealId }) => {
+        const promise = await new Promise(async (resolve, reject) => {
+          try {
+            const deal = await getAsset('deals', dealId, true);
+            resolve(deal);
+          } catch (error) {
+            reject({ error });
+          }
+        });
+
+        return promise;
+      });
+
+      const deals = await Promise.all(promises);
+      return res.json({ success: true, deals });
+    } catch (e) {
+      console.error('active deals failed. Error: ', e.message);
+      return res.status(403).json({ error: e.message });
+    }
+  });
+});
+
+// Cancel running deal
+exports.cancel = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const packet = req.body;
+      if (!packet || !packet.apiKey || !packet.dealId) {
+        console.error('cancel failed. Packet: ', packet);
+        return res.status(400).json({ error: 'Malformed Request' });
+      }
+
+      console.log(101, packet.dealId, packet.apiKey); 
+
+      const deal = await getAsset('deals', packet.dealId, true);
+      if (!deal) {
+        return res.status(403).json({ error: 'Deal not found' });
+      }
+
+      console.log(102, deal);
+
+      const user = await getKey(<String>packet.apiKey);
+      if (user.uid !== deal.offer.owner && user.uid !== deal.request.owner) {
+        return res.status(403).json({ error: 'Current user is not the participating in the given deal' });
+      }
+
+      console.log(103, user);
+
+      // Cancel deal and reactivate offer
+      await cancelRunningDeal(deal.dealId, deal.offerId);
+      
+      const cancellationTimestamp = Date.now();
+      const cancellationDate = format(cancellationTimestamp, 'DD MMMM, YYYY H:mm a ');
+
+      console.log(105, cancellationTimestamp, cancellationDate);
+
+      // Update deal MAM channel
+      const dealPayload = {
+        dealId: deal.dealId,
+        offerId: deal.offerId, 
+        requestId: deal.requestId,
+        cancelled: true,
+        cancellationDate,
+        cancellationTimestamp,
+        cancelledBy: user.uid
+      };
+      console.log(106, dealPayload);
+      const dealAppendResult = await appendToChannel(deal.dealId, dealPayload);
+      
+      console.log(107, dealAppendResult);
+
+      await updateChannelDetails(deal.dealId, dealAppendResult);
+
+      console.log(108);
+
+      // Update asset MAM channel
+      const assetPayload = {
+        offerId: deal.offerId, 
+        requestId: deal.requestId,
+        dealId: deal.dealId,
+        dealTimestamp: deal.dealTimestamp, 
+        dealTime: deal.dealTime,
+        price: deal.price,
+        cancelled: true,
+        cancellationDate,
+        cancellationTimestamp,
+        cancelledBy: user.uid
+      };
+      console.log(109, assetPayload);
+      const requestAppendResult = await appendToChannel(deal.requestId, assetPayload);
+      console.log(110, requestAppendResult);
+      await updateChannelDetails(deal.requestId, requestAppendResult);
+      console.log(111);
+
+      const offerAppendResult = await appendToChannel(deal.offerId, assetPayload);
+      console.log(112, offerAppendResult);
+      await updateChannelDetails(deal.offerId, offerAppendResult);
+      console.log(114);
+
+      return res.json({ success: true });
+    } catch (e) {
+      console.error('cancel failed. Error: ', e.message);
+      return res.status(403).json({ error: e.message });
+    }
+  });
+});
+

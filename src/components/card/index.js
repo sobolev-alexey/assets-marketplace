@@ -19,7 +19,7 @@ const Card = styled.div`
   border-radius: 6px;
   margin-bottom: 40px;
   background-color: #fff;
-  cursor: pointer;
+  cursor: default;
   transition: box-shadow 0.19s ease-out;
   width: 400px;
   @media (max-width: 1120px) {
@@ -46,4 +46,5 @@ const CardFooter = styled.footer`
   padding: 20px 30px;
   background-color: rgba(206, 218, 226, 0.2);
   border-top: 1px solid #eaecee;
+  cursor: default;
 `;

@@ -182,6 +182,7 @@ class Deal extends React.Component {
   render() {
     const { assets, user, loading, selectedOffer, selectedRequest } = this.state;
     const { userData } = this.props;
+    console.log('data error', this.state.error);
 
     return (
       <Main>
@@ -237,7 +238,7 @@ class Deal extends React.Component {
         <Modal
           show={this.state.showModal || !isEmpty(this.state.error)}
           notification={this.state.notification}
-          error={this.state.error}
+          error={this.state.error ? { body: this.state.error } : null}
           callback={this.notificationCallback}
         />
       </Main>

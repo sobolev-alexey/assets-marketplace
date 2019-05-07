@@ -8,7 +8,7 @@ import { loadUser } from '../../store/user/actions';
 import { UserContext } from '../../pages/dashboard';
 import api from '../../utils/api';
 
-const Wallet = ({ loadUser, asset, wallet }) => {
+const Wallet = ({ loadUser, asset, wallet, settings }) => {
   const { userId } = useContext(UserContext);
   const [desc, setDesc] = useState('Loading wallet');
   const [walletLoading, setWalletLoading] = useState(false);
@@ -43,21 +43,38 @@ const Wallet = ({ loadUser, asset, wallet }) => {
   return (
     <Block>
       <Desc>{desc}</Desc>
-      {walletLoading ? (
-        <div style={{ margin: '8px 0 0 ' }}>
-          <Loading size="26" color="#0d3497" />
-        </div>
-      ) : wallet.balance ? (
-        <Balance>{wallet.balance.toLocaleString(navigator.language || {})} IOTA</Balance>
-      ) : (
-        <Button onClick={fund}>Fund Wallet</Button>
-      )}
+      {
+        walletLoading ? (
+          <div style={{ margin: '8px 0 0 ' }}>
+            <Loading size="26" color="#0d3497" />
+          </div>
+        ) : (
+          wallet.balance ? (
+            !isEmpty(settings) ? (
+              <a
+                href={`${settings.tangleExplorer}/${wallet.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Balance>{wallet.balance.toLocaleString(navigator.language || {})} IOTA</Balance>
+              </a>
+            ) : (
+              <Balance>{wallet.balance.toLocaleString(navigator.language || {})} IOTA</Balance>
+            )
+          ) : (
+            <Button onClick={fund}>
+              Fund Wallet
+            </Button>
+          )
+        )
+      }
     </Block>
   )
 }
 
 const mapStateToProps = state => ({
   asset: state.asset,
+  settings: state.settings,
   wallet: (state.user && state.user.wallet) || {}
 });
 

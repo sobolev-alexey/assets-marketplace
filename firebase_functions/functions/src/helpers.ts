@@ -54,9 +54,11 @@ const sanatiseObject = (asset: any) => {
     return 'Enter city and country';
   if (!asset.lat || !asset.lon) return 'Please enter a asset coordinates';
   if (!asset.dataTypes || asset.dataTypes.length < 1) return 'You must have a valid data fields';
-  if (!asset.startTimestamp) return 'Please enter a valid date/time when the offer starts';
-  if (!asset.endTimestamp) return 'Please enter a valid date/time when the offer ends';
-
+  if (asset.category === 'requests') {
+    if (!asset.startTimestamp) return 'Please enter a valid date/time when the offer starts';
+    if (!asset.endTimestamp) return 'Please enter a valid date/time when the offer ends';
+  }
+  
   return false;
 };
 
