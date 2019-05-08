@@ -107,10 +107,6 @@ body {
   font-family: 'Nunito Sans', sans-serif;
   font-weight: 400;
   color: #000;
-
-  &.cookie-bar-top-bar {
-    margin-top: 70px;
-  }
 }
 button {
   border: none;
@@ -161,23 +157,6 @@ button {
   }
 }
 
-.mapboxgl-popup-tip {
-  color: transparent !important;
-  border-bottom-color: transparent !important;
-  border-right-color: transparent !important;
-  border-left-color: transparent !important;
-  border-top-color: transparent !important;
-}
-
-.mapboxgl-popup-content {
-  position: relative;
-  background: none !important;
-  border-radius: none !important;
-  box-shadow: none !important;
-  padding: none !important;
-  pointer-events: auto;
-}
-
 #main {
   a {
     text-decoration: none;
@@ -196,18 +175,6 @@ button {
         color: #ffffff;
       }
     }
-  }
-}
-
-.scroll-to-top {
-  right: -10px;
-  cursor: pointer;
-  z-index: 10;
-  max-width: 80px;
-
-  img {
-    width: 70%;
-    padding: 10px 0;
   }
 }
 

@@ -1,5 +1,4 @@
 import React, { useContext, useState, useEffect } from 'react';
-import ReactGA from 'react-ga';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 import isEmpty from 'lodash-es/isEmpty';
@@ -27,12 +26,6 @@ const Wallet = ({ loadUser, asset, wallet, settings }) => {
   }
 
   async function fund() {
-    ReactGA.event({
-      category: 'Fund wallet',
-      action: 'Fund wallet',
-      label: `Asset ID ${asset.assetId}`
-    });
-
     setDesc('Funding wallet');
     setWalletLoading(true);
 

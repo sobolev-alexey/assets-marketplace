@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactGA from 'react-ga';
 import { connect } from 'react-redux';
 import isEmpty from 'lodash-es/isEmpty';
 import styled from 'styled-components';
@@ -11,7 +10,6 @@ import LoginModal from '../components/login-modal';
 import Modal from '../components/modal';
 import Sidebar from '../components/user-sidebar';
 import AssetList from '../components/asset-list/deal-page';
-import Cookie from '../components/cookie';
 import Loading from '../components/loading';
 
 export const UserContext = React.createContext({});
@@ -48,7 +46,6 @@ class Deal extends React.Component {
   }
 
   async componentDidMount() {
-    ReactGA.pageview('/deal');
     // Init Wallet
     this.checkLogin();
   }
@@ -78,11 +75,6 @@ class Deal extends React.Component {
         const user = result.user;
         this.setState({ user });
         this.getUser();
-        ReactGA.event({
-          category: 'Login',
-          action: 'Login',
-          label: `User UID ${user.uid}`
-        });
       })
       .catch(error => {
         console.error('auth error', error);
@@ -146,11 +138,6 @@ class Deal extends React.Component {
         const data = await api.post('makeDeal', packet);
         // Check success
         if (data.success) {
-          ReactGA.event({
-            category: 'Deal',
-            action: 'Deal',
-          });
-
           this.setState({ 
             showModal: true, 
             error: false,
@@ -186,7 +173,6 @@ class Deal extends React.Component {
 
     return (
       <Main>
-        <Cookie />
         <AssetNav user={user} logout={this.logout} />
         <Data>
           <UserContext.Provider value={{ userId: user.uid }}>

@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactGA from 'react-ga';
 import styled from 'styled-components';
 import { withRouter } from 'react-router';
 import BurgerMenu from '../components//header/burger';
@@ -8,8 +7,6 @@ import Header from '../components/header';
 import Content from '../components/content';
 import Partners from '../components/partners';
 import Footer from '../components/footer';
-import ScrollToTop from '../components/scroll-to-top';
-import Cookie from '../components/cookie';
 
 const content1 = {
   id: 'about',
@@ -34,7 +31,6 @@ class HomePage extends React.Component {
   }
 
   componentDidMount() {
-    ReactGA.pageview('/home');
     const { location } = this.props;
     const anchor = (location.state && location.state.anchor) || null;
     this.setState({ anchor });
@@ -44,16 +40,10 @@ class HomePage extends React.Component {
     this.setState({ anchor });
   }
 
-  onScrollToTop() {
-    const target = document.querySelector('#main');
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
   render() {
     const { anchor } = this.state;
     return (
       <Main id="main">
-        <Cookie />
         <BurgerMenu />
         <MiniHeader />
         <Header onAnchorClick={this.onAnchorClick} />
@@ -63,7 +53,6 @@ class HomePage extends React.Component {
         </ImgContainer>
         <Content content={content2} />
         <Partners anchor={anchor || (this.props.location && this.props.location.hash)} />
-        <ScrollToTop onClick={this.onScrollToTop} />
         <Footer />
       </Main>
     );

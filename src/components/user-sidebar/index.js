@@ -40,10 +40,6 @@ class UserSidebar extends React.Component {
               <DetailKey>Number of Assets:</DetailKey>
               <DetailValue>{numberOfAssets}</DetailValue>
             </DetailRow>
-            <DetailRow>
-              <DetailKey>Owner:</DetailKey>
-              <DetailValue>{user.displayName}</DetailValue>
-            </DetailRow>
           </div>
         </Details>
         {userData && (

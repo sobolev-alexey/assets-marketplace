@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactGA from 'react-ga';
 import { connect } from 'react-redux';
 import isEmpty from 'lodash-es/isEmpty';
 import styled from 'styled-components';
@@ -9,7 +8,6 @@ import api from '../utils/api';
 import AssetNav from '../components/asset-nav';
 import LoginModal from '../components/login-modal';
 import Sidebar from '../components/user-sidebar';
-import AssetList from '../components/asset-list/deal-page';
 import Loading from '../components/loading';
 
 export const UserContext = React.createContext({});
@@ -38,7 +36,6 @@ class History extends React.Component {
   }
 
   async componentDidMount() {
-    ReactGA.pageview('/history');
     // Init Wallet
     this.checkLogin();
   }
@@ -68,11 +65,6 @@ class History extends React.Component {
         const user = result.user;
         this.setState({ user });
         this.getUser();
-        ReactGA.event({
-          category: 'Login',
-          action: 'Login',
-          label: `User UID ${user.uid}`
-        });
       })
       .catch(error => {
         console.error('auth error', error);

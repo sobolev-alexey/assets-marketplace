@@ -287,22 +287,6 @@ exports.getUser = async (userId: string, internal: boolean = false) => {
   return null;
 };
 
-exports.getNumberOfAssets = async () => {
-  const doc = await admin
-    .firestore()
-    .collection('settings')
-    .doc('settings')
-    .get();
-  if (doc.exists) {
-    const data = doc.data();
-    if (data.numberOfAssets) {
-      return data.numberOfAssets;
-    }
-  }
-  console.log('getNumberOfAssets failed. Setting does not exist', doc);
-  throw Error(`The getNumberOfAssets setting doesn't exist.`);
-};
-
 exports.getSettings = async () => {
   // Get data
   const doc = await admin
@@ -312,18 +296,10 @@ exports.getSettings = async () => {
     .get();
   if (doc.exists) {
     const {
-      documentation,
-      iotaApiVersion,
-      mapboxApiAccessToken,
-      mapboxStyles,
       provider,
       tangleExplorer,
     } = doc.data();
     return {
-      documentation,
-      iotaApiVersion,
-      mapboxApiAccessToken,
-      mapboxStyles,
       provider,
       tangleExplorer,
     };

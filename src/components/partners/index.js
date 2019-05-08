@@ -42,14 +42,12 @@ const Section = styled.section`
   background-image: linear-gradient(-189deg, #eaf0f4 1%, #f3f8fa 95%);
   padding: 40px 0 20px;
   margin: 50px 0 -50px;
-  transform: skewY(2deg);
   @media (max-width: 760px) {
     padding-bottom: 20px;
   }
 `;
 
 const Div = styled.div`
-  transform: skewY(-2deg);
   width: 100%;
   max-width: 1440px;
   padding: 0 15px;

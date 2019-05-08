@@ -8,7 +8,6 @@ const {
   getAsset,
   getAssets,
   getUserAssets,
-  getNumberOfAssets,
   getUser,
   getSettings,
   setUser,
@@ -147,33 +146,6 @@ exports.assets = functions.https.onRequest((req, res) => {
   });
 });
 
-// Query Asset
-exports.asset = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    const params = req.query;
-    // Add asset key into the list
-    if (!params || !params.assetId || !params.category) {
-      console.error('asset failed. Packet: ', params);
-      return res.status(400).json({ error: 'Ensure all fields are included' });
-    }
-
-    try {
-      const asset = await getAsset(params.category, params.assetId);
-      if (!asset) {
-        throw Error(`Asset doesn't exist`);
-      }
-      if (asset && !asset.price) {
-        const settings = await getSettings();
-        asset.price = settings.defaultPrice;
-      }
-      return res.json(asset);
-    } catch (e) {
-      console.error('asset failed. Error: ', e.message);
-      return res.status(403).json({ error: e.message });
-    }
-  });
-});
-
 // // Setup User with an API Key
 exports.setupUser = functions.auth.user().onCreate(user => {
   return new Promise(async (resolve, reject) => {
@@ -183,9 +155,8 @@ exports.setupUser = functions.auth.user().onCreate(user => {
       // Try saving
       try {
         const apiKey = generateUUID();
-        const numberOfAssets = 100;
 
-        await setUser(user.uid, { apiKey, numberOfAssets });
+        await setUser(user.uid, { apiKey });
         await setApiKey(apiKey, user.uid, user.email);
 
         console.log('setupUser resolved for UID', user.uid);
@@ -212,9 +183,6 @@ exports.user = functions.https.onRequest((req, res) => {
       const user = await getUser(params.userId);
       if (!user) {
         return res.json(null);
-      }
-      if (!user.numberOfAssets) {
-        user.numberOfAssets = await getNumberOfAssets();
       }
       return res.json({ ...user });
     } catch (e) {
@@ -363,8 +331,8 @@ debug && console.log(1112, transactions.length);
       const hashes = transactions && transactions.map(transaction => transaction.hash);
 
       // Find TX on network and parse
-      const { iotaApiVersion, provider } = await getSettings();
-      const bundle = await findTx(hashes, provider, iotaApiVersion);
+      const { provider } = await getSettings();
+      const bundle = await findTx(hashes, provider);
 
 debug && console.log(1113, bundle); 
       // Make sure TX is valid
@@ -575,29 +543,21 @@ exports.cancel = functions.https.onRequest((req, res) => {
         return res.status(400).json({ error: 'Malformed Request' });
       }
 
-      console.log(101, packet.dealId, packet.apiKey); 
-
       const deal = await getAsset('deals', packet.dealId, true);
       if (!deal) {
         return res.status(403).json({ error: 'Deal not found' });
       }
-
-      console.log(102, deal);
 
       const user = await getKey(<String>packet.apiKey);
       if (user.uid !== deal.offer.owner && user.uid !== deal.request.owner) {
         return res.status(403).json({ error: 'Current user is not the participating in the given deal' });
       }
 
-      console.log(103, user);
-
       // Cancel deal and reactivate offer
       await cancelRunningDeal(deal.dealId, deal.offerId);
       
       const cancellationTimestamp = Date.now();
       const cancellationDate = format(cancellationTimestamp, 'DD MMMM, YYYY H:mm a ');
-
-      console.log(105, cancellationTimestamp, cancellationDate);
 
       // Update deal MAM channel
       const dealPayload = {
@@ -607,16 +567,13 @@ exports.cancel = functions.https.onRequest((req, res) => {
         cancelled: true,
         cancellationDate,
         cancellationTimestamp,
-        cancelledBy: user.uid
+        cancelledBy: user.uid,
+        startDate: deal.startDate,
+        startTimestamp: deal.startTimestamp
       };
-      console.log(106, dealPayload);
       const dealAppendResult = await appendToChannel(deal.dealId, dealPayload);
       
-      console.log(107, dealAppendResult);
-
       await updateChannelDetails(deal.dealId, dealAppendResult);
-
-      console.log(108);
 
       // Update asset MAM channel
       const assetPayload = {
@@ -625,22 +582,19 @@ exports.cancel = functions.https.onRequest((req, res) => {
         dealId: deal.dealId,
         dealTimestamp: deal.dealTimestamp, 
         dealTime: deal.dealTime,
+        startDate: deal.startDate,
+        startTimestamp: deal.startTimestamp,
         price: deal.price,
         cancelled: true,
         cancellationDate,
         cancellationTimestamp,
         cancelledBy: user.uid
       };
-      console.log(109, assetPayload);
       const requestAppendResult = await appendToChannel(deal.requestId, assetPayload);
-      console.log(110, requestAppendResult);
       await updateChannelDetails(deal.requestId, requestAppendResult);
-      console.log(111);
 
       const offerAppendResult = await appendToChannel(deal.offerId, assetPayload);
-      console.log(112, offerAppendResult);
       await updateChannelDetails(deal.offerId, offerAppendResult);
-      console.log(114);
 
       return res.json({ success: true });
     } catch (e) {

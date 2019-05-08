@@ -50,14 +50,12 @@ export default props => (
 );
 
 const ContentOuterWrapper = styled.div`
-  transform: skewY(2deg);
   position: relative;
   bottom: -35px;
   background-image: linear-gradient(-329deg, #1857eb 31%, #0d3497 65%);
 `;
 
 const ContentInnerWrapper = styled.div`
-  transform: skewY(-2deg);
   display: flex;
   flex-direction: column;
   padding: 40px 0;

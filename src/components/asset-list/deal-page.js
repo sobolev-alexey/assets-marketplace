@@ -35,7 +35,7 @@ const CardWrapper = styled.div`
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: flex-start;
-  padding: 40px 40px 200px;
+  padding: 40px;
   @media (max-width: 1195px) {
     flex-flow: column nowrap;
     padding-bottom: 0;

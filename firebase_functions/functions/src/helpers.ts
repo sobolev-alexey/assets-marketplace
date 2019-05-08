@@ -62,14 +62,14 @@ const sanatiseObject = (asset: any) => {
   return false;
 };
 
-const findTx = (hashes, provider, iotaApiVersion) => {
+const findTx = (hashes, provider) => {
   return new Promise((resolve, reject) => {
     axios({
       method: 'POST',
       url: provider,
       headers: {
         'Content-Type': 'application/json',
-        'X-IOTA-API-Version': iotaApiVersion,
+        'X-IOTA-API-Version': 1,
       },
       data: {
         command: 'getTrytes',

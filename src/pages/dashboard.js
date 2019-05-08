@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactGA from 'react-ga';
 import { connect } from 'react-redux';
 import isEmpty from 'lodash-es/isEmpty';
 import styled from 'styled-components';
@@ -10,7 +9,6 @@ import AssetNav from '../components/asset-nav';
 import LoginModal from '../components/login-modal';
 import Sidebar from '../components/user-sidebar';
 import AssetList from '../components/asset-list';
-import Cookie from '../components/cookie';
 import Loading from '../components/loading';
 import AddCard from '../components/add-asset';
 import Modal from '../components/modal';
@@ -58,7 +56,6 @@ class Dashboard extends React.Component {
   }
 
   async componentDidMount() {
-    ReactGA.pageview('/dashboard');
     // Init Wallet
     this.checkLogin();
   }
@@ -91,11 +88,6 @@ class Dashboard extends React.Component {
         const user = result.user;
         this.setState({ user });
         this.getUser();
-        ReactGA.event({
-          category: 'Login',
-          action: 'Login',
-          label: `User UID ${user.uid}`
-        });
       })
       .catch(error => {
         console.error('auth error', error);
@@ -140,11 +132,6 @@ class Dashboard extends React.Component {
       const data = await api.post('newAsset', packet);
       // Check success
       if (data.success) {
-        ReactGA.event({
-          category: 'New asset',
-          action: 'New asset',
-          label: `Asset Name ${asset.assetName}`
-        });
         this.findAssets();
         this.setState({ 
           displayNewOfferForm: false, 
@@ -176,11 +163,6 @@ class Dashboard extends React.Component {
   };
 
   async deleteAsset(assetId, category) {
-    ReactGA.event({
-      category: 'Delete asset',
-      action: 'Delete asset',
-      label: `Asset ID ${assetId}`
-    });
     this.setState({ loading: true });
     const { userData } = this.props;
     const packet = {
@@ -268,7 +250,6 @@ class Dashboard extends React.Component {
 
     return (
       <Main>
-        <Cookie />
         <AssetNav user={user} logout={this.logout} />
         <Data>
           <UserContext.Provider value={{ userId: user.uid }}>
