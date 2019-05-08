@@ -90,10 +90,6 @@ export default class extends React.Component {
     if (!this.state.assetType)
       return alert('Specify type of asset');
     if (!this.state.city || !this.state.country) return alert('Enter city and country');
-    if (!this.state.assetLat || !this.state.assetLon)
-      return alert('Please enter asset coordinates');
-    if (!this.state.dataTypes || this.state.dataTypes.length < 1)
-      return alert('You must have a valid data field');
 
     if (this.props.category === 'requests') {
       if (!this.state.assetStart || !startDate || !isValid(startDate) || !isFuture(startDate))
