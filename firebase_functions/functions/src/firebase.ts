@@ -476,20 +476,20 @@ exports.getChannelDetailsForAsset = async (assetId: string) => {
 
 
 exports.reactivateOffers = async () => {
-  // Get inactive offers
+  // Get expired deals
   const querySnapshot = await admin.firestore()
-    .collection('offers')
-    .where('active', '==', false)
+    .collection('deals')
     .where('endTimestamp', '<', Date.now())
     .get();
 
   if (querySnapshot.size === 0) return true;
 
-  const assetIds = querySnapshot.docs.map(doc => doc.data().assetId);
-  assetIds.forEach(async assetId => {
+  const offerIds = querySnapshot.docs.map(doc => doc.data().offerId);
+  offerIds.forEach(async offerId => {
+    // reactivate offers
     await admin.firestore()
     .collection('offers')
-    .doc(assetId)
+    .doc(offerId)
     .set({ active: true }, { merge: true });
   });
 
