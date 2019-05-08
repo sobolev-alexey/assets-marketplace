@@ -5,9 +5,6 @@ const { validateBundleSignatures } = require('@iota/bundle-validator');
 
 const {
   getKey,
-  getSk,
-  getAssignedAssets,
-  getData,
   getAsset,
   getAssets,
   getUserAssets,
@@ -16,7 +13,6 @@ const {
   getSettings,
   setUser,
   setAsset,
-  setPacket,
   setApiKey,
   setWallet,
   deleteAsset,
@@ -28,7 +24,6 @@ const {
   assignDeal,
   deactivateAsset,
   updateChannelDetails,
-  // getDealsForAsset,
   getChannelDetailsForAsset,
   reactivateOffers,
   cancelRunningDeal,
@@ -175,30 +170,6 @@ exports.asset = functions.https.onRequest((req, res) => {
       return res.json(asset);
     } catch (e) {
       console.error('asset failed. Error: ', e.message);
-      return res.status(403).json({ error: e.message });
-    }
-  });
-});
-
-// Query Stream
-exports.stream = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    const params = req.query;
-    if (!params || !params.assetId || !params.userId || !params.category) {
-      console.error('stream failed. Params: ', params);
-      return res.status(400).json({ error: 'Ensure all fields are included' });
-    }
-
-    try {
-      // Make sure assignment exists
-      const purchase = await getAssignedAssets(<String>params.category, <String>params.userId, <String>params.assetId);
-      if (!purchase) {
-        return res.json({ success: false });
-      }
-      // Return data
-      return res.json(await getData(<String>params.category, <String>params.assetId, params.time));
-    } catch (e) {
-      console.error('stream failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
     }
   });

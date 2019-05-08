@@ -116,10 +116,6 @@ class Map extends React.Component {
                 <InfoValue>{popupInfo.company}</InfoValue>
               </FootRow>
               <FootRow>
-                <InfoKey>Asset Streams:</InfoKey>
-                <InfoValue>{popupInfo.dataTypes.length}</InfoValue>
-              </FootRow>
-              <FootRow>
                 <InfoKey>Price:</InfoKey>
                 <InfoValue>{popupInfo.price || popupInfo.value}i</InfoValue>
               </FootRow>

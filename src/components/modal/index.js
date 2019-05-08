@@ -76,10 +76,6 @@ export default ({
       heading: 'Not enough Balance',
       body: 'You have run out of IOTA',
     },
-    streamReadFailure: {
-      heading: 'Stream Read Failure',
-      body: 'No data found',
-    },
     assetMatchFound: {
       heading: 'Match Found!',
       body: `We found a matching asset for the ${category} you just created`,

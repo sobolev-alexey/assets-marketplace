@@ -16,30 +16,6 @@ export const makeDeal = (userId, assetId) => {
   });
 }
 
-export const getData = async (category, userId, assetId, time) => {
-  try {
-    const result = await getPackets(category, userId, assetId, time);
-    if (result.error) {
-      console.error('getData error', result.error);
-    }
-    return result;
-  } catch (error) {
-    console.error('getData error', error);
-    return null;
-  }
-};
-
-const getPackets = (category, userId, assetId, time) => {
-  return new Promise(async (resolve, reject) => {
-    const packets = await api.get('stream', { category, userId, assetId, time });
-    if (packets) {
-      resolve(packets);
-    } else {
-      reject('No packets purchased');
-    }
-  });
-};
-
 export const getBalance = async (address, provider) => {
   try {
     const packet = {

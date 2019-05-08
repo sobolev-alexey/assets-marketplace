@@ -17,18 +17,6 @@ exports.getKey = async (key: string) => {
   throw Error('Your API key is incorrect.');
 };
 
-exports.getSk = async (assetId: string) => {
-  // Get API key
-  const doc = await admin
-    .firestore()
-    .collection('mam')
-    .doc(assetId)
-    .get();
-  if (doc.exists) return doc.data();
-  console.error('getSk failed. asset does not exist', assetId, doc);
-  throw Error(`The asset doesn't exist.`);
-};
-
 exports.getMAMChannelDetails = async (assetId: string) => {
   // Get MAM channel details
   const doc = await admin
@@ -40,47 +28,6 @@ exports.getMAMChannelDetails = async (assetId: string) => {
   if (doc.exists) return doc.data();
   console.log('getMAMChannelDetails failed.', assetId, doc);
   return null;
-};
-
-exports.getAssignedAssets = async (collection: string, userId: string, assetId: string) => {
-  // Get User's assets
-  const doc = await admin
-    .firestore()
-    .collection('users')
-    .doc(userId)
-    .collection(collection)
-    .doc(assetId)
-    .get();
-  // Check user's profile for assigned assets
-  if (doc.exists) return doc.data();
-  console.log('Assets not assigned', userId, assetId);
-  return false;
-};
-
-exports.getData = async (collection: string, assetId: string, timestamp?: number) => {
-  const time = timestamp ? Number(timestamp) : Date.now();
-  // Get data
-  const querySnapshot = await admin
-    .firestore()
-    .collection(collection)
-    .doc(assetId)
-    .collection('data')
-    .where('time', '<', time)
-    .orderBy('time', 'desc')
-    .limit(50)
-    .get();
-
-  if (querySnapshot.size === 0) return [];
-
-  // Return data
-  return querySnapshot.docs.map(doc => {
-    if (doc.exists) {
-      return doc.data();
-    } else {
-      console.log('getData failed.', assetId, doc);
-      return null;
-    }
-  });
 };
 
 exports.getAsset = async (collection: string, assetId: string, internal: boolean = false) => {

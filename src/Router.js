@@ -4,11 +4,9 @@ import { HashRouter, Switch, Route } from 'react-router-dom';
 import { CookiesProvider } from 'react-cookie';
 import HomePage from './pages/home';
 import MarketplacePage from './pages/marketplace';
-import AssetPage from './pages/asset';
 import DashboardPage from './pages/dashboard';
 import DealPage from './pages/deal';
 import TransactionHistoryPage from './pages/history';
-import WhitelistPage from './pages/whitelist';
 import FaucetPage from './pages/faucet';
 import { storeProjectSettings } from './store/settings/actions';
 
@@ -26,9 +24,7 @@ class Router extends Component {
             <Route path="/marketplace" component={MarketplacePage} />
             <Route path="/dashboard" component={DashboardPage} />
             <Route path="/deal/:assetId" component={DealPage} />
-            <Route path="/asset/:assetId" component={AssetPage} />
             <Route path="/history/:assetId" component={TransactionHistoryPage} />
-            <Route path="/whitelist" component={WhitelistPage} />
             <Route path="/faucet" component={FaucetPage} />
             <Route component={HomePage} />
           </Switch>

@@ -45,11 +45,6 @@
     ],
     "redirects": [
       {
-        "source": "/whitelist",
-        "destination": "/#/whitelist",
-        "type": 301
-      },
-      {
         "source": "/marketplace",
         "destination": "/#/marketplace",
         "type": 301
@@ -57,11 +52,6 @@
       {
         "source": "/dashboard",
         "destination": "/#/dashboard",
-        "type": 301
-      },
-      {
-        "source": "/asset/:assetId",
-        "destination": "/#/asset/:assetId",
         "type": 301
       },
       {

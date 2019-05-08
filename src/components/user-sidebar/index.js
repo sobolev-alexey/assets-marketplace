@@ -40,16 +40,6 @@ class UserSidebar extends React.Component {
               <DetailKey>Number of Assets:</DetailKey>
               <DetailValue>{numberOfAssets}</DetailValue>
             </DetailRow>
-            {/* <DetailRow>
-              <DetailKey>Total Data Streams:</DetailKey>
-              <DetailValue>
-                {
-                  assets[0]
-                    ? assets.map(asset => asset.dataTypes.length).reduce((a, b) => a + b)
-                    : '--'
-                }
-              </DetailValue>
-            </DetailRow> */}
             <DetailRow>
               <DetailKey>Owner:</DetailKey>
               <DetailValue>{user.displayName}</DetailValue>
