@@ -517,23 +517,23 @@ exports.updateChannelDetails = async (assetId: string, channelDetails: any) => {
     .set({ ...channelDetails }, { merge: true });
 };
 
-exports.getDealsForAsset = async (asset: any) => {
-  const queryBuilder = admin.firestore().collection('deals');
-  let query
+// exports.getDealsForAsset = async (asset: any) => {
+//   const queryBuilder = admin.firestore().collection('deals');
+//   let query
 
-  if (asset.category === 'offers') {
-    query = queryBuilder.where('offerId', '==', asset.assetId);
-  } else if (asset.category === 'requests') {
-    query = queryBuilder.where('requestId', '==', asset.assetId);
-  }
+//   if (asset.category === 'offers') {
+//     query = queryBuilder.where('offerId', '==', asset.assetId);
+//   } else if (asset.category === 'requests') {
+//     query = queryBuilder.where('requestId', '==', asset.assetId);
+//   }
   
-  const querySnapshot = await query.get();
+//   const querySnapshot = await query.get();
 
-  if (querySnapshot.size === 0) return [];
+//   if (querySnapshot.size === 0) return [];
 
-  // Return data
-  return querySnapshot.docs.map(doc => doc.data());
-};
+//   // Return data
+//   return querySnapshot.docs.map(doc => doc.data());
+// };
 
 exports.getChannelDetailsForAsset = async (assetId: string) => {
   // Get User's wallet

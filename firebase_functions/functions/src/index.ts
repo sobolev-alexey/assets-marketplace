@@ -28,7 +28,7 @@ const {
   assignDeal,
   deactivateAsset,
   updateChannelDetails,
-  getDealsForAsset,
+  // getDealsForAsset,
   getChannelDetailsForAsset,
   reactivateOffers,
   cancelRunningDeal,
@@ -594,16 +594,17 @@ exports.history = functions.https.onRequest((req, res) => {
       }
 
       const channelDetails = await getChannelDetailsForAsset(params.assetId);
-      console.log('channelDetails', channelDetails, params.assetId);
 
       const deals = await fetchChannel(channelDetails);
-      console.log('fetchChannel', deals);
 
       return res.json({
         success: true,
         asset,
-        channelDetails,
-        deals
+        deals,
+        channelDetails: { 
+          root: channelDetails.root,
+          secretKey: channelDetails.secretKey
+        }
       });
     } catch (e) {
       console.error('history failed. Error: ', e.message);
