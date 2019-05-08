@@ -8,7 +8,6 @@ import { createContext } from '@iota/mam/lib/mam';
 import { loadUser } from '../store/user/actions';
 import { loadAsset } from '../store/asset/actions';
 import { userAuth } from '../utils/firebase';
-import { getAssetStreamJSON } from '../utils/helpers';
 import { makeDeal } from '../utils/iota';
 import AssetNav from '../components/asset-nav';
 import Modal from '../components/modal';
@@ -32,7 +31,6 @@ class Asset extends React.Component {
       category: 'offers'
     };
 
-    this.downloadAssetStreamJSON = this.downloadAssetStreamJSON.bind(this);
     this.loadMore = this.loadMore.bind(this);
     this.purchase = this.purchase.bind(this);
     this.saveData = this.saveData.bind(this);
@@ -57,11 +55,6 @@ class Asset extends React.Component {
     this.ctx = await createContext();
     this.client = createHttpClient({ provider });
     this.setState({ userId, fetching: true });
-  }
-
-  async downloadAssetStreamJSON() {
-    const { match: { params: { assetId } } } = this.props;
-    getAssetStreamJSON(assetId, this.state.packets);
   }
 
   loadMore() {
@@ -145,7 +138,6 @@ class Asset extends React.Component {
         </AssetContext.Provider>
         <Data>
           <Sidebar
-            downloadAssetStreamJSON={this.downloadAssetStreamJSON}
             isLoading={fetching && packets[0] && !this.state.dataEnd && packets.length !== streamLength}
             purchase={purchase && packets.length > 0}
           />

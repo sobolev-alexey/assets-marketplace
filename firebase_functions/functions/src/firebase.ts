@@ -181,19 +181,6 @@ exports.getUserAssets = async (collection: string, user: string) => {
   });
 };
 
-exports.setPacket = async (collection: string, asset: string, packet: any) => {
-  // Save users API key and Seed
-  await admin
-    .firestore()
-    .collection(collection)
-    .doc(asset)
-    .collection('data')
-    .doc()
-    .set(packet);
-
-  return true;
-};
-
 exports.setUser = async (userId: string, obj: any) => {
   // Save users API key and Seed
   await admin

@@ -48,33 +48,6 @@ const {
   fetchChannel,
 } = require('./helpers');
 
-// Take in data from asset
-exports.newData = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    const packet = req.body;
-    // Add asset key into the list
-    if (!packet || !packet.id || !packet.sk || !packet.packet || !packet.category) {
-      console.error('newData failed. Packet: ', packet);
-      return res.status(400).json({ error: 'Ensure all fields are included' });
-    }
-
-    try {
-      const asset = await getSk(packet.id);
-      if (asset.sk === packet.sk) {
-        return res.json({
-          success: await setPacket(packet.category, packet.id, packet.packet),
-        });
-      } else {
-        console.error('newData failed. Key is incorrect', asset.sk, packet.sk);
-        throw Error('Oh noes, your key is incorrect.');
-      }
-    } catch (e) {
-      console.error('newData failed. Error: ', e.message);
-      return res.status(403).json({ error: e.message });
-    }
-  });
-});
-
 // Add new asset
 exports.newAsset = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {

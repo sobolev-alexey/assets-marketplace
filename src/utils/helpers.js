@@ -1,5 +1,3 @@
-import FileSaver from 'file-saver';
-
 export const reducer = amount => {
   if (amount < Math.pow(10, 3)) {
     const num = amount;
@@ -22,9 +20,4 @@ export const reducer = amount => {
     if (num % 1 !== 0) return num.toFixed(2) + 'Ti';
     return num + 'Ti';
   }
-};
-
-export const getAssetStreamJSON = async (assetId, stream) => {
-  const blob = new Blob([JSON.stringify(stream, null, 2)], {type : 'application/json'});
-  FileSaver.saveAs(blob, `${assetId}-data.json`);
 };
