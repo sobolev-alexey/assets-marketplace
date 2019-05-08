@@ -1,45 +1,42 @@
 {
-  "name": "data-marketplace",
-  "version": "2.5.5",
-  "description": "IOTA Data Marketplace",
+  "name": "assets-marketplace",
+  "version": "1.0.5",
+  "description": "IOTA Assets Marketplace",
   "contributors": [
     {
       "name": "Alexey Sobolev"
-    },
-    {
-      "name": "Lewis Freiberg"
     }
   ],
   "author": {
-    "name": "Alexey Sobolev, Lewis Freiberg (IOTA Foundation)",
+    "name": "Alexey Sobolev (IOTA Foundation)",
     "website": "https://iota.org"
   },
   "keywords": [
     "iota",
     "tangle",
     "mam",
-    "data marketplace",
+    "assets marketplace",
     "asset",
     "API"
   ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/iotaledger/data-marketplace/issues"
+    "url": "https://github.com/sobolev-alexey/assets-marketplace/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/iotaledger/data-marketplace.git"
+    "url": "https://github.com/sobolev-alexey/assets-marketplace.git"
   },
   "private": true,
   "dependencies": {
     "date-fns": "^1.30.1",
-    "firebase": "^5.10.1",
+    "firebase": "^6.0.1",
     "lodash-es": "^4.17.11",
     "query-string": "^6.5.0",
     "react": "16.8.6",
     "react-burger-menu": "^2.6.10",
     "react-clipboard.js": "^2.0.7",
-    "react-cookie": "^3.1.1",
+    "react-cookie": "^4.0.0",
     "react-datepicker": "^2.5.0",
     "react-dom": "16.8.6",
     "react-ga": "^2.5.7",
