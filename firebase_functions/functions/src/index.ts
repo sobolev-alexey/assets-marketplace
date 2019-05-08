@@ -18,14 +18,14 @@ const {
   updateBalance,
   getEmailSettings,
   getMatchingAssets,
-  setDeal,
-  assignDeal,
+  setOrder,
+  assignOrder,
   deactivateAsset,
   updateChannelDetails,
   getChannelDetailsForAsset,
   reactivateOffers,
-  cancelRunningDeal,
-  getDealsForUser,
+  cancelRunningOrder,
+  getOrdersForUser,
 } = require('./firebase');
 const {
   generateUUID,
@@ -349,19 +349,19 @@ debug && console.log(1120, 'payment completed');
       await updateBalance(offeredAsset.owner, Number(offerOwnerWallet.balance) + Number(price));
 
 debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price)); 
-      // 14. Create new deal MAM channel
+      // 14. Create new order MAM channel
       const secretKey = generateSeed(81);
-      const dealId = generateUUID();
-      const dealTimestamp = Date.now();
-      const dealTime = format(dealTimestamp, 'DD MMMM, YYYY H:mm a ');
+      const orderId = generateUUID();
+      const orderTimestamp = Date.now();
+      const orderTime = format(orderTimestamp, 'DD MMMM, YYYY H:mm a ');
       const payload = {
         offer: offeredAsset,
         request: requestedAsset,
         offerId: packet.offerId, 
         requestId: packet.requestId, 
-        dealId,
-        dealTimestamp,
-        dealTime,
+        orderId,
+        orderTimestamp,
+        orderTime,
         price,
         startDate: requestedAsset.startDate,
         endDate: requestedAsset.endDate,
@@ -370,18 +370,18 @@ debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price));
       }
 debug && console.log(1150, payload); 
       const channelDetails = await initializeChannel(payload, secretKey);
-      console.log('deal channelDetails', payload, channelDetails); 
+      console.log('order channelDetails', payload, channelDetails); 
 
-      // 15. Add entry to the "deals" table, including MAM
-debug && console.log(1151, dealId, payload); 
-      await setDeal(dealId, payload, channelDetails);
+      // 15. Add entry to the "orders" table, including MAM
+debug && console.log(1151, orderId, payload); 
+      await setOrder(orderId, payload, channelDetails);
 
       const channelPayload = {
         offerId: packet.offerId, 
         requestId: packet.requestId,
-        dealId,
-        dealTimestamp, 
-        dealTime,
+        orderId,
+        orderTimestamp, 
+        orderTime,
         price,
         startDate: requestedAsset.startDate,
         endDate: requestedAsset.endDate,
@@ -405,14 +405,14 @@ debug && console.log(1180, packet.requestId, requestAppendResult);
       // 19. Set request inactive
       await deactivateAsset('requests', packet.requestId);
 
-debug && console.log(2000, dealId); 
-      // 20. Add deal to sellers deals list 
-      await assignDeal(offeredAsset.owner, dealId, dealTimestamp, dealTime);
+debug && console.log(2000, orderId); 
+      // 20. Add order to sellers orders list 
+      await assignOrder(offeredAsset.owner, orderId, orderTimestamp, orderTime);
 
-      // 21. Add deal to purchasers deals list 
-      await assignDeal(requestedAsset.owner, dealId, dealTimestamp, dealTime);
+      // 21. Add order to purchasers orders list 
+      await assignOrder(requestedAsset.owner, orderId, orderTimestamp, orderTime);
 
-debug && console.log(2100, offeredAsset.owner, requestedAsset.owner, dealId); 
+debug && console.log(2100, offeredAsset.owner, requestedAsset.owner, orderId); 
       return res.json({ success: true });
     } catch (e) {
       console.error('purchaseData failed. Error: ', e, packet);
@@ -480,12 +480,12 @@ exports.history = functions.https.onRequest((req, res) => {
 
       const channelDetails = await getChannelDetailsForAsset(params.assetId);
 
-      const deals = await fetchChannel(channelDetails);
+      const orders = await fetchChannel(channelDetails);
 
       return res.json({
         success: true,
         asset,
-        deals,
+        orders,
         channelDetails: { 
           root: channelDetails.root,
           secretKey: channelDetails.secretKey
@@ -509,7 +509,7 @@ exports.orders = functions.https.onRequest((req, res) => {
       }
 
       const user = await getKey(<String>params.apiKey);
-      const orderEntries = await getDealsForUser(user.uid);
+      const orderEntries = await getOrdersForUser(user.uid);
 
       const promises = await orderEntries.map(async ({ orderId }) => {
         const promise = await new Promise(async (resolve, reject) => {
@@ -533,68 +533,68 @@ exports.orders = functions.https.onRequest((req, res) => {
   });
 });
 
-// Cancel running deal
+// Cancel running order
 exports.cancel = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
       const packet = req.body;
-      if (!packet || !packet.apiKey || !packet.dealId) {
+      if (!packet || !packet.apiKey || !packet.orderId) {
         console.error('cancel failed. Packet: ', packet);
         return res.status(400).json({ error: 'Malformed Request' });
       }
 
-      const deal = await getAsset('deals', packet.dealId, true);
-      if (!deal) {
-        return res.status(403).json({ error: 'Deal not found' });
+      const order = await getAsset('orders', packet.orderId, true);
+      if (!order) {
+        return res.status(403).json({ error: 'Order not found' });
       }
 
       const user = await getKey(<String>packet.apiKey);
-      if (user.uid !== deal.offer.owner && user.uid !== deal.request.owner) {
-        return res.status(403).json({ error: 'Current user is not the participating in the given deal' });
+      if (user.uid !== order.offer.owner && user.uid !== order.request.owner) {
+        return res.status(403).json({ error: 'Current user is not the participating in the given order' });
       }
 
-      // Cancel deal and reactivate offer
-      await cancelRunningDeal(deal.dealId, deal.offerId);
+      // Cancel order and reactivate offer
+      await cancelRunningOrder(order.orderId, order.offerId);
       
       const cancellationTimestamp = Date.now();
       const cancellationDate = format(cancellationTimestamp, 'DD MMMM, YYYY H:mm a ');
 
-      // Update deal MAM channel
-      const dealPayload = {
-        dealId: deal.dealId,
-        offerId: deal.offerId, 
-        requestId: deal.requestId,
+      // Update order MAM channel
+      const orderPayload = {
+        orderId: order.orderId,
+        offerId: order.offerId, 
+        requestId: order.requestId,
         cancelled: true,
         cancellationDate,
         cancellationTimestamp,
         cancelledBy: user.uid,
-        startDate: deal.startDate,
-        startTimestamp: deal.startTimestamp
+        startDate: order.startDate,
+        startTimestamp: order.startTimestamp
       };
-      const dealAppendResult = await appendToChannel(deal.dealId, dealPayload);
+      const orderAppendResult = await appendToChannel(order.orderId, orderPayload);
       
-      await updateChannelDetails(deal.dealId, dealAppendResult);
+      await updateChannelDetails(order.orderId, orderAppendResult);
 
       // Update asset MAM channel
       const assetPayload = {
-        offerId: deal.offerId, 
-        requestId: deal.requestId,
-        dealId: deal.dealId,
-        dealTimestamp: deal.dealTimestamp, 
-        dealTime: deal.dealTime,
-        startDate: deal.startDate,
-        startTimestamp: deal.startTimestamp,
-        price: deal.price,
+        offerId: order.offerId, 
+        requestId: order.requestId,
+        orderId: order.orderId,
+        orderTimestamp: order.orderTimestamp, 
+        orderTime: order.orderTime,
+        startDate: order.startDate,
+        startTimestamp: order.startTimestamp,
+        price: order.price,
         cancelled: true,
         cancellationDate,
         cancellationTimestamp,
         cancelledBy: user.uid
       };
-      const requestAppendResult = await appendToChannel(deal.requestId, assetPayload);
-      await updateChannelDetails(deal.requestId, requestAppendResult);
+      const requestAppendResult = await appendToChannel(order.requestId, assetPayload);
+      await updateChannelDetails(order.requestId, requestAppendResult);
 
-      const offerAppendResult = await appendToChannel(deal.offerId, assetPayload);
-      await updateChannelDetails(deal.offerId, offerAppendResult);
+      const offerAppendResult = await appendToChannel(order.offerId, assetPayload);
+      await updateChannelDetails(order.offerId, offerAppendResult);
 
       return res.json({ success: true });
     } catch (e) {

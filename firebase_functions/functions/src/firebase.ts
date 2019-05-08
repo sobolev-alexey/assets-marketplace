@@ -166,32 +166,32 @@ exports.setAsset = async (collection: string, asset: any, channelDetails: any) =
   return true;
 };
 
-exports.setDeal = async (dealId: string, payload: any, channelDetails: any) => {
+exports.setOrder = async (orderId: string, payload: any, channelDetails: any) => {
   await admin
     .firestore()
     .collection('mam')
-    .doc(dealId)
+    .doc(orderId)
     .set({ ...channelDetails });
 
   // Add public asset record
   await admin
     .firestore()
-    .collection('deals')
-    .doc(dealId)
+    .collection('orders')
+    .doc(orderId)
     .set({ ...payload });
 
   return true;
 };
 
-exports.assignDeal = async (userId: string, dealId: string, dealTimestamp: string, dealTime: string) => {
-  // Add deal to owners' deals list
+exports.assignOrder = async (userId: string, orderId: string, orderTimestamp: string, orderTime: string) => {
+  // Add order to owners' orders list
   await admin
     .firestore()
     .collection('users')
     .doc(userId)
-    .collection('deals')
-    .doc(dealId)
-    .set({ dealId, dealTimestamp, dealTime });
+    .collection('orders')
+    .doc(orderId)
+    .set({ orderId, orderTimestamp, orderTime });
 
   return true;
 };
@@ -220,18 +220,18 @@ exports.deactivateAsset = async (collection: string, assetId: string) => {
 };
 
 exports.deleteAsset = async (collection: string, assetId: string, userId: string) => {
-  // Remove Asset if not in the list of deals
+  // Remove Asset if not in the list of orders
   
   let canDeleteAsset = true;
-  // Get deal
-    const dealsSnapshot = await admin
+  // Get order
+    const ordersSnapshot = await admin
     .firestore()
-    .collection('deals')
+    .collection('orders')
     .get();
 
-    dealsSnapshot.docs.forEach(async deal => {
-      if (deal.exists) {
-        const data = deal.data();
+    ordersSnapshot.docs.forEach(async order => {
+      if (order.exists) {
+        const data = order.data();
         if (data.assetId === assetId) {
           canDeleteAsset = false;
         }
@@ -417,8 +417,8 @@ exports.updateChannelDetails = async (assetId: string, channelDetails: any) => {
     .set({ ...channelDetails }, { merge: true });
 };
 
-// exports.getDealsForAsset = async (asset: any) => {
-//   const queryBuilder = admin.firestore().collection('deals');
+// exports.getOrdersForAsset = async (asset: any) => {
+//   const queryBuilder = admin.firestore().collection('orders');
 //   let query
 
 //   if (asset.category === 'offers') {
@@ -452,9 +452,9 @@ exports.getChannelDetailsForAsset = async (assetId: string) => {
 
 
 exports.reactivateOffers = async () => {
-  // Get expired deals
+  // Get expired orders
   const querySnapshot = await admin.firestore()
-    .collection('deals')
+    .collection('orders')
     .where('endTimestamp', '<', Date.now())
     .get();
 
@@ -472,12 +472,12 @@ exports.reactivateOffers = async () => {
   return true;
 };
 
-exports.cancelRunningDeal = async (dealId: string, offerId: string) => {
-  // Update deal asset
+exports.cancelRunningOrder = async (orderId: string, offerId: string) => {
+  // Update order asset
   await admin
     .firestore()
-    .collection('deals')
-    .doc(dealId)
+    .collection('orders')
+    .doc(orderId)
     .set({ cancelled: true, cancelTime: Date.now() }, { merge: true });
 
   // Update offer asset
@@ -490,13 +490,13 @@ exports.cancelRunningDeal = async (dealId: string, offerId: string) => {
   return true;
 };
 
-exports.getDealsForUser = async (userId: string) => {
-  // Get User's deals
+exports.getOrdersForUser = async (userId: string) => {
+  // Get User's orders
   const querySnapshot = await admin
     .firestore()
     .collection('users')
     .doc(userId)
-    .collection('deals')
+    .collection('orders')
     .get();
 
   if (querySnapshot.size === 0) return [];
@@ -506,7 +506,7 @@ exports.getDealsForUser = async (userId: string) => {
     if (doc.exists) {
       return doc.data();
     } else {
-      console.log('getDealsForUser failed.', userId, doc);
+      console.log('getOrdersForUser failed.', userId, doc);
       return null;
     }
   });

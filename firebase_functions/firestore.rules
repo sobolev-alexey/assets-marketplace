@@ -19,8 +19,8 @@ service cloud.firestore {
       allow read;
       allow write: if request.auth.token.email.matches('.*@iota[.]org');
    	}
-		match /deals/{documents=**} {
-      // Allow reading of deals
+		match /orders/{documents=**} {
+      // Allow reading of orders
       allow read;
       allow write: if request.auth.token.email.matches('.*@iota[.]org');
    	}
