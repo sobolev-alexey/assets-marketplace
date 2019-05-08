@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import isEmpty from 'lodash-es/isEmpty';
 import styled from 'styled-components';
 import firebase from 'firebase/app';
+import ReactTable from 'react-table';
+import 'react-table/react-table.css';
 import { loadUser, logout } from '../store/user/actions';
 import api from '../utils/api';
 import AssetNav from '../components/asset-nav';
@@ -18,7 +20,8 @@ class History extends React.Component {
     this.state = {
       transactions: [],
       user: {},
-      loading: false
+      loading: false,
+      historyObject: {}
     };
 
     this.checkLogin = this.checkLogin.bind(this);
@@ -80,9 +83,13 @@ class History extends React.Component {
   async getHistory(assetId) {
     const { userData } = this.props;
     this.setState({ loading: true });
-    const transactions = await api.get('history', { assetId, apiKey: userData.apiKey });
-    console.log('history', transactions);
-    return this.setState({ transactions, loading: false });
+    const historyObject = await api.get('history', { assetId, apiKey: userData.apiKey });
+    console.log('history', historyObject);
+    if (!isEmpty(historyObject) && historyObject.success) {
+      this.setState({ historyObject, loading: false });
+    } else {
+      this.setState({ loading: false });
+    }
   };
 
   logout() {
@@ -99,8 +106,13 @@ class History extends React.Component {
       });
   };
 
+  // getStatus = order => {
+  //   if (order.cancelled) return 'cancelled';
+  //   d.cancelled ? 'cancelled' : ''
+  // }
+
   render() {
-    const { user, loading, transactions } = this.state;
+    const { user, loading, historyObject } = this.state;
     const { userData } = this.props;
 
     return (
@@ -118,11 +130,46 @@ class History extends React.Component {
             ) : (
               <TransactionsWrapper>
                 {
-                  transactions && transactions.length > 1 ? (
-                    <AssetList
-                      assets={transactions}
-                      category="offers"
-                      onSelect={this.onSelect}
+                  !isEmpty(historyObject) && historyObject.orders.length > 1 ? (
+                    <ReactTable
+                      data={historyObject.orders.slice(1)}
+                      columns={[
+                        {
+                          Header: "Booked Time",
+                          columns: [
+                            {
+                              Header: "Start Time",
+                              accessor: "startDate"
+                            },
+                            {
+                              Header: "End Time",
+                              accessor: d => (d.endDate || d.cancellationDate),
+                              id: "endDate",
+                            }
+                          ]
+                        },
+                        {
+                          Header: "Info",
+                          columns: [
+                            {
+                              Header: "Price",
+                              accessor: "price"
+                            },
+                            {
+                              Header: "Status",
+                              id: "status",
+                              accessor: d => (d.cancelled ? 'cancelled' : ''),
+                            },
+                          ]
+                        }
+                      ]}
+                      defaultPageSize={20}
+                      style={{
+                        backgroundColor: 'white',
+                        width: 1000,
+                        height: 400 // This will force the table body to overflow and scroll, since there is not enough room
+                      }}
+                      className="-striped -highlight"
                     />
                   ) : null
                 }
