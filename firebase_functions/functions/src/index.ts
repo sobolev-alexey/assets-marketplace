@@ -445,7 +445,7 @@ exports.match = functions.https.onRequest((req, res) => {
 
       return res.json({
         success: true,
-        [asset.category]: [asset],
+        ownAsset: asset,
         [category]: matchingAssets
       });
     } catch (e) {

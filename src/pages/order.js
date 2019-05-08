@@ -10,6 +10,7 @@ import LoginModal from '../components/login-modal';
 import Modal from '../components/modal';
 import Sidebar from '../components/user-sidebar';
 import AssetList from '../components/asset-list/order-page';
+import AssetCard from '../components/card/asset';
 import Loading from '../components/loading';
 
 export const UserContext = React.createContext({});
@@ -185,6 +186,18 @@ class Order extends React.Component {
               </LoadingBox>
             ) : (
               <AssetsWrapper>
+                <Heading>Selected Asset</Heading>
+                {
+                  assets.ownAsset && !isEmpty(assets.ownAsset) ? (
+                    <AssetCard asset={assets.ownAsset} />
+                  ) : null
+                }
+                {
+                  selectedOffer && selectedRequest ? (
+                    <Button onClick={this.completeOrder}>Complete Order</Button>
+                  ) : null
+                }
+                <Heading>Please select matching offer</Heading>
                 {
                   assets.offers && !isEmpty(assets.offers) ? (
                     <Offers>
@@ -196,11 +209,7 @@ class Order extends React.Component {
                     </Offers>
                   ) : null
                 }
-                {
-                  selectedOffer && selectedRequest ? (
-                    <Button onClick={this.completeOrder}>Complete Order</Button>
-                  ) : null
-                }
+                <Heading>Please select matching request</Heading>
                 {
                   assets.requests && !isEmpty(assets.requests) ? (
                     <Requests>
@@ -295,4 +304,11 @@ const Button = styled.button`
   box-shadow: 0 10px 20px 0 #0a2056;
   font-weight: 700;
   background-color: #009fff;
+`;
+
+const Heading = styled.h2`
+  font-size: 2rem;
+  font-weight: 300;
+  color: #009fff;
+  padding: 50px 40px 0;
 `;
