@@ -193,9 +193,9 @@ export default class extends React.Component {
                     >
                       <option value=""></option>     
                       <option value="frequency">Frequency</option>
-                      <option value="bandwidth">Bandwidth</option>
-                      <option value="volume">Volume</option>
-                      <option value="energy">Energy</option>
+                      <option value="infrastructure">Infrastructure</option>
+                      <option value="cell">Cell</option>
+                      <option value="connectivity">Connectivity</option>
                     </select>
                   </Column>
                   <Column>
