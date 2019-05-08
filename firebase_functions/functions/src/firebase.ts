@@ -263,16 +263,6 @@ exports.deleteAsset = async (collection: string, assetId: string, userId: string
   return true;
 };
 
-exports.toggleWhitelistAsset = async (collection: string, assetId: string, inactive: string) => {
-  // Whitelist asset
-  await admin
-    .firestore()
-    .collection(collection)
-    .doc(assetId)
-    .set({ inactive: inactive === 'true' }, { merge: true });
-  return true;
-};
-
 exports.getUser = async (userId: string, internal: boolean = false) => {
   // Get user
   const doc = await admin

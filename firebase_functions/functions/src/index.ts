@@ -16,7 +16,6 @@ const {
   setApiKey,
   setWallet,
   deleteAsset,
-  toggleWhitelistAsset,
   updateBalance,
   getEmailSettings,
   getMatchingAssets,
@@ -195,32 +194,6 @@ exports.setupUser = functions.auth.user().onCreate(user => {
         console.error('setupUser rejected with ', e.message);
         reject(e.message);
       }
-    }
-  });
-});
-
-// Toggle whitelist entry
-exports.toggleWhitelist = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    // Check Fields
-    const packet = req.body;
-    if (!packet || !packet.assetId || !packet.isInactive || !packet.apiKey || !packet.uid) {
-      console.error('toggleWhitelist failed. Packet: ', packet);
-      return res.status(400).json({ error: 'Ensure all fields are included' });
-    }
-
-    try {
-      const data = await getKey(<String>packet.apiKey);
-      if (data.email && data.email.indexOf('iota.org') !== -1 && packet.uid === data.uid) {
-        // Toggle whitelist
-        console.error('toggleWhitelist success', packet, data);
-        await toggleWhitelistAsset(packet.assetId, packet.isInactive);
-        return res.json({ success: true });
-      }
-      return res.status(403).json({ error: 'Access denied' });
-    } catch (e) {
-      console.error('toggleWhitelist failed. Error: ', e.message);
-      return res.status(403).json({ error: e.message });
     }
   });
 });
