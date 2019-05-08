@@ -55,18 +55,13 @@
         "type": 301
       },
       {
-        "source": "/deal/:assetId",
-        "destination": "/#/deal/:assetId",
+        "source": "/order/:assetId",
+        "destination": "/#/order/:assetId",
         "type": 301
       },
       {
         "source": "/history/:assetId",
         "destination": "/#/history/:assetId",
-        "type": 301
-      },
-      {
-        "source": "/faucet",
-        "destination": "/#/faucet",
         "type": 301
       }
     ]

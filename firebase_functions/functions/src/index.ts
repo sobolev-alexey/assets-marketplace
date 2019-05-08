@@ -251,12 +251,12 @@ exports.faucet = functions.https.onRequest((req, res) => {
   });
 });
 
-exports.makeDeal = functions.https.onRequest((req, res) => {
+exports.order = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     // Check Fields
     const packet = req.body;
     if (!packet || !packet.apiKey || !packet.offerId || !packet.requestId) {
-      console.error('makeDeal failed. Packet: ', packet);
+      console.error('order failed. Packet: ', packet);
       return res.status(400).json({ error: 'Malformed Request' });
     }
 
@@ -311,18 +311,18 @@ debug && console.log(1100, price);
       if (requestOwnerWallet && requestOwnerWallet.balance) {
         newWalletBalance = Number(requestOwnerWallet.balance) - Number(price);
         if (newWalletBalance < 0) {
-          console.error('makeDeal failed. Not enough funds', packet);
+          console.error('order failed. Not enough funds', packet);
           return res.json({ error: 'Not enough funds or your new wallet is awaiting confirmation. Please try again in 5 min.' });
         }
       } else {
-        console.error('makeDeal failed. Wallet not set', packet);
+        console.error('order failed. Wallet not set', packet);
         return res.json({ error: `Asset requesters' wallet not set` });
       }
 
 debug && console.log(1111, newWalletBalance); 
       // 11. Transfer tokens from request owner to offer owner
       const transactions = await purchaseData(requestedAsset.owner, offerOwnerWallet.address, Number(price));
-      console.log('makeDeal', requestedAsset.owner, offeredAsset.owner, transactions);
+      console.log('order', requestedAsset.owner, offeredAsset.owner, transactions);
 
       if (!transactions || transactions.length === 0) {
         return res.json({ error: 'Purchase failed. Insufficient balance or out of sync' });
@@ -337,7 +337,7 @@ debug && console.log(1112, transactions.length);
 debug && console.log(1113, bundle); 
       // Make sure TX is valid
       if (!validateBundleSignatures(bundle)) {
-        console.error('makeDeal failed. Transaction is invalid for: ', bundle);
+        console.error('order failed. Transaction is invalid for: ', bundle);
         return res.status(403).json({ error: 'Transaction is Invalid' });
       }
 
@@ -498,24 +498,24 @@ exports.history = functions.https.onRequest((req, res) => {
   });
 });
 
-// Get list of active deals
-exports.deals = functions.https.onRequest((req, res) => {
+// Get list of active orders
+exports.orders = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
       const params = req.query;
       if (!params || !params.apiKey) {
-        console.error('deals failed. Params: ', params);
+        console.error('orders failed. Params: ', params);
         return res.status(400).json({ error: 'Malformed Request' });
       }
 
       const user = await getKey(<String>params.apiKey);
-      const dealEntries = await getDealsForUser(user.uid);
+      const orderEntries = await getDealsForUser(user.uid);
 
-      const promises = await dealEntries.map(async ({ dealId }) => {
+      const promises = await orderEntries.map(async ({ orderId }) => {
         const promise = await new Promise(async (resolve, reject) => {
           try {
-            const deal = await getAsset('deals', dealId, true);
-            resolve(deal);
+            const order = await getAsset('orders', orderId, true);
+            resolve(order);
           } catch (error) {
             reject({ error });
           }
@@ -524,10 +524,10 @@ exports.deals = functions.https.onRequest((req, res) => {
         return promise;
       });
 
-      const deals = await Promise.all(promises);
-      return res.json({ success: true, deals });
+      const orders = await Promise.all(promises);
+      return res.json({ success: true, orders });
     } catch (e) {
-      console.error('active deals failed. Error: ', e.message);
+      console.error('active orders failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
     }
   });

@@ -33,7 +33,7 @@ export default ({
   );
 
   const seeMatchButton = (
-    <Link to={`/deal/${assetId}`}>
+    <Link to={`/order/${assetId}`}>
     <Button type="button" className="btn btn-accent txt-bold modal-trigger">
       See Match!
     </Button>
@@ -95,8 +95,8 @@ export default ({
       button: purchaseButton,
       icon
     },
-    dealMade: {
-      heading: 'Purchase completed',
+    orderCompleted: {
+      heading: 'Order completed',
       body: 'Asset was successfully purchased.',
       button: closeButton
     },

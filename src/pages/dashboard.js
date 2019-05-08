@@ -26,7 +26,7 @@ class Dashboard extends React.Component {
         requests: []
       },
       user: {},
-      deals: [],
+      orders: [],
       loading: false,
       displayNewOfferForm: false,
       displayNewRequestForm: false,
@@ -46,7 +46,7 @@ class Dashboard extends React.Component {
     this.createRequest = this.createRequest.bind(this);
     this.logout = this.logout.bind(this);
     // this.modify = this.modify.bind(this);
-    this.getDeals = this.getDeals.bind(this);
+    this.getOrders = this.getOrders.bind(this);
     this.showHistory = this.showHistory.bind(this);
     this.showNewOfferForm = this.showNewOfferForm.bind(this);
     this.hideNewOfferForm = this.hideNewOfferForm.bind(this);
@@ -97,7 +97,7 @@ class Dashboard extends React.Component {
   async getUser() {
     await this.props.loadUser(this.state.user.uid);
     await this.findAssets();
-    await this.getDeals();
+    await this.getOrders();
   };
 
   async findAssets() {
@@ -231,12 +231,11 @@ class Dashboard extends React.Component {
     this.props.history.push(`/history/${assetId}`);
   }
 
-  async getDeals() {
+  async getOrders() {
     const { userData } = this.props;
     this.setState({ loading: true });
-    const deals = await api.get('deals', { apiKey: userData.apiKey });
-    console.log('deals', deals);
-    return this.setState({ deals, loading: false });
+    const orders = await api.get('orders', { apiKey: userData.apiKey });
+    return this.setState({ orders, loading: false });
   };
 
   // modify(assetId, category) {

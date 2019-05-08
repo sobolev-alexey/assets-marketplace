@@ -5,7 +5,7 @@ import MiniHeader from '../components/header/mini-header';
 import AssetList from '../components/asset-list';
 import Footer from '../components/footer';
 import Loading from '../components/loading';
-import { allAssets } from '../utils/firebase';
+import api from '../utils/api';
 
 export default class extends React.Component {
   constructor(props) {
@@ -20,7 +20,7 @@ export default class extends React.Component {
   }
 
   async componentDidMount() {
-    const assets = await allAssets();
+    const assets = await api.get('assets');
     this.setState({ assets, loading: false });
   }
 

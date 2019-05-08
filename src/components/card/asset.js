@@ -11,7 +11,7 @@ const Heading = ({ assetId, active, assetName, category }) => {
   return (
     <Full>
       <AssetCategory>{category}</AssetCategory>
-      <Link to={`/deal/${assetId}`}>
+      <Link to={`/order/${assetId}`}>
         <AssetId>{assetName.length > 20 ? `${assetName.substr(0, 20)}...` : assetName}</AssetId>
       </Link>
       {

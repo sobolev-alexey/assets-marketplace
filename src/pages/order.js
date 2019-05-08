@@ -9,12 +9,12 @@ import AssetNav from '../components/asset-nav';
 import LoginModal from '../components/login-modal';
 import Modal from '../components/modal';
 import Sidebar from '../components/user-sidebar';
-import AssetList from '../components/asset-list/deal-page';
+import AssetList from '../components/asset-list/order-page';
 import Loading from '../components/loading';
 
 export const UserContext = React.createContext({});
 
-class Deal extends React.Component {
+class Order extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -34,7 +34,7 @@ class Deal extends React.Component {
     this.findMatchingAssets = this.findMatchingAssets.bind(this);
     this.logout = this.logout.bind(this);
     this.onSelect = this.onSelect.bind(this);
-    this.makeDeal = this.makeDeal.bind(this);
+    this.completeOrder = this.completeOrder.bind(this);
     this.notificationCallback = this.notificationCallback.bind(this);
   }
 
@@ -122,7 +122,7 @@ class Deal extends React.Component {
     }
   }
 
-  makeDeal() {
+  completeOrder() {
     const { selectedOffer, selectedRequest } = this.state;
     this.setState({ loading: true });
 
@@ -135,13 +135,13 @@ class Deal extends React.Component {
         };
   
         // Call server
-        const data = await api.post('makeDeal', packet);
+        const data = await api.post('order', packet);
         // Check success
         if (data.success) {
           this.setState({ 
             showModal: true, 
             error: false,
-            notification: 'dealMade',
+            notification: 'orderCompleted',
             loading: false
           });
         } else if (data.error) {
@@ -198,7 +198,7 @@ class Deal extends React.Component {
                 }
                 {
                   selectedOffer && selectedRequest ? (
-                    <Button onClick={this.makeDeal}>Deal</Button>
+                    <Button onClick={this.completeOrder}>Complete Order</Button>
                   ) : null
                 }
                 {
@@ -244,7 +244,7 @@ const mapDispatchToProps = dispatch => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(Deal);
+)(Order);
 
 const Main = styled.main`
   width: 100vw;
