@@ -45,7 +45,6 @@ class Dashboard extends React.Component {
     this.deleteAsset = this.deleteAsset.bind(this);
     this.createRequest = this.createRequest.bind(this);
     this.logout = this.logout.bind(this);
-    // this.modify = this.modify.bind(this);
     this.getOrders = this.getOrders.bind(this);
     this.showHistory = this.showHistory.bind(this);
     this.showNewOfferForm = this.showNewOfferForm.bind(this);
@@ -238,14 +237,21 @@ class Dashboard extends React.Component {
     return this.setState({ orders, loading: false });
   };
 
-  // modify(assetId, category) {
-  //   const asset = this.state.assets[category].find(asset => asset.assetId === assetId);
-  //   this.setState({ assetToModify: asset });
-  // }
-
   render() {
     const { assets, user, loading, displayNewOfferForm, displayNewRequestForm } = this.state;
     const { userData } = this.props;
+
+    const activeOffers = assets.offers && !isEmpty(assets.offers) 
+      ? assets.offers.filter(asset => asset.active) : [];
+    
+    const inactiveOffers = assets.offers && !isEmpty(assets.offers) 
+      ? assets.offers.filter(asset => !asset.active) : [];
+
+    const activeRequests = assets.requests && !isEmpty(assets.requests) 
+      ? assets.requests.filter(asset => asset.active) : [];
+
+    const inactiveRequests = assets.requests && !isEmpty(assets.requests) 
+      ? assets.requests.filter(asset => !asset.active) : [];
 
     return (
       <Main>
@@ -264,7 +270,6 @@ class Dashboard extends React.Component {
                 value={{
                   deleteAsset: this.deleteAsset, 
                   history: this.showHistory,
-                  // modify: this.modify
                 }}
               >
                 <ModifyAssetContext.Provider
@@ -286,18 +291,24 @@ class Dashboard extends React.Component {
                       /> 
                     }
                     {
-                      assets.offers && !isEmpty(assets.offers) ? (
+                      activeOffers.length > 0 ? (
                         <React.Fragment>
-                          Active Offers
+                          <Heading>Active Offers</Heading>
                           <ActiveAssets>
                             <AssetList
-                              assets={assets.offers.filter(asset => asset.active)}
+                              assets={activeOffers}
                             />
                           </ActiveAssets>
-                          Inactive Offers
+                        </React.Fragment>
+                      ) : null
+                    }
+                    {
+                      inactiveOffers.length > 0 ? (
+                        <React.Fragment>
+                          <Heading>Inactive Offers</Heading>
                           <InactiveAssets>
                             <AssetList
-                              assets={assets.offers.filter(asset => !asset.active)}
+                              assets={inactiveOffers}
                             />
                           </InactiveAssets>
                         </React.Fragment>
@@ -318,18 +329,24 @@ class Dashboard extends React.Component {
                       /> 
                     }
                     {
-                      assets.requests && !isEmpty(assets.requests) ? (
+                      activeRequests.length > 0 ? (
                         <React.Fragment>
-                          Active Requests
+                          <Heading>Active Requests</Heading>
                           <ActiveAssets>
                             <AssetList
-                              assets={assets.requests.filter(asset => asset.active)}
+                              assets={activeRequests}
                             />
                           </ActiveAssets>
-                          Inactive Requests
+                        </React.Fragment>
+                      ) : null
+                    }
+                    {
+                      inactiveRequests.length > 0 ? (
+                        <React.Fragment>
+                          <Heading>Inactive Requests</Heading>
                           <InactiveAssets>
                             <AssetList
-                              assets={assets.requests.filter(asset => !asset.active)}
+                              assets={inactiveRequests}
                             />
                           </InactiveAssets>
                         </React.Fragment>
@@ -422,4 +439,11 @@ const Button = styled.button`
   box-shadow: 0 10px 20px 0 #0a2056;
   font-weight: 700;
   background-color: #009fff;
+`;
+
+const Heading = styled.h2`
+  font-size: 2rem;
+  font-weight: 300;
+  color: #ffffff;
+  padding: 50px 40px 0;
 `;
