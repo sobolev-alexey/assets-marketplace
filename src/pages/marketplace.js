@@ -25,8 +25,7 @@ export default class extends React.Component {
   }
 
   render() {
-    const offers = this.state.assets.offers.filter(asset => asset && asset.active);
-    const requests = this.state.assets.requests.filter(asset => asset && asset.active);
+    const { assets: { offers, requests } } = this.state;
 
     return (
       <Main id="main">
@@ -38,24 +37,24 @@ export default class extends React.Component {
               <Loading color="#009fff" size="80" />
             </LoadingBox>
           ) : (
-            <React.Fragment>
-              <Heading>Active Offers</Heading>
+            <AssetsOuterWrapper>
               {
                 offers.length > 0 ? (
                   <AssetsWrapper id="offers">
-                    <AssetList assets={offers} />
+                    <Heading>Active Offers</Heading>
+                    <AssetList assets={offers.filter(asset => asset && asset.active)} />
                   </AssetsWrapper>
                 ) : null
               }
-              <Heading>Active Requests</Heading>
               {
                 requests.length > 0 ? (
                   <AssetsWrapper id="requests">
-                    <AssetList assets={requests} />
+                    <Heading>Active Requests</Heading>
+                    <AssetList assets={requests.filter(asset => asset && asset.active)} />
                   </AssetsWrapper>
                 ) : null
               }
-            </React.Fragment>
+            </AssetsOuterWrapper>
           )
         }
         <Footer />
@@ -66,6 +65,12 @@ export default class extends React.Component {
 
 const Main = styled.div`
   overflow-x: hidden;
+`;
+
+const AssetsOuterWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  min-height: 400px;
 `;
 
 const AssetsWrapper = styled.div`

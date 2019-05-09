@@ -309,6 +309,6 @@ const Button = styled.button`
 const Heading = styled.h2`
   font-size: 2rem;
   font-weight: 300;
-  color: #009fff;
+  color: #ffffff;
   padding: 50px 40px 0;
 `;

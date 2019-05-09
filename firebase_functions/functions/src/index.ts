@@ -61,12 +61,14 @@ exports.newAsset = functions.https.onRequest((req, res) => {
       // Modify object to include
       packet.asset.assetId = generateUUID();
       packet.asset.owner = uid;
+      packet.asset.active = true;
 
       const channelDetails = await initializeChannel(packet.asset, secretKey);
       console.log('newAsset channelDetails', packet.category, packet.asset.assetId, channelDetails); 
       await setAsset(packet.category, packet.asset, channelDetails);
 
-      const matchingAssets = await getMatchingAssets(packet.category, packet.asset);
+      const category = packet.category !== 'offers' ? 'offers' : 'requests';
+      const matchingAssets = await getMatchingAssets(category, packet.asset);
       console.log('newAsset matchingAssets', packet.asset.assetId, matchingAssets);
 
       return res.json({

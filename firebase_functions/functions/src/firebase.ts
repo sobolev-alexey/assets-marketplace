@@ -56,53 +56,20 @@ exports.getAssets = async (collection: string) => {
     .collection(collection)
     .get();
 
-  const promises = [];
-  const results = [];
-
-  querySnapshot.docs.forEach(doc => {
-    const promise = new Promise((resolve, reject) => {
-      try {
-        if (doc.exists) {
-          const result = doc.data();
-          result.createTime = doc.createTime;
-          delete result.sk;
-          delete result.owner;
-
-          // Get data
-          admin
-            .firestore()
-            .collection(collection)
-            .doc(result.assetId)
-            .collection('data')
-            .limit(2)
-            .get()
-            .then(assetData => {
-              if (assetData.size !== 0) {
-                result.hasData = true;
-              };
-              results.push(result);
-              resolve(result);
-            })
-            .catch(error => {
-              reject(error);
-            });
-        } else {
-          console.log('getAssets failed.', doc);
-          return null;
-        }
-      } catch (error) {
-        reject(error);
-      }
-    });
-    promises.push(promise);
-  });
-
+  // Check there is data
+  if (querySnapshot.size === 0) return [];
   // Return data
-  return await Promise.all(promises)
-    .then(() => results)
-    .catch(error => {
-      console.log('getAssets error', error);
-    });
+  return querySnapshot.docs.map(doc => {
+    if (doc.exists) {
+      const result = doc.data();
+      delete result.owner;
+      return result;
+    } else {
+      console.log('getAssets failed.', doc);
+      return null;
+    }
+  });
+  
 };
 
 exports.getUserAssets = async (collection: string, user: string) => {
@@ -118,7 +85,6 @@ exports.getUserAssets = async (collection: string, user: string) => {
   return querySnapshot.docs.map(doc => {
     if (doc.exists) {
       const result = doc.data();
-      delete result.sk;
       delete result.owner;
       return result;
     } else {
