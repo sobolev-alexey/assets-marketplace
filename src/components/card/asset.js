@@ -50,6 +50,8 @@ const Footer = ({ assetId, active, category }) => {
 const Asset = props => {
   const { asset } = props;
 
+  console.log(asset)
+
   return (
     <Card header={Heading(asset, props.delete)} footer={Footer(asset)}>
       <Row>
@@ -91,6 +93,20 @@ const Asset = props => {
         </RowHalf>
       </Row>
       {
+        asset.dataTypes && asset.dataTypes.length > 0 ? (
+          <Row>
+          {
+            asset.dataTypes.map(({ name, value }) => (
+              <RowHalf key={name}>
+                <RowDesc>{name}:</RowDesc>
+                <Data>{value}</Data>
+              </RowHalf>
+            ))
+          }
+          </Row>
+        ) : null
+      }
+      {
         asset.assetDescription ? (
           <RowFull>
             <RowDesc>Asset Description:</RowDesc>
@@ -117,6 +133,7 @@ export default connect(mapStateToProps)(Asset);
 const Row = styled.div`
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   &:not(:last-of-type) {
     margin-bottom: 5px;
   }
@@ -136,19 +153,14 @@ const RowFull = styled.div`
 `;
 
 const RowHalf = styled.div`
+  width: 50%;
   padding: 5px 30px;
   display: inline-block;
-  &:last-child {
+  :nth-child(even) {
     text-align: right;
   }
-
-  &:first-of-type {
-    @media (max-width: 400px) {
-      border: none;
-      width: 140px;
-      padding-left: 20px;
-      padding-right: 0;
-    }
+  :nth-child(odd) {
+    text-align: left;
   }
 `;
 

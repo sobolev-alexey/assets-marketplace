@@ -124,15 +124,23 @@ class Order extends React.Component {
   }
 
   completeOrder() {
-    const { selectedOffer, selectedRequest } = this.state;
-    this.setState({ loading: true });
+    const { assets } = this.state;
 
-    if (selectedOffer && selectedRequest) {
+    if (!isEmpty(assets.ownAsset)) {
+      if (assets.ownAsset.category === 'requests') {
+        this.setState({ selectedRequest: assets.ownAsset.assetId });
+      } else if (assets.ownAsset.category === 'offers') {
+        this.setState({ selectedOffer: assets.ownAsset.assetId });
+      }
+    }
+
+    if (this.state.selectedOffer && this.state.selectedRequest) {
+      this.setState({ loading: true });
       return new Promise(async (resolve) => {
         const packet = {
           apiKey: this.props.userData.apiKey,
-          offerId: selectedOffer, 
-          requestId: selectedRequest
+          offerId: this.state.selectedOffer, 
+          requestId: this.state.selectedRequest
         };
   
         // Call server
@@ -168,9 +176,8 @@ class Order extends React.Component {
   }
 
   render() {
-    const { assets, user, loading, selectedOffer, selectedRequest } = this.state;
+    const { assets, user, loading } = this.state;
     const { userData } = this.props;
-    console.log('data error', this.state.error);
 
     return (
       <Main>
@@ -192,12 +199,11 @@ class Order extends React.Component {
                     <AssetCard asset={assets.ownAsset} />
                   ) : null
                 }
+                <Button onClick={this.completeOrder}>Complete Order</Button>
                 {
-                  selectedOffer && selectedRequest ? (
-                    <Button onClick={this.completeOrder}>Complete Order</Button>
-                  ) : null
+                  assets.offers && !isEmpty(assets.offers) && 
+                    <Heading>Please select matching offer</Heading>
                 }
-                <Heading>Please select matching offer</Heading>
                 {
                   assets.offers && !isEmpty(assets.offers) ? (
                     <Offers>
@@ -209,7 +215,10 @@ class Order extends React.Component {
                     </Offers>
                   ) : null
                 }
-                <Heading>Please select matching request</Heading>
+                {
+                  assets.requests && !isEmpty(assets.requests) && 
+                    <Heading>Please select matching request</Heading>
+                }
                 {
                   assets.requests && !isEmpty(assets.requests) ? (
                     <Requests>

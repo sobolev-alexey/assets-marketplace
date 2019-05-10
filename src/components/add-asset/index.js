@@ -5,7 +5,6 @@ import parse from 'date-fns/parse';
 import compareDesc from 'date-fns/compare_desc';
 import isFuture from 'date-fns/is_future';
 import isValid from 'date-fns/is_valid';
-import getTime from 'date-fns/get_time';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Loading from '../loading';
@@ -55,7 +54,7 @@ export default class extends React.Component {
 
   addRow() {
     const dataTypes = this.state.dataTypes;
-    dataTypes.push({ id: '', name: '', unit: '' });
+    dataTypes.push({ name: '', value: '' });
     this.setState({ dataTypes });
   };
 
@@ -125,10 +124,8 @@ export default class extends React.Component {
     };
 
     if (this.props.category === 'requests') {
-      asset.startDate = format(startDate, 'DD MMMM, YYYY H:mm a ');
-      asset.endDate = format(endDate, 'DD MMMM, YYYY H:mm a ');
-      asset.startTimestamp = getTime(startDate);
-      asset.endTimestamp = getTime(endDate);
+      asset.start = startDate;
+      asset.end = endDate;
     }
 
     const createAssetResult = await this.props.createAsset(asset);
@@ -217,9 +214,9 @@ export default class extends React.Component {
                           />
                         </Column>
                         <Column>
-                          <label>Price of the asset:</label>
+                          <label>Price / min:</label>
                           <Input
-                            placeholder={50000}
+                            placeholder={100}
                             type="number"
                             name="assetPrice"
                             value={this.state.assetPrice}
@@ -266,14 +263,14 @@ export default class extends React.Component {
                           <label>Location:</label>
                           <Row>
                             <Input
-                              placeholder="eg. London"
+                              placeholder="eg. Nice"
                               type="text"
                               name="city"
                               value={this.state.city}
                               onChange={this.change}
                             />
                             <Input
-                              placeholder="eg. UK"
+                              placeholder="eg. France"
                               type="text"
                               name="country"
                               value={this.state.country}
@@ -285,7 +282,7 @@ export default class extends React.Component {
                           <Column>
                             <label>Latitude:</label>
                             <Input
-                              placeholder="eg. 51.507"
+                              placeholder="eg. 43.701"
                               type="number"
                               name="assetLat"
                               value={this.state.assetLat}
@@ -295,7 +292,7 @@ export default class extends React.Component {
                           <Column>
                             <label>Longitude:</label>
                             <Input
-                              placeholder="eg. 0.127"
+                              placeholder="eg. 7.264"
                               type="number"
                               name="assetLon"
                               value={this.state.assetLon}
@@ -463,7 +460,7 @@ const Modal = styled.div`
   opacity: 1;
   transition: all 0.5s ease;
   background-color: rgba(14, 56, 160, 0.9);
-  z-index: 2;
+  z-index: 10000;
 `;
 
 const AddAsset = styled.div`

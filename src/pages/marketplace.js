@@ -69,12 +69,14 @@ const Main = styled.div`
 
 const AssetsOuterWrapper = styled.div`
   display: flex;
+  flex-direction: column;
   width: 100%;
   min-height: 400px;
 `;
 
 const AssetsWrapper = styled.div`
   display: flex;
+  flex-direction: column;
   width: 100%;
 `;
 

@@ -22,6 +22,7 @@ const Card = styled.div`
   cursor: default;
   transition: box-shadow 0.19s ease-out;
   width: 400px;
+  height: 100%;
   @media (max-width: 1120px) {
     margin-bottom: 20px;
   }

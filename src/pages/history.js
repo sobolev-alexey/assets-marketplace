@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import isEmpty from 'lodash-es/isEmpty';
 import styled from 'styled-components';
 import firebase from 'firebase/app';
 import ReactTable from 'react-table';
+import Clipboard from 'react-clipboard.js';
 import 'react-table/react-table.css';
 import { loadUser, logout } from '../store/user/actions';
 import api from '../utils/api';
@@ -14,6 +15,53 @@ import Loading from '../components/loading';
 
 export const UserContext = React.createContext({});
 
+const mamExplorerLink = 'https://mam-explorer.firebaseapp.com/?mode=restricted';
+ 
+const AdditionalInfo = ({ channelDetails, provider }) => {
+  const [message, setMessage] = useState('');
+
+  let link = `${mamExplorerLink}&provider=${encodeURIComponent(provider)}`;
+  link += `&root=${channelDetails.root}`;
+  link += `&key=${channelDetails.secretKey}`;
+
+  function alert(text) {
+    setMessage(text);
+    setTimeout(() => setMessage(''), 1500);
+  };
+
+  return (
+    <TransactionDataWrapper>
+      <Clipboard
+        style={{ background: 'none', display: 'block' }}
+        data-clipboard-text={channelDetails.root}
+        onSuccess={() => alert('Successfully Copied')}
+      >
+        <Text>Transaction root: {' '}</Text>
+        <CopyBox>
+          {channelDetails.root && `${channelDetails.root.substr(0, 20)}...`}
+        </CopyBox>
+      </Clipboard>
+      <Clipboard
+        style={{ background: 'none', display: 'block' }}
+        data-clipboard-text={channelDetails.secretKey}
+        onSuccess={() => alert('Successfully Copied')}
+      >
+        <Text>Transaction encryption key: {' '}</Text>
+        <CopyBox>
+          {channelDetails.secretKey && `${channelDetails.secretKey.substr(0, 20)}...`}
+        </CopyBox>
+      </Clipboard>
+      <Alert message={message}>{message}</Alert>
+      <ExternalLink
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Verify raw transaction data from the Tangle
+      </ExternalLink>
+    </TransactionDataWrapper>
+  )
+}
 class History extends React.Component {
   constructor(props) {
     super(props);
@@ -21,7 +69,8 @@ class History extends React.Component {
       transactions: [],
       user: {},
       loading: false,
-      historyObject: {}
+      historyObject: {},
+      total: 0
     };
 
     this.checkLogin = this.checkLogin.bind(this);
@@ -84,9 +133,16 @@ class History extends React.Component {
     const { userData } = this.props;
     this.setState({ loading: true });
     const historyObject = await api.get('history', { assetId, apiKey: userData.apiKey });
-    console.log('history', historyObject);
     if (!isEmpty(historyObject) && historyObject.success) {
-      this.setState({ historyObject, loading: false });
+      const transactions = {}
+      historyObject.orders.slice(1).forEach(entry => {
+        transactions[entry.orderId] = entry;
+      });
+      const total = Object.values(transactions).reduce((acc, entry) => { 
+        return !entry.cancelled ? (acc + Number(entry.price)) : acc;
+      }, 0); 
+
+      this.setState({ total, historyObject, transactions: Object.values(transactions), loading: false });
     } else {
       this.setState({ loading: false });
     }
@@ -106,13 +162,14 @@ class History extends React.Component {
       });
   };
 
-  // getStatus = order => {
-  //   if (order.cancelled) return 'cancelled';
-  //   d.cancelled ? 'cancelled' : ''
-  // }
+  getStatus(order) {
+    if (order.cancelled) return 'cancelled';
+    if (order.endTimestamp < Date.now()) return 'expired';
+    return 'active';
+  }
 
   render() {
-    const { user, loading, historyObject } = this.state;
+    const { user, loading, historyObject, transactions, total } = this.state;
     const { userData } = this.props;
 
     return (
@@ -128,52 +185,57 @@ class History extends React.Component {
                 <Loading />
               </LoadingBox>
             ) : (
-              <TransactionsWrapper>
+              <Wrapper>
                 {
                   !isEmpty(historyObject) && historyObject.orders.length > 1 ? (
-                    <ReactTable
-                      data={historyObject.orders.slice(1)}
-                      columns={[
-                        {
-                          Header: "Booked Time",
-                          columns: [
-                            {
-                              Header: "Start Time",
-                              accessor: "startDate"
-                            },
-                            {
-                              Header: "End Time",
-                              accessor: d => (d.endDate || d.cancellationDate),
-                              id: "endDate",
-                            }
-                          ]
-                        },
-                        {
-                          Header: "Info",
-                          columns: [
-                            {
-                              Header: "Price",
-                              accessor: "price"
-                            },
-                            {
-                              Header: "Status",
-                              id: "status",
-                              accessor: d => (d.cancelled ? 'cancelled' : ''),
-                            },
-                          ]
-                        }
-                      ]}
-                      defaultPageSize={20}
-                      style={{
-                        backgroundColor: 'white',
-                        width: 1000,
-                        height: 400 // This will force the table body to overflow and scroll, since there is not enough room
-                      }}
-                      className="-striped -highlight"
+                    <TotalRevenue>Total revenue: {total}</TotalRevenue>
+                  ) : null
+                }
+                <TransactionsOuterWrapper>
+                  {
+                    !isEmpty(historyObject) && historyObject.orders.length > 1 ? (
+                      <ReactTable
+                        data={transactions}
+                        columns={[
+                          {
+                            Header: "Start Time",
+                            accessor: "startDate"
+                          },
+                          {
+                            Header: "End Time",
+                            accessor: d => (d.endDate || d.cancellationDate),
+                            id: "endDate",
+                          },
+                          {
+                            Header: "Price",
+                            accessor: "price"
+                          },
+                          {
+                            Header: "Status",
+                            id: "status",
+                            accessor: this.getStatus,
+                          }
+                        ]}
+                        defaultPageSize={10}
+                        style={{
+                          backgroundColor: 'white',
+                          width: '100%',
+                          height: 400 // This will force the table body to overflow and scroll, since there is not enough room
+                        }}
+                        className="-striped -highlight"
+                      />
+                    ) : null
+                  }
+                </TransactionsOuterWrapper>
+                {
+                  !isEmpty(historyObject) && historyObject.orders.length > 1 ? (
+                    <AdditionalInfo
+                      channelDetails={historyObject.channelDetails} 
+                      provider={this.props.settings.provider} 
                     />
                   ) : null
                 }
-              </TransactionsWrapper>
+              </Wrapper>
             )
           }
         </Data>
@@ -189,6 +251,7 @@ class History extends React.Component {
 
 const mapStateToProps = state => ({
   userData: state.user,
+  settings: state.settings,
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -206,9 +269,18 @@ const Main = styled.main`
   height: 100vh;
 `;
 
-const TransactionsWrapper = styled.div`
+const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
+  width: 100%;
+  margin: 50px;
+`;
+
+const TransactionsOuterWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin: 50px 0;
 `
 
 const Data = styled.section`
@@ -223,4 +295,46 @@ const Data = styled.section`
 
 const LoadingBox = styled.div`
   margin: auto;
+`;
+
+const Text = styled.span`
+  font-size: 16px;
+  line-height: 32px;
+  color: #ffffff;
+`;
+
+const ExternalLink = styled.a`
+  font-size: 16px;
+  line-height: 32px;
+  color: #ffffff;
+`;
+
+const TransactionDataWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+`;
+
+const Alert = styled.span`
+  font-size: 16px;
+  line-height: 32px;
+  color: #ffffff;
+  opacity: ${props => (props.message ? 1 : 0)};
+  transition: all 0.5s ease;
+`;
+
+const CopyBox = styled(Text)`
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  &:hover {
+    opacity: 0.6;
+  }
+`;
+
+const TotalRevenue = styled.h3`
+  text-align: left;
+  font-size: 22px;
+  line-height: 32px;
+  color: #ffffff;
 `;

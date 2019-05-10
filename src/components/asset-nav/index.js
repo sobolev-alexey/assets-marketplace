@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import isEmpty from 'lodash-es/isEmpty';
 import { Link, withRouter } from 'react-router-dom';
 
-const HeaderWrapper = ({ history, logout, user }) => (
+const HeaderWrapper = ({ history, logout, user, createOffer, createRequest }) => (
   <Main>
     <Back to={'/'} onClick={history.goBack}>
       <img src="/static/icons/icon-arrow-back-dark.svg" alt="Icon arrow" />
@@ -15,9 +15,17 @@ const HeaderWrapper = ({ history, logout, user }) => (
         <AssetID>{user.displayName || '--'}</AssetID>
       </Block>
     </Header>
-    <RightHeader>
+    <RightHeader createOffer={createOffer}>
       {
-        !isEmpty(user) && <FooterButton onClick={logout}>Log Out</FooterButton>
+        createOffer && createRequest ? (
+          <ButtonWrapper>
+            <Button onClick={createOffer}>Create offer</Button>
+            <Button onClick={createRequest}>Create request</Button>
+          </ButtonWrapper>
+        ) : null
+      }
+      {
+        !isEmpty(user) && <Logout onClick={logout}>Log Out</Logout>
       }
     </RightHeader>
   </Main>
@@ -79,8 +87,11 @@ const AssetID = styled.span`
 const RightHeader = styled.div`
   margin: 0 30px;
   display: block;
-  width: 150px;
+  width: ${props => (props.createOffer ? '500px' : '150px')};
   text-align: right;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
   @media (max-width: 760px) {
     margin: 10px 20px 0 30px;
     width: 120px;
@@ -93,14 +104,37 @@ const Block = styled.div`
   align-items: flex-start;
 `;
 
-const FooterButton = styled.button`
-  color: ${props => (props.grey ? `rgba(41, 41, 41, 0.4)` : `rgba(41, 41, 41, 0.9)`)};
-  padding: 5px 15px;
-  margin-right: -15px;
-  font-size: 90%;
+const Logout = styled.button`
+  color: rgba(41, 41, 41, 0.9);
+  padding: 9px 21px;
+  font-size: 16px;
+  height: 46px;
   background: transparent;
-  &:first-of-type {
-    margin-left: -15px;
-    margin-right: 0;
-  }
+  border: 1px solid #009fff;
+  border-radius: 50px;
+  margin: 1px -15px 1px 0;
+`;
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+`;
+
+const Button = styled.button`
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font: 15px 'Nunito Sans', sans-serif;
+  letter-spacing: 0.47px;
+  padding: 20px 38px;
+  border-radius: 100px;
+  color: #fff;
+  font-size: 16px;
+  letter-spacing: 0.38px;
+  padding: 12px 21px;
+  margin: 1px 13px 0;
+  font-weight: 700;
+  background-color: #009fff;
+  width: 160px;
 `;

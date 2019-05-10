@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Clipboard from 'react-clipboard.js';
-import isEmpty from 'lodash-es/isEmpty';
+// import isEmpty from 'lodash-es/isEmpty';
 import Wallet from '../wallet';
 
 class UserSidebar extends React.Component {
@@ -18,22 +18,22 @@ class UserSidebar extends React.Component {
   };
 
   render() {
-    const { assets, user, userData } = this.props;
+    const { /* assets, */ user, userData } = this.props;
     const { message } = this.state;
 
-    let numberOfAssets = 0
-    if (!isEmpty(assets)) {
-      if (assets.offers) {
-        numberOfAssets += assets.offers.length;
-      }
-      if (assets.requests) {
-        numberOfAssets += assets.requests.length;
-      }
-    }
+    // let numberOfAssets = 0
+    // if (!isEmpty(assets)) {
+    //   if (assets.offers) {
+    //     numberOfAssets += assets.offers.length;
+    //   }
+    //   if (assets.requests) {
+    //     numberOfAssets += assets.requests.length;
+    //   }
+    // }
 
     return (
       <Sidebar>
-        <Details>
+        {/* <Details>
           <Label>Your Statistics:</Label>
           <div>
             <DetailRow>
@@ -41,7 +41,7 @@ class UserSidebar extends React.Component {
               <DetailValue>{numberOfAssets}</DetailValue>
             </DetailRow>
           </div>
-        </Details>
+        </Details> */}
         {userData && (
           <Details>
             <DetailRow>
@@ -96,18 +96,10 @@ const Sidebar = styled.aside`
   background: rgba(240, 240, 240, 1);
   display: flex;
   flex-flow: column nowrap;
-  align-items: flex-end;
-  width: 25vw;
-  min-width: 330px;
-  padding: 40px 30px 0 0;
-  @media (max-width: 1235px) {
-    width: 10vw;
-    min-width: 290px;
-  }
-  @media (max-width: 760px) {
-    width: 100%;
-    padding: 30px 15px;
-  }
+  align-items: center;
+  min-width: 350px;
+  width: 350px;
+  padding: 40px 0 0 0;
 `;
 
 const Details = styled.div`
@@ -129,17 +121,17 @@ const Details = styled.div`
   }
 `;
 
-const Label = styled.label`
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.41px;
-  position: relative;
-  display: block;
-  margin: 0 0 30px;
-  cursor: pointer;
-  text-transform: uppercase;
-  color: #595959ff;
-`;
+// const Label = styled.label`
+//   font-size: 14px;
+//   font-weight: 800;
+//   letter-spacing: 0.41px;
+//   position: relative;
+//   display: block;
+//   margin: 0 0 30px;
+//   cursor: pointer;
+//   text-transform: uppercase;
+//   color: #595959ff;
+// `;
 
 const DetailRow = styled.div`
   @media (max-width: 760px) {
@@ -164,7 +156,7 @@ const DetailValue = styled.p`
 const Alert = styled.span`
   font-size: 16px;
   line-height: 32px;
-  color: #595959ff;
+  color: #595959;
   opacity: ${props => (props.message ? 1 : 0)};
   transition: all 0.5s ease;
 `;

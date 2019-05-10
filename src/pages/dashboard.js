@@ -33,6 +33,7 @@ class Dashboard extends React.Component {
       showModal: false,
       notification: null,
       error: false,
+      noAssets: true,
       assetDetails: {},
       assetToModify: {}
     };
@@ -106,7 +107,15 @@ class Dashboard extends React.Component {
       requests: []
     }
     const assets = await api.get('assets', { userId: this.state.user.uid, apiKey: this.props.userData.apiKey }) || emptyAssets;
-    return this.setState({ assets, loading: false });
+    const activeOffers = assets.offers && !isEmpty(assets.offers) 
+      ? assets.offers.filter(asset => asset.active) : [];
+  
+    const activeRequests = assets.requests && !isEmpty(assets.requests) 
+      ? assets.requests.filter(asset => asset.active) : [];
+
+    const noAssets = activeOffers.length === 0 && activeRequests.length === 0 ? true : false;
+
+    return this.setState({ assets, noAssets, loading: false });
   };
 
   createOffer(asset) {
@@ -238,7 +247,7 @@ class Dashboard extends React.Component {
   };
 
   render() {
-    const { assets, user, loading, displayNewOfferForm, displayNewRequestForm } = this.state;
+    const { assets, noAssets, user, loading, displayNewOfferForm, displayNewRequestForm } = this.state;
     const { userData } = this.props;
 
     const activeOffers = assets.offers && !isEmpty(assets.offers) 
@@ -255,7 +264,12 @@ class Dashboard extends React.Component {
 
     return (
       <Main>
-        <AssetNav user={user} logout={this.logout} />
+        <AssetNav
+          user={user} 
+          logout={this.logout} 
+          createOffer={this.showNewOfferForm}
+          createRequest={this.showNewRequestForm}
+        />
         <Data>
           <UserContext.Provider value={{ userId: user.uid }}>
             <Sidebar assets={assets} user={user} userData={userData} />
@@ -276,12 +290,25 @@ class Dashboard extends React.Component {
                   value={{ ...this.state.assetToModify }}
                 >
                   <AssetsWrapper>
-                    { 
-                      !displayNewOfferForm && 
-                      <Button onClick={this.showNewOfferForm}>
-                        +Create Offer
-                      </Button>
+                    {
+                      noAssets ? (
+                        <NoAssetsOuterWrapper>
+                          <NoAssetsInnerWrapper>
+                            <Heading>You have no active offers or requests</Heading>
+                            <Text>Why not create a new one?</Text>
+                            <ButtonWrapper>
+                              <Button onClick={this.showNewOfferForm}>
+                                Create offer
+                              </Button>
+                              <Button onClick={this.showNewRequestForm}>
+                                Create request
+                              </Button> 
+                            </ButtonWrapper>
+                          </NoAssetsInnerWrapper>
+                        </NoAssetsOuterWrapper>
+                      ) : null
                     }
+
                     { 
                       displayNewOfferForm && 
                       <AddCard 
@@ -313,12 +340,6 @@ class Dashboard extends React.Component {
                           </InactiveAssets>
                         </React.Fragment>
                       ) : null
-                    }
-                    { 
-                      !displayNewRequestForm && 
-                      <Button onClick={this.showNewRequestForm}>
-                        +Create Request
-                      </Button> 
                     }
                     { 
                       displayNewRequestForm && 
@@ -400,9 +421,25 @@ const AssetsWrapper = styled.div`
   flex-direction: column;
 `
 
-const ActiveAssets = styled.div`
-
+const NoAssetsOuterWrapper = styled.div`
+  position: relative;
 `
+
+const NoAssetsInnerWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 30% 50%;
+  text-align: center;
+`
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+`
+
+const ActiveAssets = styled.div``
 
 const InactiveAssets = styled.div`
   opacity: 0.7;
@@ -439,11 +476,19 @@ const Button = styled.button`
   box-shadow: 0 10px 20px 0 #0a2056;
   font-weight: 700;
   background-color: #009fff;
+  width: 160px;
 `;
 
 const Heading = styled.h2`
   font-size: 2rem;
   font-weight: 300;
   color: #ffffff;
-  padding: 50px 40px 0;
+  padding-top: 50px;
+`;
+
+const Text = styled.h4`
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: #ffffff;
+  padding: 20px 0;
 `;
