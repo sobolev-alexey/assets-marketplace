@@ -55,6 +55,11 @@
         "type": 301
       },
       {
+        "source": "/orders",
+        "destination": "/#/orders",
+        "type": 301
+      },
+      {
         "source": "/order/:assetId",
         "destination": "/#/order/:assetId",
         "type": 301

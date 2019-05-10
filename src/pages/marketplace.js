@@ -50,7 +50,7 @@ export default class extends React.Component {
               <Loading color="#009fff" size="80" />
             </LoadingBox>
           ) : (
-            <UserContext.Provider value={{ userId }}>
+            <UserContext.Provider value={{ owner: userId }}>
               <AssetsOuterWrapper>
                 {
                   offers.length > 0 ? (

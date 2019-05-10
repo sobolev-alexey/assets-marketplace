@@ -198,7 +198,7 @@ class Order extends React.Component {
         <AssetNav user={user} logout={this.logout} />
         <Data>
           <UserContext.Provider value={{ userId: user.uid }}>
-            <Sidebar assets={assets} user={user} userData={userData} />
+            <Sidebar user={user} userData={userData} />
           </UserContext.Provider>
           {
             loading ? (

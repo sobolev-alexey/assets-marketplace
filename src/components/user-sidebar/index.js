@@ -18,30 +18,11 @@ class UserSidebar extends React.Component {
   };
 
   render() {
-    const { /* assets, */ user, userData } = this.props;
+    const { user, userData } = this.props;
     const { message } = this.state;
-
-    // let numberOfAssets = 0
-    // if (!isEmpty(assets)) {
-    //   if (assets.offers) {
-    //     numberOfAssets += assets.offers.length;
-    //   }
-    //   if (assets.requests) {
-    //     numberOfAssets += assets.requests.length;
-    //   }
-    // }
 
     return (
       <Sidebar>
-        {/* <Details>
-          <Label>Your Statistics:</Label>
-          <div>
-            <DetailRow>
-              <DetailKey>Number of Assets:</DetailKey>
-              <DetailValue>{numberOfAssets}</DetailValue>
-            </DetailRow>
-          </div>
-        </Details> */}
         {userData && (
           <Details>
             <DetailRow>

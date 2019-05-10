@@ -5,6 +5,7 @@ import HomePage from './pages/home';
 import MarketplacePage from './pages/marketplace';
 import DashboardPage from './pages/dashboard';
 import OrderPage from './pages/order';
+import OrdersPage from './pages/orders';
 import TransactionHistoryPage from './pages/history';
 import { storeProjectSettings } from './store/settings/actions';
 
@@ -20,6 +21,7 @@ class Router extends Component {
           <Route path="/" component={HomePage} exact />
           <Route path="/marketplace" component={MarketplacePage} />
           <Route path="/dashboard" component={DashboardPage} />
+          <Route path="/orders" component={OrdersPage} />
           <Route path="/order/:assetId" component={OrderPage} />
           <Route path="/history/:assetId" component={TransactionHistoryPage} />
           <Route component={HomePage} />

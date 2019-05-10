@@ -11,7 +11,7 @@ const Heading = ({ assetId, active, assetName, category }) => {
   const { deleteAsset } = useContext(AssetContext);
   return (
     <Full>
-      <AssetCategory>{category}</AssetCategory>
+      <AssetCategory>{category.replace(/s([^s]*)$/,'')}</AssetCategory>
       <Link to={`/order/${assetId}`}>
         <AssetId>{assetName.length > 20 ? `${assetName.substr(0, 20)}...` : assetName}</AssetId>
       </Link>
@@ -57,10 +57,15 @@ const Footer = ({ assetId, active, category }) => {
 }
 
 const Asset = props => {
-  const { asset } = props;
+  const { asset, disableMargin } = props;
 
   return (
-    <Card header={Heading(asset, props.delete)} footer={Footer(asset)} asset={asset}>
+    <Card 
+      header={Heading(asset, props.delete)} 
+      footer={Footer(asset)} 
+      asset={asset} 
+      disableMargin={disableMargin}
+    >
       <Row>
         <RowHalf>
           <RowDesc>Asset Type:</RowDesc>

@@ -4,11 +4,12 @@ import isEmpty from 'lodash-es/isEmpty';
 import { UserContext } from '../../pages/marketplace';
 
 export default props => {
-  const { userId } = useContext(UserContext);
+  const { owner } = useContext(UserContext);
   return (
     <Card
       data-component="AssetCard"
-      ownAsset={props.asset && !isEmpty(props.asset) && userId === props.asset.owner}
+      disableMargin={props.disableMargin}
+      ownAsset={owner && props.asset && !isEmpty(props.asset) && owner === props.asset.owner}
     >
       {props.header ? <CardHeader>{props.header}</CardHeader> : null}
       {props.children}
@@ -22,9 +23,9 @@ const Card = styled.div`
   text-decoration: none;
   position: relative;
   padding-top: 20px;
-  margin-right: 50px;
+  margin-right: ${props => (props.disableMargin ? 0 : '50px')};;
   border-radius: 6px;
-  margin-bottom: 40px;
+  margin-bottom: ${props => (props.disableMargin ? 0 : '40px')};;
   background-color: #fff;
   cursor: default;
   transition: box-shadow 0.19s ease-out;
@@ -32,7 +33,7 @@ const Card = styled.div`
   height: 100%;
   border: ${props => (props.ownAsset ? '1px solid #009fff' : '1px solid #eaecee')};
   @media (max-width: 1120px) {
-    margin-bottom: 20px;
+    margin-bottom: ${props => (props.disableMargin ? 0 : '20px')};
   }
   @media (max-width: 890px) {
     width: 100%;

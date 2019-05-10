@@ -46,7 +46,6 @@ class Dashboard extends React.Component {
     this.deleteAsset = this.deleteAsset.bind(this);
     this.createRequest = this.createRequest.bind(this);
     this.logout = this.logout.bind(this);
-    this.getOrders = this.getOrders.bind(this);
     this.showHistory = this.showHistory.bind(this);
     this.showNewOfferForm = this.showNewOfferForm.bind(this);
     this.hideNewOfferForm = this.hideNewOfferForm.bind(this);
@@ -97,7 +96,6 @@ class Dashboard extends React.Component {
   async getUser() {
     await this.props.loadUser(this.state.user.uid);
     await this.findAssets();
-    await this.getOrders();
   };
 
   async findAssets() {
@@ -239,13 +237,6 @@ class Dashboard extends React.Component {
     this.props.history.push(`/history/${assetId}`);
   }
 
-  async getOrders() {
-    const { userData } = this.props;
-    this.setState({ loading: true });
-    const orders = await api.get('orders', { apiKey: userData.apiKey });
-    return this.setState({ orders, loading: false });
-  };
-
   render() {
     const { assets, noAssets, user, loading, displayNewOfferForm, displayNewRequestForm } = this.state;
     const { userData } = this.props;
@@ -272,7 +263,7 @@ class Dashboard extends React.Component {
         />
         <Data>
           <UserContext.Provider value={{ userId: user.uid }}>
-            <Sidebar assets={assets} user={user} userData={userData} />
+            <Sidebar user={user} userData={userData} />
           </UserContext.Provider>
           {
             loading ? (
