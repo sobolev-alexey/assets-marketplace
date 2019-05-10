@@ -37,7 +37,7 @@ exports.getAsset = async (collection: string, assetId: string, internal: boolean
     .collection(collection)
     .doc(assetId)
     .get();
-  // Check user's profile for purchase
+
   if (doc.exists) {
     const result = doc.data();
     if (!internal) {
@@ -45,7 +45,7 @@ exports.getAsset = async (collection: string, assetId: string, internal: boolean
     }
     return result;
   }
-  console.log('getAsset failed.', assetId, doc);
+  console.log('getAsset failed.', assetId, collection, internal, doc);
   return null;
 };
 

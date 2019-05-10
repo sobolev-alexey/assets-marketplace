@@ -53,8 +53,8 @@ const sanatiseObject = (asset: any) => {
   if (!asset.location || !asset.location.city || !asset.location.country)
     return 'Enter city and country';
   if (asset.category === 'requests') {
-    if (!asset.startTimestamp) return 'Please enter a valid date/time when the offer starts';
-    if (!asset.endTimestamp) return 'Please enter a valid date/time when the offer ends';
+    if (!asset.start) return 'Please enter a valid date/time when the offer starts';
+    if (!asset.end) return 'Please enter a valid date/time when the offer ends';
   }
   
   return false;

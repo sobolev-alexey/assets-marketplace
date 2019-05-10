@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 const format = require('date-fns/format');
+const getTime = require('date-fns/get_time');
 const cors = require('cors')({ origin: true });
 const { validateBundleSignatures } = require('@iota/bundle-validator');
 
@@ -62,6 +63,11 @@ exports.newAsset = functions.https.onRequest((req, res) => {
       packet.asset.assetId = generateUUID();
       packet.asset.owner = uid;
       packet.asset.active = true;
+
+      packet.asset.startDate = format(packet.asset.start, 'DD MMMM, YYYY H:mm a');
+      packet.asset.endDate = format(packet.asset.end, 'DD MMMM, YYYY H:mm a');
+      packet.asset.startTimestamp = getTime(packet.asset.start);
+      packet.asset.endTimestamp = getTime(packet.asset.end);
 
       const channelDetails = await initializeChannel(packet.asset, secretKey);
       console.log('newAsset channelDetails', packet.category, packet.asset.assetId, channelDetails); 
