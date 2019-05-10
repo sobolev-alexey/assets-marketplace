@@ -61,9 +61,7 @@ exports.getAssets = async (collection: string) => {
   // Return data
   return querySnapshot.docs.map(doc => {
     if (doc.exists) {
-      const result = doc.data();
-      delete result.owner;
-      return result;
+      return doc.data();
     } else {
       console.log('getAssets failed.', doc);
       return null;

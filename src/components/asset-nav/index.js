@@ -105,7 +105,7 @@ const Block = styled.div`
 `;
 
 const Logout = styled.button`
-  color: rgba(41, 41, 41, 0.9);
+  color: #009fff;
   padding: 9px 21px;
   font-size: 16px;
   height: 46px;
@@ -113,6 +113,12 @@ const Logout = styled.button`
   border: 1px solid #009fff;
   border-radius: 50px;
   margin: 1px -15px 1px 0;
+
+  &:hover {
+    color: #ffffff;
+    background-color: #009fff;
+    border: none;
+  }
 `;
 
 const ButtonWrapper = styled.div`
@@ -137,4 +143,10 @@ const Button = styled.button`
   font-weight: 700;
   background-color: #009fff;
   width: 160px;
+
+  &:hover {
+    color: #009fff;
+    background-color: #ffffff;
+    border: 1px solid #009fff;
+  }
 `;

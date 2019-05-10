@@ -347,10 +347,12 @@ export default class extends React.Component {
                     )
                   }
                   <FootRow>
-                    <FooterButton grey onClick={this.cancel}>
+                    <FooterButton secondary onClick={this.cancel}>
                       Cancel
                     </FooterButton>
-                    <FooterButton onClick={this.submit}>Submit</FooterButton>
+                    <FooterButton onClick={this.submit}>
+                      Submit
+                    </FooterButton>
                   </FootRow>
                 </Card>
               </AddAsset>
@@ -423,14 +425,26 @@ const IconButton = styled.img`
 `;
 
 const FooterButton = styled.button`
-  color: ${props => (props.grey ? `rgba(41, 41, 41, 0.4)` : `rgba(41, 41, 41, 0.9)`)};
-  padding: 5px 15px;
-  margin-right: -15px;
-  font-size: 90%;
-  background: transparent;
-  &:first-of-type {
-    margin-left: -15px;
-    margin-right: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font: 16px 'Nunito Sans', sans-serif;
+  letter-spacing: 0.47px;
+  padding: 12px 21px;
+  border-radius: 100px;
+  color: ${props => (props.secondary ? '#009fff' : '#ffffff')};
+  background-color: ${props => (props.secondary ? '#ffffff' : '#009fff')};
+  border: ${props => (props.secondary ? '1px solid #009fff' : 'none')};
+  font-size: 16px;
+  font-weight: normal;
+  letter-spacing: 0.38px;
+  width: 150px;
+  height: 45px;
+
+  &:hover {
+    color: ${props => (props.secondary ? '#ffffff' : '#009fff')};
+    background-color: ${props => (props.secondary ? '#009fff' : '#ffffff')};
+    border: 1px solid #009fff;
   }
 `;
 

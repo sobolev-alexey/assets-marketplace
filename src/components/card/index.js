@@ -1,13 +1,21 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import styled from 'styled-components';
+import isEmpty from 'lodash-es/isEmpty';
+import { UserContext } from '../../pages/marketplace';
 
-export default props => (
-  <Card data-component="AssetCard">
-    {props.header ? <CardHeader>{props.header}</CardHeader> : null}
-    {props.children}
-    {props.footer ? <CardFooter>{props.footer}</CardFooter> : null}
-  </Card>
-);
+export default props => {
+  const { userId } = useContext(UserContext);
+  return (
+    <Card
+      data-component="AssetCard"
+      ownAsset={props.asset && !isEmpty(props.asset) && userId === props.asset.owner}
+    >
+      {props.header ? <CardHeader>{props.header}</CardHeader> : null}
+      {props.children}
+      {props.footer ? <CardFooter>{props.footer}</CardFooter> : null}
+    </Card>
+  );
+}
 
 const Card = styled.div`
   color: inherit;
@@ -15,7 +23,6 @@ const Card = styled.div`
   position: relative;
   padding-top: 20px;
   margin-right: 50px;
-  border: 1px solid #eaecee;
   border-radius: 6px;
   margin-bottom: 40px;
   background-color: #fff;
@@ -23,6 +30,7 @@ const Card = styled.div`
   transition: box-shadow 0.19s ease-out;
   width: 400px;
   height: 100%;
+  border: ${props => (props.ownAsset ? '1px solid #009fff' : '1px solid #eaecee')};
   @media (max-width: 1120px) {
     margin-bottom: 20px;
   }

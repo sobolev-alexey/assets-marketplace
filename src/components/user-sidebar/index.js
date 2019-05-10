@@ -100,6 +100,7 @@ const Sidebar = styled.aside`
   min-width: 350px;
   width: 350px;
   padding: 40px 0 0 0;
+  z-index: 1;
 `;
 
 const Details = styled.div`

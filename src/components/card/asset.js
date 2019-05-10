@@ -4,6 +4,7 @@ import format from 'date-fns/format';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { AssetContext } from '../../pages/dashboard';
+import { OrderContext } from '../../pages/order';
 import Card from './index.js';
 
 const Heading = ({ assetId, active, assetName, category }) => {
@@ -26,23 +27,28 @@ const Heading = ({ assetId, active, assetName, category }) => {
 }
 
 const Footer = ({ assetId, active, category }) => {
-  const { history, selectAsset } = useContext(AssetContext);
-  if (!history) return null;
+  const { history } = useContext(AssetContext);
+  const { selectAsset, selected } = useContext(OrderContext);
+  if (!history && !selectAsset) return null;
 
   return (
     <React.Fragment>
       <FootRow>
-        <FooterButton onClick={() => history(assetId)}>
-          History
-        </FooterButton>
         {
-          console.log(222, assetId, active, selectAsset)
+          history && (
+            <FooterButton onClick={() => history(assetId)}>
+              History
+            </FooterButton>
+          )
         }
         {
           selectAsset && active && (
-            <FooterButton onClick={() => selectAsset(assetId, category)}>
-              Select
-            </FooterButton>
+            <ButtonSelect 
+              selected={selected === assetId} 
+              onClick={() => selectAsset(assetId, category)}
+            >
+              {selected === assetId ? 'Selected' : 'Select'} 
+            </ButtonSelect>
           )
         }
       </FootRow>
@@ -53,10 +59,8 @@ const Footer = ({ assetId, active, category }) => {
 const Asset = props => {
   const { asset } = props;
 
-  console.log(3333)
-
   return (
-    <Card header={Heading(asset, props.delete)} footer={Footer(asset)}>
+    <Card header={Heading(asset, props.delete)} footer={Footer(asset)} asset={asset}>
       <Row>
         <RowHalf>
           <RowDesc>Asset Type:</RowDesc>
@@ -229,14 +233,48 @@ const FootRow = styled.div`
 `;
 
 const FooterButton = styled.button`
-  color: rgba(41, 41, 41, 0.9);
-  padding: 5px 15px;
-  margin-right: -15px;
-  font-size: 90%;
-  background: transparent;
-  cursor: pointer;
-  &:first-of-type {
-    margin-left: -15px;
-    margin-right: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font: 16px 'Nunito Sans', sans-serif;
+  letter-spacing: 0.47px;
+  padding: 12px 21px;
+  border-radius: 100px;
+  color: #009fff;
+  background-color: #ffffff;
+  border: 1px solid #009fff;
+  font-size: 16px;
+  font-weight: normal;
+  letter-spacing: 0.38px;
+  width: 150px;
+  height: 45px;
+
+  &:hover {
+    color: #ffffff;
+    background-color: #009fff;
+  }
+`;
+
+const ButtonSelect = styled.button`
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font: 16px 'Nunito Sans', sans-serif;
+  letter-spacing: 0.47px;
+  padding: 12px 21px;
+  border-radius: 100px;
+  color: ${props => (props.selected ? '#009fff' : '#ffffff')};
+  background-color: ${props => (props.selected ? '#ffffff' : '#009fff')};
+  border: ${props => (props.selected ? '1px solid #009fff' : 'none')};
+  font-size: 16px;
+  font-weight: normal;
+  letter-spacing: 0.38px;
+  width: 400px;
+  height: 45px;
+
+  &:hover {
+    color: ${props => (props.selected ? '#ffffff' : '#009fff')};
+    background-color: ${props => (props.selected ? '#009fff' : '#ffffff')};
+    border: 1px solid #009fff;
   }
 `;

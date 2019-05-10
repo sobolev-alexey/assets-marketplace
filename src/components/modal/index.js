@@ -20,6 +20,14 @@ export default ({
     </Link>
   );
 
+  const dashboardButton = (
+    <Link to={'/dashboard'}>
+      <Button type="button" className="btn btn-accent txt-bold modal-trigger">
+        Go to Dashboard
+      </Button>
+    </Link>
+  );
+
   const purchaseButton = (
     <Button type="button" className="btn btn-accent txt-bold modal-trigger" onClick={callback}>
       Purchase Access for {purchasePrice} IOTA
@@ -98,7 +106,7 @@ export default ({
     orderCompleted: {
       heading: 'Order completed',
       body: 'Asset was successfully purchased.',
-      button: closeButton
+      button: dashboardButton
     },
     generalError: {
       heading: 'Error',

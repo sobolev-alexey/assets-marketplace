@@ -14,7 +14,7 @@ import AssetCard from '../components/card/asset';
 import Loading from '../components/loading';
 
 export const UserContext = React.createContext({});
-export const AssetContext = React.createContext({});
+export const OrderContext = React.createContext({});
 
 class Order extends React.Component {
   constructor(props) {
@@ -28,7 +28,7 @@ class Order extends React.Component {
       loading: false,
       selectedOffer: null,
       selectedRequest: null,
-      matchingAssetSelected: true
+      matchingAssetSelected: null
     };
 
     this.checkLogin = this.checkLogin.bind(this);
@@ -115,35 +115,38 @@ class Order extends React.Component {
       });
   };
 
-  selectAsset(event) {
-    if (event.target && event.target.name) {
-      const category = event.target.name;
-      if (category === 'offers') {
-        this.setState({ selectedOffer: event.target.id });
-      } else if (category === 'requests') {
-        this.setState({ selectedRequest: event.target.id });
-      }
+  selectAsset(assetId, category) {
+    const { assets, matchingAssetSelected } = this.state;
+    if (assetId === matchingAssetSelected) {
+      this.setState({ 
+        selectedOffer: null, 
+        selectedRequest: null, 
+        matchingAssetSelected: null 
+      });
+    } else if (category === 'offers') {
+      this.setState({
+        selectedOffer: assetId, 
+        selectedRequest: assets.ownAsset.assetId, 
+        matchingAssetSelected: assetId 
+      });
+    } else if (category === 'requests') {
+      this.setState({
+        selectedOffer: assets.ownAsset.assetId,
+        selectedRequest: assetId, 
+        matchingAssetSelected: assetId 
+      });
     }
   }
 
   confirmOrder() {
-    const { assets } = this.state;
-
-    if (!isEmpty(assets.ownAsset)) {
-      if (assets.ownAsset.category === 'requests') {
-        this.setState({ selectedRequest: assets.ownAsset.assetId });
-      } else if (assets.ownAsset.category === 'offers') {
-        this.setState({ selectedOffer: assets.ownAsset.assetId });
-      }
-    }
-
-    if (this.state.selectedOffer && this.state.selectedRequest) {
+    const { selectedOffer, selectedRequest } = this.state;
+    if (selectedOffer && selectedRequest) {
       this.setState({ loading: true });
       return new Promise(async (resolve) => {
         const packet = {
           apiKey: this.props.userData.apiKey,
-          offerId: this.state.selectedOffer, 
-          requestId: this.state.selectedRequest
+          offerId: selectedOffer, 
+          requestId: selectedRequest
         };
   
         // Call server
@@ -179,7 +182,11 @@ class Order extends React.Component {
   }
 
   cancel() {
-    this.setState({ matchingAssetSelected: false });
+    this.setState({ 
+      selectedOffer: null, 
+      selectedRequest: null, 
+      matchingAssetSelected: null 
+    });
   }
 
   render() {
@@ -201,13 +208,16 @@ class Order extends React.Component {
             ) : (
               <OrderWrapper>
                 <AssetsWrapper>
-                  <AssetContext.Provider value={{ selectAsset: this.selectAsset }}>
-                    <Heading>Selected Asset</Heading>
-                    {
-                      assets.ownAsset && !isEmpty(assets.ownAsset) ? (
-                        <AssetCard asset={assets.ownAsset} />
-                      ) : null
-                    }
+                  <Heading>Selected Asset</Heading>
+                  {
+                    assets.ownAsset && !isEmpty(assets.ownAsset) ? (
+                      <AssetCard asset={assets.ownAsset} />
+                    ) : null
+                  }
+                  <OrderContext.Provider value={{
+                    selectAsset: this.selectAsset,
+                    selected: matchingAssetSelected
+                  }}>
                     {
                       assets.offers && !isEmpty(assets.offers) && 
                         <Heading>Please select matching offer</Heading>
@@ -236,12 +246,12 @@ class Order extends React.Component {
                         </Requests>
                       ) : null
                     }
-                  </AssetContext.Provider>
+                  </OrderContext.Provider>
                 </AssetsWrapper>
                 {
                   matchingAssetSelected ? (
                     <OrderButtonsWrapper>
-                      <Button onClick={this.cancel}>Cancel</Button>
+                      <Button onClick={this.cancel} secondary>Cancel</Button>
                       <Button onClick={this.confirmOrder}>Confirm Order</Button>
                     </OrderButtonsWrapper>
                   ) : null
@@ -287,7 +297,7 @@ const Main = styled.main`
 const AssetsWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  margin: 50px;
+  margin: 50px 50px 80px;
 `
 
 const Offers = styled.div`
@@ -320,15 +330,21 @@ const Button = styled.button`
   letter-spacing: 0.47px;
   padding: 12px 21px;
   border-radius: 100px;
-  color: #fff;
+  color: ${props => (props.secondary ? '#009fff' : '#ffffff')};
+  background-color: ${props => (props.secondary ? '#ffffff' : '#009fff')};
+  border: ${props => (props.secondary ? '1px solid #009fff' : 'none')};
   font-size: 20px;
   font-weight: normal;
   letter-spacing: 0.38px;
   margin: 15px 0 0;
-  font-weight: 700;
-  background-color: #009fff;
   width: 300px;
   height: 50px;
+
+  &:hover {
+    color: ${props => (props.secondary ? '#ffffff' : '#009fff')};
+    background-color: ${props => (props.secondary ? '#009fff' : '#ffffff')};
+    border: 1px solid #009fff;
+  }
 `;
 
 const Heading = styled.h2`
@@ -348,11 +364,12 @@ const OrderWrapper = styled.div`
 const OrderButtonsWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: space-between;
   background-color: #ffffff;
   position: fixed;
   bottom: 0;
-  width: 100%;
+  width: calc(100% - 350px);
   height: 80px;
+  padding: 0 30px;
   box-shadow: 2px -4px 41px 0px rgba(0,0,0,0.75);
 `
