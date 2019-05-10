@@ -204,7 +204,9 @@ export default class extends React.Component {
                           </select>
                         </Column>
                         <Column>
-                          <label>Company:</label>
+                          <label>
+                            {this.props.category === 'offers' ? 'Asset' : 'Service'} Provider:
+                          </label>
                           <Input
                             placeholder="eg. Orange"
                             type="text"

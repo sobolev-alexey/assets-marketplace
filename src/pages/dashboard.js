@@ -289,26 +289,25 @@ class Dashboard extends React.Component {
                 <ModifyAssetContext.Provider
                   value={{ ...this.state.assetToModify }}
                 >
+                  {
+                    noAssets ? (
+                      <NoAssetsOuterWrapper>
+                        <NoAssetsInnerWrapper>
+                          <Heading>You have no active offers or requests</Heading>
+                          <Text>Why not create a new one?</Text>
+                          <ButtonWrapper>
+                            <Button onClick={this.showNewOfferForm}>
+                              Create offer
+                            </Button>
+                            <Button onClick={this.showNewRequestForm}>
+                              Create request
+                            </Button> 
+                          </ButtonWrapper>
+                        </NoAssetsInnerWrapper>
+                      </NoAssetsOuterWrapper>
+                    ) : null
+                  }
                   <AssetsWrapper>
-                    {
-                      noAssets ? (
-                        <NoAssetsOuterWrapper>
-                          <NoAssetsInnerWrapper>
-                            <Heading>You have no active offers or requests</Heading>
-                            <Text>Why not create a new one?</Text>
-                            <ButtonWrapper>
-                              <Button onClick={this.showNewOfferForm}>
-                                Create offer
-                              </Button>
-                              <Button onClick={this.showNewRequestForm}>
-                                Create request
-                              </Button> 
-                            </ButtonWrapper>
-                          </NoAssetsInnerWrapper>
-                        </NoAssetsOuterWrapper>
-                      ) : null
-                    }
-
                     { 
                       displayNewOfferForm && 
                       <AddCard 
@@ -412,7 +411,6 @@ export default connect(
 )(Dashboard);
 
 const Main = styled.main`
-  width: 100vw;
   height: 100vh;
 `;
 
@@ -484,6 +482,7 @@ const Heading = styled.h2`
   font-weight: 300;
   color: #ffffff;
   padding-top: 50px;
+  margin: 0 40px;
 `;
 
 const Text = styled.h4`

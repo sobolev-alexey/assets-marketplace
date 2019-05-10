@@ -2,21 +2,14 @@ import React from 'react';
 import styled from 'styled-components';
 import AssetCard from '../card/asset';
 
-export default props => (
+export default ({ assets, category }) => (
   <InfoCol>
-    <CardWrapper id={props.category}>
-      {props.assets && props.assets.map((asset, i) => (
-        <React.Fragment key={asset.assetId}>
-          <input
-            type="radio"
-            name={props.category}
-            id={asset.assetId}
-            onChange={props.onSelect}
-          />
-          <AssetCard index={i} key={asset.assetId} asset={asset} delete={props.delete} />
-        </React.Fragment>
-
-      ))}
+    <CardWrapper id={category}>
+      {
+        assets && assets.map(asset => (
+          <AssetCard key={asset.assetId} asset={asset} />
+        ))
+      }
     </CardWrapper>
   </InfoCol>
 );
@@ -35,7 +28,6 @@ const CardWrapper = styled.div`
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: flex-start;
-  padding: 40px;
   @media (max-width: 1195px) {
     flex-flow: column nowrap;
     padding-bottom: 0;

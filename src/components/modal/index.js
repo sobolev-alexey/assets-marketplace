@@ -131,6 +131,7 @@ const Modal = styled.div`
   width: 100vw;
   height: 100vh;
   visibility: ${props => (props.show ? 'visible' : 'hidden')};
+  display: ${props => (props.show ? 'block' : 'none')};
   opacity: ${props => (props.show ? 1 : 0)};
   transition: all 0.5s ease;
   background-color: rgba(14, 56, 160, 0.6);

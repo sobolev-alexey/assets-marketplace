@@ -189,7 +189,9 @@ class History extends React.Component {
                 {
                   !isEmpty(historyObject) && historyObject.orders.length > 1 ? (
                     <TotalRevenue>Total revenue: {total}</TotalRevenue>
-                  ) : null
+                  ) : (
+                    <TotalRevenue>No transactions found for selected asset</TotalRevenue>
+                  )
                 }
                 <TransactionsOuterWrapper>
                   {
@@ -265,7 +267,6 @@ export default connect(
 )(History);
 
 const Main = styled.main`
-  width: 100vw;
   height: 100vh;
 `;
 

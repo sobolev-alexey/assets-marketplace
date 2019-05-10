@@ -14,6 +14,7 @@ import AssetCard from '../components/card/asset';
 import Loading from '../components/loading';
 
 export const UserContext = React.createContext({});
+export const AssetContext = React.createContext({});
 
 class Order extends React.Component {
   constructor(props) {
@@ -26,7 +27,8 @@ class Order extends React.Component {
       user: {},
       loading: false,
       selectedOffer: null,
-      selectedRequest: null
+      selectedRequest: null,
+      matchingAssetSelected: true
     };
 
     this.checkLogin = this.checkLogin.bind(this);
@@ -34,8 +36,9 @@ class Order extends React.Component {
     this.getUser = this.getUser.bind(this);
     this.findMatchingAssets = this.findMatchingAssets.bind(this);
     this.logout = this.logout.bind(this);
-    this.onSelect = this.onSelect.bind(this);
-    this.completeOrder = this.completeOrder.bind(this);
+    this.selectAsset = this.selectAsset.bind(this);
+    this.cancel = this.cancel.bind(this);
+    this.confirmOrder = this.confirmOrder.bind(this);
     this.notificationCallback = this.notificationCallback.bind(this);
   }
 
@@ -112,7 +115,7 @@ class Order extends React.Component {
       });
   };
 
-  onSelect(event) {
+  selectAsset(event) {
     if (event.target && event.target.name) {
       const category = event.target.name;
       if (category === 'offers') {
@@ -123,7 +126,7 @@ class Order extends React.Component {
     }
   }
 
-  completeOrder() {
+  confirmOrder() {
     const { assets } = this.state;
 
     if (!isEmpty(assets.ownAsset)) {
@@ -175,8 +178,12 @@ class Order extends React.Component {
     });
   }
 
+  cancel() {
+    this.setState({ matchingAssetSelected: false });
+  }
+
   render() {
-    const { assets, user, loading } = this.state;
+    const { assets, user, loading, matchingAssetSelected } = this.state;
     const { userData } = this.props;
 
     return (
@@ -192,45 +199,54 @@ class Order extends React.Component {
                 <Loading />
               </LoadingBox>
             ) : (
-              <AssetsWrapper>
-                <Heading>Selected Asset</Heading>
+              <OrderWrapper>
+                <AssetsWrapper>
+                  <AssetContext.Provider value={{ selectAsset: this.selectAsset }}>
+                    <Heading>Selected Asset</Heading>
+                    {
+                      assets.ownAsset && !isEmpty(assets.ownAsset) ? (
+                        <AssetCard asset={assets.ownAsset} />
+                      ) : null
+                    }
+                    {
+                      assets.offers && !isEmpty(assets.offers) && 
+                        <Heading>Please select matching offer</Heading>
+                    }
+                    {
+                      assets.offers && !isEmpty(assets.offers) ? (
+                        <Offers>
+                          <AssetList
+                            assets={assets.offers.filter(asset => asset && asset.active)}
+                            category="offers"
+                          />
+                        </Offers>
+                      ) : null
+                    }
+                    {
+                      assets.requests && !isEmpty(assets.requests) && 
+                        <Heading>Please select matching request</Heading>
+                    }
+                    {
+                      assets.requests && !isEmpty(assets.requests) ? (
+                        <Requests>
+                          <AssetList
+                            assets={assets.requests.filter(asset => asset && asset.active)}
+                            category="requests"
+                          />
+                        </Requests>
+                      ) : null
+                    }
+                  </AssetContext.Provider>
+                </AssetsWrapper>
                 {
-                  assets.ownAsset && !isEmpty(assets.ownAsset) ? (
-                    <AssetCard asset={assets.ownAsset} />
+                  matchingAssetSelected ? (
+                    <OrderButtonsWrapper>
+                      <Button onClick={this.cancel}>Cancel</Button>
+                      <Button onClick={this.confirmOrder}>Confirm Order</Button>
+                    </OrderButtonsWrapper>
                   ) : null
                 }
-                <Button onClick={this.completeOrder}>Complete Order</Button>
-                {
-                  assets.offers && !isEmpty(assets.offers) && 
-                    <Heading>Please select matching offer</Heading>
-                }
-                {
-                  assets.offers && !isEmpty(assets.offers) ? (
-                    <Offers>
-                      <AssetList
-                        assets={assets.offers.filter(asset => asset && asset.active)}
-                        category="offers"
-                        onSelect={this.onSelect}
-                      />
-                    </Offers>
-                  ) : null
-                }
-                {
-                  assets.requests && !isEmpty(assets.requests) && 
-                    <Heading>Please select matching request</Heading>
-                }
-                {
-                  assets.requests && !isEmpty(assets.requests) ? (
-                    <Requests>
-                      <AssetList
-                        assets={assets.requests.filter(asset => asset && asset.active)}
-                        category="requests"
-                        onSelect={this.onSelect}
-                      />
-                    </Requests>
-                  ) : null
-                }
-              </AssetsWrapper>
+              </OrderWrapper>
             )
           }
         </Data>
@@ -265,13 +281,13 @@ export default connect(
 )(Order);
 
 const Main = styled.main`
-  width: 100vw;
   height: 100vh;
 `;
 
 const AssetsWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  margin: 50px;
 `
 
 const Offers = styled.div`
@@ -302,22 +318,41 @@ const Button = styled.button`
   appearance: none;
   font: 15px 'Nunito Sans', sans-serif;
   letter-spacing: 0.47px;
-  padding: 20px 38px;
-  border-radius: 100px;
-  text-transform: uppercase;
-  color: #fff;
-  font-size: 12px;
-  letter-spacing: 0.38px;
   padding: 12px 21px;
+  border-radius: 100px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: normal;
+  letter-spacing: 0.38px;
   margin: 15px 0 0;
-  box-shadow: 0 10px 20px 0 #0a2056;
   font-weight: 700;
   background-color: #009fff;
+  width: 300px;
+  height: 50px;
 `;
 
 const Heading = styled.h2`
   font-size: 2rem;
   font-weight: 300;
   color: #ffffff;
-  padding: 50px 40px 0;
+  padding-bottom: 50px;
 `;
+
+const OrderWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+`
+
+const OrderButtonsWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  background-color: #ffffff;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 80px;
+  box-shadow: 2px -4px 41px 0px rgba(0,0,0,0.75);
+`

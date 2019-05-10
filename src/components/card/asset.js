@@ -26,7 +26,7 @@ const Heading = ({ assetId, active, assetName, category }) => {
 }
 
 const Footer = ({ assetId, active, category }) => {
-  const { history, modify } = useContext(AssetContext);
+  const { history, selectAsset } = useContext(AssetContext);
   if (!history) return null;
 
   return (
@@ -36,9 +36,12 @@ const Footer = ({ assetId, active, category }) => {
           History
         </FooterButton>
         {
-          modify && active && (
-            <FooterButton onClick={() => modify(assetId, category)}>
-              Modify
+          console.log(222, assetId, active, selectAsset)
+        }
+        {
+          selectAsset && active && (
+            <FooterButton onClick={() => selectAsset(assetId, category)}>
+              Select
             </FooterButton>
           )
         }
@@ -50,7 +53,7 @@ const Footer = ({ assetId, active, category }) => {
 const Asset = props => {
   const { asset } = props;
 
-  console.log(asset)
+  console.log(3333)
 
   return (
     <Card header={Heading(asset, props.delete)} footer={Footer(asset)}>
@@ -60,7 +63,9 @@ const Asset = props => {
           <Data>{asset.type}</Data>
         </RowHalf>
         <RowHalf>
-          <RowDesc>Owner:</RowDesc>
+          <RowDesc>
+            {asset.category === 'offers' ? 'Asset' : 'Service'} Provider:
+          </RowDesc>
           <Data>{asset.company}</Data>
         </RowHalf>
       </Row>
