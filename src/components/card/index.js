@@ -23,9 +23,9 @@ const Card = styled.div`
   text-decoration: none;
   position: relative;
   padding-top: 20px;
-  margin-right: ${props => (props.disableMargin ? 0 : '50px')};;
+  margin-right: ${props => (props.disableMargin ? 0 : '50px')};
   border-radius: 6px;
-  margin-bottom: ${props => (props.disableMargin ? 0 : '40px')};;
+  margin-bottom: ${props => (props.disableMargin ? 0 : '40px')};
   background-color: #fff;
   cursor: default;
   transition: box-shadow 0.19s ease-out;

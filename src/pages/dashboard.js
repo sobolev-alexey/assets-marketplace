@@ -263,7 +263,7 @@ class Dashboard extends React.Component {
         />
         <Data>
           <UserContext.Provider value={{ userId: user.uid }}>
-            <Sidebar user={user} userData={userData} />
+            <Sidebar user={user} userData={userData} menu />
           </UserContext.Provider>
           {
             loading ? (

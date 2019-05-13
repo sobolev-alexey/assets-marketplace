@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Clipboard from 'react-clipboard.js';
-// import isEmpty from 'lodash-es/isEmpty';
+import { withRouter } from 'react-router';
 import Wallet from '../wallet';
 
 class UserSidebar extends React.Component {
@@ -9,6 +9,7 @@ class UserSidebar extends React.Component {
     super(props);
     this.state = { message: '' };
     this.alert = this.alert.bind(this);
+    this.switchMenu = this.switchMenu.bind(this);
   }
 
   alert(text) {
@@ -17,12 +18,36 @@ class UserSidebar extends React.Component {
     );
   };
 
+  switchMenu(nextPage) {
+    const currentPage = this.props.location.pathname;
+    if (nextPage === currentPage) return;
+    this.props.history.push(nextPage);
+  }
+
   render() {
-    const { user, userData } = this.props;
+    const { user, userData, menu, location: { pathname } } = this.props;
     const { message } = this.state;
 
     return (
       <Sidebar>
+        {
+          menu ? (
+            <MenuWrapper>
+              <Menu
+                role="button"
+                onClick={() => this.switchMenu('/dashboard')}
+                active={pathname === '/dashboard'}
+              >
+                My Dashboard</Menu>
+              <Menu
+                role="button" 
+                onClick={() => this.switchMenu('/orders')}
+                active={pathname === '/orders'}
+              >
+                Order History</Menu>
+            </MenuWrapper>
+          ) : null
+        }
         {userData && (
           <Details>
             <DetailRow>
@@ -71,7 +96,7 @@ class UserSidebar extends React.Component {
   }
 }
 
-export default UserSidebar;
+export default withRouter(UserSidebar);
 
 const Sidebar = styled.aside`
   background: rgba(240, 240, 240, 1);
@@ -102,18 +127,6 @@ const Details = styled.div`
     background-color: rgba(115, 143, 212, 0.15);
   }
 `;
-
-// const Label = styled.label`
-//   font-size: 14px;
-//   font-weight: 800;
-//   letter-spacing: 0.41px;
-//   position: relative;
-//   display: block;
-//   margin: 0 0 30px;
-//   cursor: pointer;
-//   text-transform: uppercase;
-//   color: #595959ff;
-// `;
 
 const DetailRow = styled.div`
   @media (max-width: 760px) {
@@ -151,3 +164,19 @@ const CopyBox = styled(DetailValue)`
   }
 `;
 
+const MenuWrapper = styled.div`
+  margin-left: 30px;
+  width: 320px;
+  position: relative;
+  padding-bottom: 30px;
+  margin-bottom: 30px;
+`;
+
+const Menu = styled.h3`
+  font-size: 25px;
+  font-weight: 300;
+  padding: 20px 20px 20px 30px;
+  cursor: pointer;
+  color: ${props => (props.active ? '#ffffff' : '#595959')};
+  background-color: ${props => (props.active ? '#061b70' : '#f0f0f0')};
+`;

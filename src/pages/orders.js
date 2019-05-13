@@ -108,7 +108,11 @@ class Orders extends React.Component {
       showModal: false,
       notification: null,
       error: false,
-      assetDetails: {},
+      active: [],
+      cancelled: [],
+      expired: [],
+      orders: 0,
+      total: 0
     });
   }
 
@@ -116,12 +120,28 @@ class Orders extends React.Component {
     const { userData } = this.props;
     this.setState({ loading: true });
     const result = await api.get('orders', { apiKey: userData.apiKey });
-    console.log(result.orders);
-    return this.setState({ orders: result.orders, loading: false });
+    const active= [];
+    const cancelled= [];
+    const expired= [];
+    let total = 0;
+
+    result.orders.forEach(order => {
+      if (order.cancelled) {
+        cancelled.push(order);
+      } else if (order.endTimestamp < Date.now()) {
+        expired.push(order);
+        total += Number(order.price);
+      } else {
+        active.push(order);
+        total += Number(order.price);
+      }
+    });
+
+    return this.setState({ active, cancelled, expired, total, orders: result.orders.length, loading: false });
   };
 
   render() {
-    const { user, loading, orders } = this.state;
+    const { user, loading, active, cancelled, expired, total, orders } = this.state;
     const { userData } = this.props;
 
     return (
@@ -134,7 +154,7 @@ class Orders extends React.Component {
         />
         <Data>
           <UserContext.Provider value={{ userId: user.uid }}>
-            <Sidebar user={user} userData={userData} />
+            <Sidebar user={user} userData={userData} menu />
           </UserContext.Provider>
           {
             loading ? (
@@ -144,15 +164,53 @@ class Orders extends React.Component {
             ) : (
               <OrderListWrapper>
                 {
-                  orders && orders.length > 0 ? orders.map(order => (
-                    <OrderWrapper key={order.orderId}>
-                      <AssetsWrapper>
-                        <AssetCard asset={order.offer} disableMargin />
-                        <AssetCard asset={order.request} disableMargin />
-                      </AssetsWrapper>
-                      <Button onClick={() => this.cancelOrder(order.orderId)}>Cancel order</Button>
-                    </OrderWrapper>
-                  )) : null
+                  orders === 0 ? (
+                    <SmallHeading>No orders found</SmallHeading>
+                  ) : (
+                    <React.Fragment>
+                      <SmallHeading>Total revenue: {total}</SmallHeading>
+                      {
+                        active && active.length > 0 && <Heading>Active Orders</Heading>
+                      }
+                      {
+                        active && active.length > 0 ? active.map(order => (
+                          <OrderWrapper key={order.orderId}>
+                            <AssetsWrapper>
+                              <AssetCard asset={order.offer} disableMargin />
+                              <AssetCard asset={order.request} disableMargin />
+                            </AssetsWrapper>
+                            <Button onClick={() => this.cancelOrder(order.orderId)}>Cancel order</Button>
+                          </OrderWrapper>
+                        )) : null
+                      }
+                      {
+                        expired && expired.length > 0 && <Heading>Expired Orders</Heading>
+                      }
+                      {
+                        expired && expired.length > 0 ? expired.map(order => (
+                          <OrderWrapper key={order.orderId}>
+                            <AssetsWrapper>
+                              <AssetCard asset={order.offer} disableMargin />
+                              <AssetCard asset={order.request} disableMargin />
+                            </AssetsWrapper>
+                          </OrderWrapper>
+                        )) : null
+                      }
+                      {
+                        cancelled && cancelled.length > 0 && <Heading>Cancelled Orders</Heading>
+                      }
+                      {
+                        cancelled && cancelled.length > 0 ? cancelled.map(order => (
+                          <OrderWrapper key={order.orderId}>
+                            <AssetsWrapper>
+                              <AssetCard asset={order.offer} disableMargin />
+                              <AssetCard asset={order.request} disableMargin />
+                            </AssetsWrapper>
+                          </OrderWrapper>
+                        )) : null
+                      }
+                    </React.Fragment>
+                  )
                 }
               </OrderListWrapper>
             )
@@ -203,7 +261,7 @@ const OrderWrapper = styled.div`
   border-radius: 15px;
   background-color: rgba(10, 32, 86, 0.9);
   align-items: center;
-  margin: 30px 60px;
+  margin: 30px 40px;
   padding: 40px;
 `
 
@@ -211,6 +269,10 @@ const AssetsWrapper = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+
+  & > div:first-child {
+    margin-right: 40px;
+  }
 `
 
 const Data = styled.section`
@@ -240,11 +302,18 @@ const Button = styled.button`
   font-size: 12px;
   letter-spacing: 0.38px;
   padding: 12px 21px;
-  margin: 15px 0 0;
+  margin: 40px 0 0;
   box-shadow: 0 10px 20px 0 #0a2056;
   font-weight: 700;
-  background-color: #009fff;
+  background-color: #ac422f;
+  border: 2px solid #ac422f;
   width: 160px;
+
+  &:hover {
+    color: #ac422f;
+    background-color: #ffffff;
+    border: 2px solid #ac422f;
+  }
 `;
 
 const Heading = styled.h2`
@@ -252,12 +321,15 @@ const Heading = styled.h2`
   font-weight: 300;
   color: #ffffff;
   padding-top: 50px;
-  margin: 0 40px;
+  margin: 0 60px;
 `;
 
-const Text = styled.h4`
-  font-size: 1.3rem;
+const SmallHeading = styled.h3`
+  text-align: left;
+  font-size: 22px;
   font-weight: 300;
+  line-height: 32px;
   color: #ffffff;
-  padding: 20px 0;
+  padding-top: 50px;
+  margin: 0 60px;
 `;
