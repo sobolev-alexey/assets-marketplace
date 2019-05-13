@@ -20,10 +20,10 @@ export default ({
     </Link>
   );
 
-  const dashboardButton = (
-    <Link to={'/dashboard'}>
+  const ordersPageButton = (
+    <Link to={'/orders'}>
       <Button type="button" className="btn btn-accent txt-bold modal-trigger">
-        Go to Dashboard
+        Go to Orders
       </Button>
     </Link>
   );
@@ -106,7 +106,7 @@ export default ({
     orderCompleted: {
       heading: 'Order completed',
       body: 'Asset was successfully purchased.',
-      button: dashboardButton
+      button: ordersPageButton
     },
     generalError: {
       heading: 'Error',

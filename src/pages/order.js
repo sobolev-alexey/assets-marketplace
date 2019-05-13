@@ -11,6 +11,7 @@ import Modal from '../components/modal';
 import Sidebar from '../components/user-sidebar';
 import AssetList from '../components/asset-list/order-page';
 import AssetCard from '../components/card/asset';
+import AddCard from '../components/add-asset';
 import Loading from '../components/loading';
 
 export const UserContext = React.createContext({});
@@ -25,10 +26,15 @@ class Order extends React.Component {
         requests: []
       },
       user: {},
+      showModal: false,
+      notification: null,
+      error: false,
       loading: false,
       selectedOffer: null,
       selectedRequest: null,
-      matchingAssetSelected: null
+      matchingAssetSelected: null,
+      displayNewOfferForm: false,
+      displayNewRequestForm: false,
     };
 
     this.checkLogin = this.checkLogin.bind(this);
@@ -40,6 +46,12 @@ class Order extends React.Component {
     this.cancel = this.cancel.bind(this);
     this.confirmOrder = this.confirmOrder.bind(this);
     this.notificationCallback = this.notificationCallback.bind(this);
+    this.showNewOfferForm = this.showNewOfferForm.bind(this);
+    this.hideNewOfferForm = this.hideNewOfferForm.bind(this);
+    this.showNewRequestForm = this.showNewRequestForm.bind(this);
+    this.hideNewRequestForm = this.hideNewRequestForm.bind(this);
+    this.createOffer = this.createOffer.bind(this);
+    this.createRequest = this.createRequest.bind(this);
   }
 
   async componentWillReceiveProps(nextProps) {
@@ -189,9 +201,89 @@ class Order extends React.Component {
     });
   }
 
+  showNewOfferForm() {
+    this.setState({ displayNewOfferForm: true });
+  }
+
+  hideNewOfferForm() {
+    this.setState({ displayNewOfferForm: false });
+  }
+
+  showNewRequestForm() {
+    this.setState({ displayNewRequestForm: true });
+  }
+
+  hideNewRequestForm() {
+    this.setState({ displayNewRequestForm: false });
+  }
+
+  createOffer(asset) {
+    return this.create(asset, 'offers');
+  };
+
+  createRequest(asset) {
+    return this.create(asset, 'requests');
+  };
+
+  create(asset, category) {
+    const { userData, match: { params: { assetId } } } = this.props;
+
+    return new Promise(async (resolve) => {
+      const packet = {
+        apiKey: userData.apiKey,
+        asset,
+        category
+      };
+
+      // Call server
+      const data = await api.post('newAsset', packet);
+      // Check success
+      if (data.success) {
+        await this.findMatchingAssets(assetId);
+        this.setState({ 
+          displayNewOfferForm: false, 
+          displayNewRequestForm: false,
+          loading: false,
+          showModal: false,
+          notification: null,
+          error: false
+        });
+      } else if (data.error) {
+        this.setState({
+          showModal: true, 
+          error: data.error, 
+          notification: 'generalError', 
+          loading: false,
+          assetDetails: {}
+        });
+      }
+      
+      resolve(data);
+    });
+  };
+
   render() {
     const { assets, user, loading, matchingAssetSelected } = this.state;
     const { userData } = this.props;
+
+    const userId = this.state.user.uid;
+    const selectedAssetOwner = assets.ownAsset && !isEmpty(assets.ownAsset) ? assets.ownAsset.owner : null;
+    const hasMatchingAssets = !isEmpty(assets.offers) || !isEmpty(assets.requests);
+
+    let status
+    if (!hasMatchingAssets) {
+      if (userId === selectedAssetOwner) {
+        status = 'No matching assets';
+      } else {
+        if (assets.ownAsset && !isEmpty(assets.ownAsset)) {
+          if (assets.ownAsset.category === 'offers') {
+            status = 'Create request';
+          } else if (assets.ownAsset.category === 'requests') {
+            status = 'Create offer';
+          }
+        }
+      }
+    }
 
     return (
       <Main>
@@ -218,6 +310,46 @@ class Order extends React.Component {
                     selectAsset: this.selectAsset,
                     selected: matchingAssetSelected
                   }}>
+                    {
+                      isEmpty(assets.offers) && isEmpty(assets.requests) ? (
+                        <NoAssetsOuterWrapper>
+                          <NoAssetsInnerWrapper>
+                            <Heading>You have no active offers or requests</Heading>
+                            <Text>Why not create a new one?</Text>
+                            {
+                              status === 'Create offer' ? (
+                                <Button onClick={this.showNewOfferForm}>
+                                  Create offer
+                                </Button>
+                              ) : null
+                            }
+                            {
+                              status === 'Create request' ? (
+                                <Button onClick={this.showNewRequestForm}>
+                                  Create request
+                                </Button> 
+                              ) : null
+                            }
+                            { 
+                              this.state.displayNewOfferForm && 
+                              <AddCard 
+                                createAsset={this.createOffer} 
+                                cancel={this.hideNewOfferForm} 
+                                category="offers"  
+                              /> 
+                            }
+                            { 
+                              this.state.displayNewRequestForm && 
+                              <AddCard
+                                createAsset={this.createRequest} 
+                                cancel={this.hideNewRequestForm}
+                                category="requests"
+                              /> 
+                            }
+                          </NoAssetsInnerWrapper>
+                        </NoAssetsOuterWrapper>
+                      ) : null
+                    }
                     {
                       assets.offers && !isEmpty(assets.offers) && 
                         <Heading>Please select matching offer</Heading>
@@ -373,3 +505,22 @@ const OrderButtonsWrapper = styled.div`
   padding: 0 30px;
   box-shadow: 2px -4px 41px 0px rgba(0,0,0,0.75);
 `
+
+const NoAssetsOuterWrapper = styled.div`
+  position: relative;
+  margin-top: 100px;
+`
+
+const NoAssetsInnerWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+`
+
+const Text = styled.h4`
+  font-size: 1.3rem;
+  font-weight: 300;
+  color: #ffffff;
+  padding: 20px 0;
+`;
+
