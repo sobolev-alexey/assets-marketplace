@@ -314,7 +314,7 @@ class Order extends React.Component {
                       isEmpty(assets.offers) && isEmpty(assets.requests) ? (
                         <NoAssetsOuterWrapper>
                           <NoAssetsInnerWrapper>
-                            <Heading>You have no active offers or requests</Heading>
+                            <Heading>No matching assets found</Heading>
                             <Text>Why not create a new one?</Text>
                             {
                               status === 'Create offer' ? (

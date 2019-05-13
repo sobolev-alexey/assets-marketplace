@@ -48,6 +48,11 @@ class UserSidebar extends React.Component {
             </MenuWrapper>
           ) : null
         }
+        <Details>
+          <DetailRow>
+            <Wallet />
+          </DetailRow>
+        </Details>
         {userData && (
           <Details>
             <DetailRow>
@@ -75,12 +80,7 @@ class UserSidebar extends React.Component {
             <Alert message={message}>{message}</Alert>
           </Details>
         )}
-        <Details>
-          <DetailRow>
-            <Wallet />
-          </DetailRow>
-        </Details>
-        <Details>
+        {/* <Details>
           <DetailRow>
             <a
               href={'/static/docs/index.html'}
@@ -90,7 +90,7 @@ class UserSidebar extends React.Component {
               <DetailValue>View the API documentation</DetailValue>
             </a>
           </DetailRow>
-        </Details>
+        </Details> */}
       </Sidebar>
     );
   }
