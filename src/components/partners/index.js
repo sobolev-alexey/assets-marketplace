@@ -3,7 +3,10 @@ import styled from 'styled-components';
 import upperFirst from 'lodash-es/upperFirst';
 
 const partners = [
-  { src: 'orange.png', alt: 'orange' }
+  { src: 'orange.png', alt: 'orange' },
+  { src: 'vodafone.png', alt: 'vodafone' },
+  { src: 'nokia.png', alt: 'nokia' },
+  { src: 'infosys.png', alt: 'infosys' }
 ];
 
 export default class extends React.Component {
