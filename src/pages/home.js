@@ -10,14 +10,8 @@ import Footer from '../components/footer';
 
 const content1 = {
   id: 'about',
-  text: `The IOTA Foundation launched the Data Marketplace as a proof of concept and open innovation ecosystem in the fourth quarter of 2017. The rationale and opportunity landscape related to this initiative are described in depth <a href="https://blog.iota.org/iota-data-marketplace-cb6be463ac7f">here</a>.
-<br /><br />As of July 2018, the initiative produced a PoC available online at <a href="https://data.iota.org">https://data.iota.org</a> and continued to onboard organisations. We now have more than 70 organisations signed up.`,
-};
-
-const content2 = {
-  text: `The IOTA Tangle is a secure data communication protocol and zero fee micro-transaction system for the IoT/M2M. It provides the means to develop new "smart" business models in the IoT, enabling connected assets and "machines" to share securely information based on a new framework of 'Trust in the Data' and also allow seamless transactions between IoT assets.
-<br /><br />
-The IOTA Data Marketplace is a simplified platform which simulates how a connected asset running the IOTA protocol can be paid rapidly for sharing secure data over to a web browser.`,
+  text: `The IOTA-based Telco Infrastructure Marketplace is an initiative Championed by Orange and Vodafone as part of the <a href="https://www.tmforum.org/collaboration/catalyst-program/catalyst-program-benefits/">TMForum Catalyst Initiative</a>.
+<br /><br />Aim of the marketplace is to demonstrate how DLTs can help to create an agile, secure and easy to access assets marketplace where CSPs can provide access to their network infrastructure on-demand and real-time to any Service Providers.`,
 };
 
 class HomePage extends React.Component {
@@ -51,7 +45,6 @@ class HomePage extends React.Component {
         <ImgContainer>
           <Image src="/static/illustrations/home1.png" alt="IOTA process illustration" />
         </ImgContainer>
-        <Content content={content2} />
         <Partners anchor={anchor || (this.props.location && this.props.location.hash)} />
         <Footer />
       </Main>

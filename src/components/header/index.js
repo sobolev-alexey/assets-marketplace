@@ -8,16 +8,10 @@ export default ({ onAnchorClick }) => (
       <Info>
         <Heading>
           IOTA makes it<br className="desktop-hidden-later mobile-hidden-later" /> possible<br className="tablet-hidden-later mobile-hidden-later" />{' '}
-          to securely<br className="desktop-hidden-later mobile-hidden-later" /> store, sell,<br className="tablet-hidden-later mobile-hidden-later" />{' '}
-          and access<br className="desktop-hidden-later mobile-hidden" /> data streams.
+          to fast and securely<br className="desktop-hidden-later mobile-hidden-later" /> trade<br className="tablet-hidden-later mobile-hidden-later" />{' '}
+          telco<br className="desktop-hidden-later mobile-hidden" /> infrastructure assets
         </Heading>
-        <Tagline>Never has getting access to diverse, fine-granular data been this easy!</Tagline>
-        <a
-          href="https://blog.iota.org/part-1-iota-data-marketplace-update-5f6a8ce96d05"
-          target="_blank"
-          rel="noopener noreferrer">
-          <Button type="button">About the Marketplace</Button>
-        </a>
+        <Tagline>Deploying services on mobile network has never been this easy!</Tagline>
         <Link to={'/#about'} onClick={() => onAnchorClick('about')}>
           <SubLink>{'About the initiative'.toUpperCase()}</SubLink>
         </Link>
@@ -147,20 +141,6 @@ const Tagline = styled.h2`
   @media (max-width: 470px) {
     max-width: 230px;
   }
-`;
-
-const Button = styled.button`
-  background-color: #009fff;
-  box-shadow: 0 16px 25px 0 rgba(0, 159, 255, 0.27);
-  appearance: none;
-  font: 15px 'Nunito Sans', sans-serif;
-  letter-spacing: 0.47px;
-  padding: 20px 38px;
-  border-radius: 100px;
-  text-transform: uppercase;
-  color: #fff;
-  font-weight: 700;
-  margin-bottom: 15px;
 `;
 
 const Graphics = styled.div`
