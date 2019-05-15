@@ -1,0 +1,180 @@
+sample API requests
+
+newAsset.post('/newAsset').form({
+   "apiKey":"76169630-4289-4fc0-8098-3942fd326fe0",
+   "asset":{
+      "location":{
+         "city":"Nice",
+         "country":"France"
+      },
+      "assetName":"Request for Drone",
+      "assetDescription":"",
+      "type":"infrastructure",
+      "dataTypes":[
+         {
+            "name":"Coverage Type",
+            "value":"Indoor"
+         },
+         {
+            "name":"Frequency",
+            "value":"4G Licensed"
+         }
+      ],
+      "lat":43.7,
+      "lon":7.25,
+      "company":"o2",
+      "price":200,
+      "category":"requests",
+      "creationDate":"14 May, 2019 12:41 pm ",
+      "start":"2019-05-16T13:00:00.239Z",
+      "end":"2019-05-16T13:30:00.239Z"
+   },
+   "category":"requests"
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+newAsset.post('/newAsset').form({
+   "apiKey":"320cab2e-66dd-455e-a9b4-94a78a5c0432",
+   "asset":{
+      "location":{
+         "city":"Nice",
+         "country":"France"
+      },
+      "assetName":"Fiber 10 Gbps",
+      "assetDescription":"Service location: Acropolis Convention Center",
+      "type":"connectivity",
+      "dataTypes":[
+         {
+            "name":"Capacity",
+            "value":"10 Gbps"
+         },
+         {
+            "name":"Service location",
+            "value":"Acropolis Convention Center"
+         }
+      ],
+      "lat":43.71,
+      "lon":7.29,
+      "company":"Orange",
+      "price":20,
+      "category":"offers",
+      "creationDate":"09 May, 2019 11:51 am "
+   },
+   "category":"offers"
+})
+
+
+
+
+
+
+
+newAsset.post('/newAsset').form({
+   "apiKey":"a672542c-d401-41fd-835b-11a1972b3db3",
+   "asset":{
+      "location":{
+         "city":"Nice",
+         "country":"France"
+      },
+      "assetName":"Aerial Drone 10",
+      "assetDescription":"DJI Inspire Unmanned aerial vehicle",
+      "type":"infrastructure",
+      "dataTypes":[
+         {
+            "name":"Name",
+            "value":"DJI Inspire"
+         },
+         {
+            "name":"Coverage Type",
+            "value":"Venue specific"
+         },
+         {
+            "name":"Frequency",
+            "value":"4G Licensed"
+         },
+         {
+            "name":"Power consumption",
+            "value":"B3"
+         },
+         {
+            "name":"Coverage",
+            "value":"200m radius"
+         }
+      ],
+      "lat":43.71,
+      "lon":7.28,
+      "company":"Vodafone",
+      "price":30,
+      "category":"offers",
+      "creationDate":"09 May, 2019 11:51 am "
+   },
+   "category":"offers"
+})
+
+
+
+
+newAsset.post('/newAsset').form({
+   "apiKey":"320cab2e-66dd-455e-a9b4-94a78a5c0432",
+   "asset":{
+      "location":{
+         "city":"Nice",
+         "country":"France"
+      },
+      "assetName":"Cell Tower 2",
+      "assetDescription":"",
+      "type":"cell",
+      "dataTypes":[
+         {
+            "name":"Coverage",
+            "value":"Outdoor"
+         },
+         {
+            "name":"Frequency",
+            "value":"4.7 Mhz/ 9.4 MHz TD-LTE"
+         },
+         {
+            "name":"Bachhaul",
+            "value":"(A) DSL/ Fiber/ Microwave"
+         },
+         {
+            "name":"Power",
+            "value":"<130 w"
+         },
+         {
+            "name":"Range",
+            "value":"1200m"
+         }
+      ],
+      "lat":43.51,
+      "lon":7.25,
+      "company":"o2",
+      "price":60,
+      "category":"offers",
+      "creationDate":"09 May, 2019 11:51 am "
+   },
+   "category":"offers"
+})
+
+
+
+
+
+cancel.post('/cancel').form({
+   "apiKey":"76169630-4289-4fc0-8098-3942fd326fe0",
+   "orderId":"fd8c3873-ca90-45ca-8d45-c895d00bec38"
+})
+
+
+match.get('/match?assetId=05a26085-9d24-40ea-8d3d-01043fbf8399')

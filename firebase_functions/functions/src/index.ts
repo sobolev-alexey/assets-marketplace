@@ -70,7 +70,7 @@ exports.newAsset = functions.https.onRequest((req, res) => {
       packet.asset.endTimestamp = getTime(packet.asset.end);
 
       const channelDetails = await initializeChannel(packet.asset, secretKey);
-      console.log('newAsset channelDetails', packet.category, packet.asset.assetId, channelDetails); 
+      console.log('newAsset channelDetails', packet.category, packet.asset.assetId, channelDetails);
       await setAsset(packet.category, packet.asset, channelDetails);
 
       const category = packet.category !== 'offers' ? 'offers' : 'requests';
@@ -131,7 +131,7 @@ exports.delete = functions.https.onRequest((req, res) => {
 exports.assets = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
-      await reactivateOffers();
+      // await reactivateOffers();
 
       const params = req.query;
       if (params && params.userId && params.apiKey) {
@@ -268,7 +268,7 @@ exports.order = functions.https.onRequest((req, res) => {
       return res.status(400).json({ error: 'Malformed Request' });
     }
 
-    const debug = packet.debug === true;
+    const debug = packet.debug === 'true';
 
     try {
 debug && console.log(100, packet.apiKey, packet.offerId, packet.requestId);
@@ -276,25 +276,25 @@ debug && console.log(100, packet.apiKey, packet.offerId, packet.requestId);
       const offeredAsset = await getAsset('offers', packet.offerId, true);
       // 2. Get request from ID
       const requestedAsset = await getAsset('requests', packet.requestId, true);
-      
-debug && console.log(122, offeredAsset, requestedAsset);      
+
+debug && console.log(122, offeredAsset, requestedAsset);
       if (!offeredAsset || !requestedAsset) {
           return res.status(403).json({ error: 'Asset not found' });
       }
 
-debug && console.log(133, offeredAsset.owner, requestedAsset.owner); 
+debug && console.log(133, offeredAsset.owner, requestedAsset.owner);
       // 3. Get offer owner from offer
       const offerOwner = await getUser(offeredAsset.owner, true);
 
       // 4. Get request offer from request
       const requestOwner = await getUser(requestedAsset.owner, true);
 
-debug && console.log(144, offerOwner, requestOwner); 
+debug && console.log(144, offerOwner, requestOwner);
       // 5. Get user from API key
       const { uid } = await getKey(<String>packet.apiKey);
       const user = await getUser(uid, true);
 
-debug && console.log(155, user, uid); 
+debug && console.log(155, user, uid);
       // 6. check user is one of the owners
       if (user.apiKey !== offerOwner.apiKey && user.apiKey !== requestOwner.apiKey) {
         return res.status(403).json({ error: 'Current user is not the asset owner' });
@@ -304,8 +304,8 @@ debug && console.log(155, user, uid);
       const offerOwnerWallet = offerOwner.wallet;
       // 8. Get wallet from request owner
       const requestOwnerWallet = requestOwner.wallet;
-      
-debug && console.log(188, offerOwnerWallet, requestOwnerWallet); 
+
+debug && console.log(188, offerOwnerWallet, requestOwnerWallet);
       if (!offerOwnerWallet || !offerOwnerWallet.address || !requestOwnerWallet || !requestOwnerWallet.address) {
         return res.json({ error: `Asset owners' wallet not set` });
       }
@@ -313,7 +313,7 @@ debug && console.log(188, offerOwnerWallet, requestOwnerWallet);
       // 9. Get lowest price between offer and request
       const price = offeredAsset.price < requestedAsset.price ? offeredAsset.price : requestedAsset.price;
 
-debug && console.log(1100, price); 
+debug && console.log(1100, price);
       // 10. Check wallet balance before purchasing
       let newWalletBalance;
       if (requestOwnerWallet && requestOwnerWallet.balance) {
@@ -327,7 +327,7 @@ debug && console.log(1100, price);
         return res.json({ error: `Asset requesters' wallet not set` });
       }
 
-debug && console.log(1111, newWalletBalance); 
+debug && console.log(1111, newWalletBalance);
       // 11. Transfer tokens from request owner to offer owner
       const transactions = await purchaseData(requestedAsset.owner, offerOwnerWallet.address, Number(price));
       console.log('order', requestedAsset.owner, offeredAsset.owner, transactions);
@@ -335,28 +335,28 @@ debug && console.log(1111, newWalletBalance);
       if (!transactions || transactions.length === 0) {
         return res.json({ error: 'Purchase failed. Insufficient balance or out of sync' });
       }
-debug && console.log(1112, transactions.length); 
+debug && console.log(1112, transactions.length);
       const hashes = transactions && transactions.map(transaction => transaction.hash);
 
       // Find TX on network and parse
       const { provider } = await getSettings();
       const bundle = await findTx(hashes, provider);
 
-debug && console.log(1113, bundle); 
+debug && console.log(1113, bundle);
       // Make sure TX is valid
       if (!validateBundleSignatures(bundle)) {
         console.error('order failed. Transaction is invalid for: ', bundle);
         return res.status(403).json({ error: 'Transaction is Invalid' });
       }
 
-debug && console.log(1120, 'payment completed'); 
+debug && console.log(1120, 'payment completed');
       // 12. Update user wallet balance
       await updateBalance(requestedAsset.owner, newWalletBalance);
 
       // 13. Update recipient (request/offer owner) wallet balance
       await updateBalance(offeredAsset.owner, Number(offerOwnerWallet.balance) + Number(price));
 
-debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price)); 
+debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price));
       // 14. Create new order MAM channel
       const secretKey = generateSeed(81);
       const orderId = generateUUID();
@@ -365,8 +365,8 @@ debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price));
       const payload = {
         offer: offeredAsset,
         request: requestedAsset,
-        offerId: packet.offerId, 
-        requestId: packet.requestId, 
+        offerId: packet.offerId,
+        requestId: packet.requestId,
         orderId,
         orderTimestamp,
         orderTime,
@@ -376,19 +376,19 @@ debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price));
         startTimestamp: requestedAsset.startTimestamp,
         endTimestamp: requestedAsset.endTimestamp,
       }
-debug && console.log(1150, payload); 
+debug && console.log(1150, payload);
       const channelDetails = await initializeChannel(payload, secretKey);
-      console.log('order channelDetails', payload, channelDetails); 
+      console.log('order channelDetails', payload, channelDetails);
 
       // 15. Add entry to the "orders" table, including MAM
-debug && console.log(1151, orderId, payload); 
+debug && console.log(1151, orderId, payload);
       await setOrder(orderId, payload, channelDetails);
 
       const channelPayload = {
-        offerId: packet.offerId, 
+        offerId: packet.offerId,
         requestId: packet.requestId,
         orderId,
-        orderTimestamp, 
+        orderTimestamp,
         orderTime,
         price,
         startDate: requestedAsset.startDate,
@@ -396,31 +396,31 @@ debug && console.log(1151, orderId, payload);
         startTimestamp: requestedAsset.startTimestamp,
         endTimestamp: requestedAsset.endTimestamp,
       };
-debug && console.log(1160, channelPayload); 
+debug && console.log(1160, channelPayload);
       // 16. Add new event to the offer MAM channel
       const offerAppendResult = await appendToChannel(packet.offerId, channelPayload);
       await updateChannelDetails(packet.offerId, offerAppendResult);
 
-debug && console.log(1170, packet.offerId, offerAppendResult); 
+debug && console.log(1170, packet.offerId, offerAppendResult);
       // 17. Add new event to the request MAM channel
       const requestAppendResult = await appendToChannel(packet.requestId, channelPayload);
       await updateChannelDetails(packet.requestId, requestAppendResult);
 
-debug && console.log(1180, packet.requestId, requestAppendResult); 
+debug && console.log(1180, packet.requestId, requestAppendResult);
       // 18. Set offer inactive
       await deactivateAsset('offers', packet.offerId);
 
       // 19. Set request inactive
       await deactivateAsset('requests', packet.requestId);
 
-debug && console.log(2000, orderId); 
-      // 20. Add order to sellers orders list 
+debug && console.log(2000, orderId);
+      // 20. Add order to sellers orders list
       await assignOrder(offeredAsset.owner, orderId, orderTimestamp, orderTime);
 
-      // 21. Add order to purchasers orders list 
+      // 21. Add order to purchasers orders list
       await assignOrder(requestedAsset.owner, orderId, orderTimestamp, orderTime);
 
-debug && console.log(2100, offeredAsset.owner, requestedAsset.owner, orderId); 
+debug && console.log(2100, offeredAsset.owner, requestedAsset.owner, orderId);
       return res.json({ success: true });
     } catch (e) {
       console.error('purchaseData failed. Error: ', e, packet);
@@ -433,7 +433,7 @@ debug && console.log(2100, offeredAsset.owner, requestedAsset.owner, orderId);
 exports.match = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
-      await reactivateOffers();
+      // await reactivateOffers();
 
       const params = req.query;
       if (!params || !params.assetId) {
@@ -494,9 +494,10 @@ exports.history = functions.https.onRequest((req, res) => {
         success: true,
         asset,
         orders,
-        channelDetails: { 
+        channelDetails: {
           root: channelDetails.root,
-          secretKey: channelDetails.secretKey
+          secretKey: channelDetails.secretKey,
+          hash: channelDetails.hash
         }
       });
     } catch (e) {
@@ -522,7 +523,9 @@ exports.orders = functions.https.onRequest((req, res) => {
       const promises = await orderEntries.map(async ({ orderId }) => {
         const promise = await new Promise(async (resolve, reject) => {
           try {
+            const mam = await getChannelDetailsForAsset(orderId);
             const order = await getAsset('orders', orderId, true);
+            order.mam = mam;
             resolve(order);
           } catch (error) {
             reject({ error });
@@ -563,14 +566,14 @@ exports.cancel = functions.https.onRequest((req, res) => {
 
       // Cancel order and reactivate offer
       await cancelRunningOrder(order.orderId, order.offerId);
-      
+
       const cancellationTimestamp = Date.now();
       const cancellationDate = format(cancellationTimestamp, 'DD MMMM, YYYY H:mm a ');
 
       // Update order MAM channel
       const orderPayload = {
         orderId: order.orderId,
-        offerId: order.offerId, 
+        offerId: order.offerId,
         requestId: order.requestId,
         cancelled: true,
         cancellationDate,
@@ -580,15 +583,15 @@ exports.cancel = functions.https.onRequest((req, res) => {
         startTimestamp: order.startTimestamp
       };
       const orderAppendResult = await appendToChannel(order.orderId, orderPayload);
-      
+
       await updateChannelDetails(order.orderId, orderAppendResult);
 
       // Update asset MAM channel
       const assetPayload = {
-        offerId: order.offerId, 
+        offerId: order.offerId,
         requestId: order.requestId,
         orderId: order.orderId,
-        orderTimestamp: order.orderTimestamp, 
+        orderTimestamp: order.orderTimestamp,
         orderTime: order.orderTime,
         startDate: order.startDate,
         startTimestamp: order.startTimestamp,
@@ -611,4 +614,3 @@ exports.cancel = functions.https.onRequest((req, res) => {
     }
   });
 });
-

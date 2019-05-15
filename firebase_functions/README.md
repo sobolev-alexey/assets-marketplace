@@ -32,7 +32,20 @@ To test this locally, run
 `firebase functions:shell`
 
 Then call a function with parameters
-`getAssets.post('/getAssets').form({})`
+`assets.get('/assets')`
+
+order.post('/order').form({apiKey: '4d0c6a2e-6868-451c-8fbf-38c903c9d5ad', offerId: '8ea3ffa6-e62d-4ee9-a5fc-f31fb6d3bc92', requestId: '4321f243-e296-4db5-9894-df2843bc78d0'})
+
+history.post('/history').form({apiKey: '4d0c6a2e-6868-451c-8fbf-38c903c9d5ad', assetId: '61bedaf1-a93e-4d9e-a49b-6dda9bbca357'})
+
+history.post('/history').form({apiKey: '76169630-4289-4fc0-8098-3942fd326fe0', assetId: '73069964-cc25-406e-bc1b-0ca1b88934d4'})
+
+cancel.post('/cancel').form({apiKey: '76169630-4289-4fc0-8098-3942fd326fe0', orderId: '1c895f1d-7827-483b-b1c9-d5e89afaeaa8'})
+
+orders.post('/orders').form({apiKey: '76169630-4289-4fc0-8098-3942fd326fe0'})
+
+order.post('/order').form({"apiKey":"76169630-4289-4fc0-8098-3942fd326fe0","offerId":"3befd7c6-9f03-4abd-9ab2-84f9936975a2","requestId":"82060882-ec2b-4829-a68a-e516b9086817", debug:true})
+
 
 #### Deploy fo Firebase
 

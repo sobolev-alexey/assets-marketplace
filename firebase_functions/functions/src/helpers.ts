@@ -10,7 +10,7 @@ const {
   updateUserWalletAddressKeyIndex,
   getIotaWallet,
   getUserWallet,
-  getMAMChannelDetails,
+  getChannelDetailsForAsset,
 } = require('./firebase');
 
 const checkRecaptcha = async (captcha, emailSettings) => {
@@ -234,7 +234,7 @@ const initializeChannel = async (packet, secretKey) => {
 const appendToChannel = async (assetId, channelPayload) => {
   try {
     const { provider } = await getSettings();
-    const { secretKey, next, start, seed, root } = await getMAMChannelDetails(assetId);
+    const { secretKey, next, start, seed, root } = await getChannelDetailsForAsset(assetId);
     Mam.init(provider);
 
     // Initialise MAM State
@@ -258,7 +258,8 @@ const appendToChannel = async (assetId, channelPayload) => {
     const message = Mam.create(mamState, trytes);
 
     // Attach the payload
-    await Mam.attach(message.payload, message.address, 3, 9);
+    const transactions = await Mam.attach(message.payload, message.address, 3, 9);
+    const firstTransaction = transactions.find(transaction => transaction.currentIndex === 0);
 
     return {
       secretKey,
@@ -266,6 +267,7 @@ const appendToChannel = async (assetId, channelPayload) => {
       seed: message.state.seed,
       next: message.state.channel.next_root,
       start: message.state.channel.start,
+      hash: firstTransaction.hash
     };
   } catch (error) {
     console.log('MAM append error', error);

@@ -17,19 +17,6 @@ exports.getKey = async (key: string) => {
   throw Error('Your API key is incorrect.');
 };
 
-exports.getMAMChannelDetails = async (assetId: string) => {
-  // Get MAM channel details
-  const doc = await admin
-    .firestore()
-    .collection('mam')
-    .doc(assetId)
-    .get();
-
-  if (doc.exists) return doc.data();
-  console.log('getMAMChannelDetails failed.', assetId, doc);
-  return null;
-};
-
 exports.getAsset = async (collection: string, assetId: string, internal: boolean = false) => {
   // Get User's purchase
   const doc = await admin
@@ -67,7 +54,7 @@ exports.getAssets = async (collection: string) => {
       return null;
     }
   });
-  
+
 };
 
 exports.getUserAssets = async (collection: string, user: string) => {
@@ -185,7 +172,7 @@ exports.deactivateAsset = async (collection: string, assetId: string) => {
 
 exports.deleteAsset = async (collection: string, assetId: string, userId: string) => {
   // Remove Asset if not in the list of orders
-  
+
   let canDeleteAsset = true;
   // Get order
     const ordersSnapshot = await admin
@@ -390,7 +377,7 @@ exports.updateChannelDetails = async (assetId: string, channelDetails: any) => {
 //   } else if (asset.category === 'requests') {
 //     query = queryBuilder.where('requestId', '==', asset.assetId);
 //   }
-  
+
 //   const querySnapshot = await query.get();
 
 //   if (querySnapshot.size === 0) return [];
@@ -413,7 +400,6 @@ exports.getChannelDetailsForAsset = async (assetId: string) => {
   console.log('getChannelDetailsForAsset failed.', assetId);
   throw Error(`The channel doesn't exist.`);
 };
-
 
 exports.reactivateOffers = async () => {
   // Get expired orders
@@ -475,5 +461,3 @@ exports.getOrdersForUser = async (userId: string) => {
     }
   });
 };
-
-
