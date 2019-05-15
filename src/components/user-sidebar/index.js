@@ -38,13 +38,22 @@ class UserSidebar extends React.Component {
                 onClick={() => this.switchMenu('/dashboard')}
                 active={pathname === '/dashboard'}
               >
-                My Dashboard</Menu>
+                My Dashboard
+              </Menu>
               <Menu
                 role="button" 
                 onClick={() => this.switchMenu('/orders')}
                 active={pathname === '/orders'}
               >
-                Order History</Menu>
+                Order History
+              </Menu>
+              <Menu
+                role="button" 
+                onClick={() => this.switchMenu('/marketplace')}
+                active={pathname === '/marketplace'}
+              >
+                Marketplace
+              </Menu>
             </MenuWrapper>
           ) : null
         }
@@ -80,7 +89,7 @@ class UserSidebar extends React.Component {
             <Alert message={message}>{message}</Alert>
           </Details>
         )}
-        {/* <Details>
+        <Details>
           <DetailRow>
             <a
               href={'/static/docs/index.html'}
@@ -90,7 +99,7 @@ class UserSidebar extends React.Component {
               <DetailValue>View the API documentation</DetailValue>
             </a>
           </DetailRow>
-        </Details> */}
+        </Details>
       </Sidebar>
     );
   }

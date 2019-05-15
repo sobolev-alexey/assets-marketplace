@@ -15,6 +15,23 @@ import Modal from '../components/modal';
 export const UserContext = React.createContext({});
 export const AssetContext = React.createContext({});
 
+const mamExplorerLink = 'https://mam-explorer.firebaseapp.com/?mode=restricted';
+ 
+const ExternalLink = ({ channelDetails, provider, children }) => {
+  let link = `${mamExplorerLink}&provider=${encodeURIComponent(provider)}`;
+  link += `&root=${channelDetails.root}`;
+  link += `&key=${channelDetails.secretKey}`;
+
+  return (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {children}
+    </a>
+  )
+}
 class Orders extends React.Component {
   constructor(props) {
     super(props);
@@ -24,7 +41,7 @@ class Orders extends React.Component {
       loading: false,
       showModal: false,
       notification: null,
-      error: false,
+      error: {},
     };
 
     this.checkLogin = this.checkLogin.bind(this);
@@ -142,7 +159,7 @@ class Orders extends React.Component {
 
   render() {
     const { user, loading, active, cancelled, expired, total, orders } = this.state;
-    const { userData } = this.props;
+    const { userData, settings: { provider } } = this.props;
 
     return (
       <Main>
@@ -174,13 +191,15 @@ class Orders extends React.Component {
                       }
                       {
                         active && active.length > 0 ? active.map(order => (
-                          <OrderWrapper key={order.orderId}>
-                            <AssetsWrapper>
-                              <AssetCard asset={order.offer} disableMargin />
-                              <AssetCard asset={order.request} disableMargin />
-                            </AssetsWrapper>
-                            <Button onClick={() => this.cancelOrder(order.orderId)}>Cancel order</Button>
-                          </OrderWrapper>
+                          <ExternalLink key={order.orderId} channelDetails={order.mam} provider={provider}>
+                            <OrderWrapper key={order.orderId}>
+                              <AssetsWrapper>
+                                <AssetCard asset={order.offer} disableMargin />
+                                <AssetCard asset={order.request} disableMargin />
+                              </AssetsWrapper>
+                              <Button onClick={() => this.cancelOrder(order.orderId)}>Cancel order</Button>
+                            </OrderWrapper>
+                          </ExternalLink>
                         )) : null
                       }
                       {
@@ -188,12 +207,14 @@ class Orders extends React.Component {
                       }
                       {
                         expired && expired.length > 0 ? expired.map(order => (
-                          <OrderWrapper key={order.orderId}>
-                            <AssetsWrapper>
-                              <AssetCard asset={order.offer} disableMargin />
-                              <AssetCard asset={order.request} disableMargin />
-                            </AssetsWrapper>
-                          </OrderWrapper>
+                          <ExternalLink key={order.orderId} channelDetails={order.mam} provider={provider}>
+                            <OrderWrapper key={order.orderId}>
+                              <AssetsWrapper>
+                                <AssetCard asset={order.offer} disableMargin />
+                                <AssetCard asset={order.request} disableMargin />
+                              </AssetsWrapper>
+                            </OrderWrapper>
+                          </ExternalLink>
                         )) : null
                       }
                       {
@@ -201,12 +222,14 @@ class Orders extends React.Component {
                       }
                       {
                         cancelled && cancelled.length > 0 ? cancelled.map(order => (
-                          <OrderWrapper key={order.orderId}>
-                            <AssetsWrapper>
-                              <AssetCard asset={order.offer} disableMargin />
-                              <AssetCard asset={order.request} disableMargin />
-                            </AssetsWrapper>
-                          </OrderWrapper>
+                          <ExternalLink key={order.orderId} channelDetails={order.mam} provider={provider}>
+                            <OrderWrapper key={order.orderId}>
+                              <AssetsWrapper>
+                                <AssetCard asset={order.offer} disableMargin />
+                                <AssetCard asset={order.request} disableMargin />
+                              </AssetsWrapper>
+                            </OrderWrapper>
+                          </ExternalLink>
                         )) : null
                       }
                     </React.Fragment>
@@ -234,6 +257,7 @@ class Orders extends React.Component {
 
 const mapStateToProps = state => ({
   userData: state.user,
+  settings: state.settings,
 });
 
 const mapDispatchToProps = dispatch => ({
@@ -263,6 +287,7 @@ const OrderWrapper = styled.div`
   align-items: center;
   margin: 30px 40px;
   padding: 40px;
+  color: #000;
 `
 
 const AssetsWrapper = styled.div`

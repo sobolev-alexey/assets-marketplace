@@ -51,6 +51,20 @@ const AdditionalInfo = ({ channelDetails, provider }) => {
           {channelDetails.secretKey && `${channelDetails.secretKey.substr(0, 20)}...`}
         </CopyBox>
       </Clipboard>
+      {
+        channelDetails.hash ? (
+          <Clipboard
+            style={{ background: 'none', display: 'block' }}
+            data-clipboard-text={channelDetails.hash}
+            onSuccess={() => alert('Successfully Copied')}
+          >
+            <Text>Transaction hash: {' '}</Text>
+            <CopyBox>
+              {channelDetails.hash && `${channelDetails.hash.substr(0, 20)}...`}
+            </CopyBox>
+          </Clipboard>
+        ) : null
+      }
       <Alert message={message}>{message}</Alert>
       <ExternalLink
         href={link}
