@@ -1,9 +1,8 @@
-import * as functions from 'firebase-functions';
+const functions = require('firebase-functions');
 const format = require('date-fns/format');
 const getTime = require('date-fns/get_time');
 const cors = require('cors')({ origin: true });
 const { validateBundleSignatures } = require('@iota/bundle-validator');
-
 const { sendEmail } = require('./email');
 const {
   getKey,
@@ -27,7 +26,7 @@ const {
   getChannelDetailsForAsset,
   reactivateOffers,
   cancelRunningOrder,
-  getOrdersForUser,
+  getOrdersForUser
 } = require('./firebase');
 const {
   generateUUID,
@@ -40,7 +39,7 @@ const {
   purchaseData,
   initializeChannel,
   appendToChannel,
-  fetchChannel,
+  fetchChannel
 } = require('./helpers');
 
 exports.sendEmail = functions.https.onRequest((req, res) => {
@@ -84,10 +83,12 @@ exports.newAsset = functions.https.onRequest((req, res) => {
 
     try {
       const invalid = sanatiseObject(packet.asset);
-      if (invalid) throw Error(invalid);
+      if (invalid) {
+        throw Error(invalid);
+      }
 
       const secretKey = generateSeed(81);
-      const { uid } = await getKey(<String>packet.apiKey);
+      const { uid } = await getKey(packet.apiKey);
 
       // Modify object to include
       packet.asset.assetId = generateUUID();
@@ -131,18 +132,18 @@ exports.delete = functions.https.onRequest((req, res) => {
 
     try {
       const { apiKey, assetId, category } = packet;
-      const { uid } = await getKey(<String>apiKey);
-      const asset = await getAsset(<String>category, <String>assetId, true);
+      const { uid } = await getKey(apiKey);
+      const asset = await getAsset(category, assetId, true);
       if (!asset) {
         throw Error(`Asset doesn't exist`);
       }
       if (asset.owner === uid) {
         return res.json({
-          success: await deleteAsset(<String>category, <String>assetId, <String>uid),
+          success: await deleteAsset(category, assetId, uid),
         });
       } else {
         console.error(
-          "removeAsset failed. You don't have permission to delete this asset",
+          'removeAsset failed. You don\'t have permission to delete this asset',
           asset.owner,
           uid
         );
@@ -151,7 +152,7 @@ exports.delete = functions.https.onRequest((req, res) => {
     } catch (e) {
       console.error('removeAsset failed. Error: ', e.message);
       return res.status(403).json({
-        error: e.message,
+        error: e.message
       });
     }
   });
@@ -165,7 +166,7 @@ exports.assets = functions.https.onRequest((req, res) => {
 
       const params = req.query;
       if (params && params.userId && params.apiKey) {
-        const { uid } = await getKey(<String>params.apiKey);
+        const { uid } = await getKey(params.apiKey);
         if (params.userId === uid) {
           const offers = await getUserAssets('offers', params.userId);
           const requests = await getUserAssets('requests', params.userId);
@@ -185,7 +186,7 @@ exports.assets = functions.https.onRequest((req, res) => {
 });
 
 // // Setup User with an API Key
-exports.setupUser = functions.auth.user().onCreate(user => {
+exports.setupUser = functions.auth.user().onCreate(async user => {
   return new Promise(async (resolve, reject) => {
     if (!user.email) {
       reject();
@@ -321,7 +322,7 @@ debug && console.log(133, offeredAsset.owner, requestedAsset.owner);
 
 debug && console.log(144, offerOwner, requestOwner);
       // 5. Get user from API key
-      const { uid } = await getKey(<String>packet.apiKey);
+      const { uid } = await getKey(packet.apiKey);
       const user = await getUser(uid, true);
 
 debug && console.log(155, user, uid);
@@ -511,7 +512,7 @@ exports.history = functions.https.onRequest((req, res) => {
         }
       }
 
-      const user = await getKey(<String>params.apiKey);
+      const user = await getKey(params.apiKey);
       if (user.uid !== asset.owner) {
         return res.status(403).json({ error: 'Current user is not the asset owner' });
       }
@@ -547,7 +548,7 @@ exports.orders = functions.https.onRequest((req, res) => {
         return res.status(400).json({ error: 'Malformed Request' });
       }
 
-      const user = await getKey(<String>params.apiKey);
+      const user = await getKey(params.apiKey);
       const orderEntries = await getOrdersForUser(user.uid);
 
       const promises = await orderEntries.map(async ({ orderId }) => {
@@ -589,7 +590,7 @@ exports.cancel = functions.https.onRequest((req, res) => {
         return res.status(403).json({ error: 'Order not found' });
       }
 
-      const user = await getKey(<String>packet.apiKey);
+      const user = await getKey(packet.apiKey);
       if (user.uid !== order.offer.owner && user.uid !== order.request.owner) {
         return res.status(403).json({ error: 'Current user is not the participating in the given order' });
       }

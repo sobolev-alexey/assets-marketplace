@@ -45,7 +45,7 @@ const Wallet = ({ loadUser, asset, wallet, settings }) => {
           wallet.balance ? (
             !isEmpty(settings) ? (
               <a
-                href={`${settings.tangleExplorer}/${wallet.address}`}
+                href={`${settings.tangleExplorer}/${wallet.address}/devnet`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
