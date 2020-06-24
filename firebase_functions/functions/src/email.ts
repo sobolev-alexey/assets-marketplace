@@ -75,7 +75,7 @@ const mailgunSendEmail = (packet: any, emailSettings: any) => {
         <br/>
         <br/>
 
-        The whole IOTA team thank you again for your interest and look forward to collaborating with you.
+        The whole IOTA team thanks you again for your interest and is looking forward to collaborating with you.
         <br/>
         <br/>
 
