@@ -1,23 +1,23 @@
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 
 admin.initializeApp(functions.config().firebase);
 
-const firestore = admin.firestore();
-
-exports.getKey = async (key: string) => {
+exports.getKey = async (key) => {
   // Get API key
   const doc = await admin
     .firestore()
     .collection('keys')
     .doc(key)
     .get();
-  if (doc.exists) return doc.data();
+  if (doc.exists) { 
+    return doc.data();
+  }
   console.error('getKey failed. API key is incorrect. ', key, doc);
   throw Error('Your API key is incorrect.');
 };
 
-exports.getAsset = async (collection: string, assetId: string, internal: boolean = false) => {
+exports.getAsset = async (collection, assetId, internal = false) => {
   // Get User's purchase
   const doc = await admin
     .firestore()
@@ -36,7 +36,7 @@ exports.getAsset = async (collection: string, assetId: string, internal: boolean
   return null;
 };
 
-exports.getAssets = async (collection: string) => {
+exports.getAssets = async (collection) => {
   // Get data
   const querySnapshot = await admin
     .firestore()
@@ -44,7 +44,10 @@ exports.getAssets = async (collection: string) => {
     .get();
 
   // Check there is data
-  if (querySnapshot.size === 0) return [];
+  if (querySnapshot.size === 0) {
+    return [];
+  }
+
   // Return data
   return querySnapshot.docs.map(doc => {
     if (doc.exists) {
@@ -57,7 +60,7 @@ exports.getAssets = async (collection: string) => {
 
 };
 
-exports.getUserAssets = async (collection: string, user: string) => {
+exports.getUserAssets = async (collection, user) => {
   // Get data
   const querySnapshot = await admin
     .firestore()
@@ -65,7 +68,10 @@ exports.getUserAssets = async (collection: string, user: string) => {
     .where('owner', '==', user)
     .get();
   // Check there is data
-  if (querySnapshot.size === 0) return [];
+  if (querySnapshot.size === 0) {
+    return [];
+  }
+
   // Return data
   return querySnapshot.docs.map(doc => {
     if (doc.exists) {
@@ -79,7 +85,7 @@ exports.getUserAssets = async (collection: string, user: string) => {
   });
 };
 
-exports.setUser = async (userId: string, obj: any) => {
+exports.setUser = async (userId, obj) => {
   // Save users API key and Seed
   await admin
     .firestore()
@@ -90,7 +96,7 @@ exports.setUser = async (userId: string, obj: any) => {
   return true;
 };
 
-exports.setAsset = async (collection: string, asset: any, channelDetails: any) => {
+exports.setAsset = async (collection, asset, channelDetails) => {
   // Save users API key and Seed
   await admin
     .firestore()
@@ -117,7 +123,7 @@ exports.setAsset = async (collection: string, asset: any, channelDetails: any) =
   return true;
 };
 
-exports.setOrder = async (orderId: string, payload: any, channelDetails: any) => {
+exports.setOrder = async (orderId, payload, channelDetails) => {
   await admin
     .firestore()
     .collection('mam')
@@ -134,7 +140,7 @@ exports.setOrder = async (orderId: string, payload: any, channelDetails: any) =>
   return true;
 };
 
-exports.assignOrder = async (userId: string, orderId: string, orderTimestamp: string, orderTime: string) => {
+exports.assignOrder = async (userId, orderId, orderTimestamp, orderTime) => {
   // Add order to owners' orders list
   await admin
     .firestore()
@@ -147,7 +153,7 @@ exports.assignOrder = async (userId: string, orderId: string, orderTimestamp: st
   return true;
 };
 
-exports.setApiKey = async (apiKey: string, uid: string, email: string) => {
+exports.setApiKey = async (apiKey, uid, email) => {
   // Set API key in separate table
   await admin
     .firestore()
@@ -155,12 +161,12 @@ exports.setApiKey = async (apiKey: string, uid: string, email: string) => {
     .doc(apiKey)
     .set({
       email,
-      uid,
+      uid
     });
   return true;
 };
 
-exports.deactivateAsset = async (collection: string, assetId: string) => {
+exports.deactivateAsset = async (collection, assetId) => {
   // Assign new asset
   await admin
     .firestore()
@@ -170,7 +176,7 @@ exports.deactivateAsset = async (collection: string, assetId: string) => {
   return true;
 };
 
-exports.deleteAsset = async (collection: string, assetId: string, userId: string) => {
+exports.deleteAsset = async (collection, assetId, userId) => {
   // Remove Asset if not in the list of orders
 
   let canDeleteAsset = true;
@@ -189,7 +195,9 @@ exports.deleteAsset = async (collection: string, assetId: string, userId: string
       }
     });
 
-  if (!canDeleteAsset) return false;
+  if (!canDeleteAsset) {
+    return false;
+  }
 
   await admin
     .firestore()
@@ -214,7 +222,7 @@ exports.deleteAsset = async (collection: string, assetId: string, userId: string
   return true;
 };
 
-exports.getUser = async (userId: string, internal: boolean = false) => {
+exports.getUser = async (userId, internal = false) => {
   // Get user
   const doc = await admin
     .firestore()
@@ -248,18 +256,18 @@ exports.getSettings = async () => {
   if (doc.exists) {
     const {
       provider,
-      tangleExplorer,
+      tangleExplorer
     } = doc.data();
     return {
       provider,
-      tangleExplorer,
+      tangleExplorer
     };
   }
   console.error('getSettings failed. Setting does not exist', doc);
   throw Error(`The getSettings setting doesn't exist.`);
 };
 
-exports.getUserWallet = async (uid: string) => {
+exports.getUserWallet = async (uid) => {
   // Get User's wallet
   const doc = await admin
     .firestore()
@@ -275,7 +283,7 @@ exports.getUserWallet = async (uid: string) => {
   throw Error(`The wallet doesn't exist.`);
 };
 
-exports.setWallet = async (uid: string, wallet: any) => {
+exports.setWallet = async (uid, wallet) => {
   // Create wallet
   await admin
     .firestore()
@@ -285,7 +293,7 @@ exports.setWallet = async (uid: string, wallet: any) => {
   return true;
 };
 
-exports.updateBalance = async (uid: string, balance: any) => {
+exports.updateBalance = async (uid, balance) => {
   await admin
     .firestore()
     .collection('users')
@@ -294,7 +302,7 @@ exports.updateBalance = async (uid: string, balance: any) => {
   return true;
 };
 
-exports.updateUserWalletAddressKeyIndex = async (address: string, keyIndex: number, uid: string) => {
+exports.updateUserWalletAddressKeyIndex = async (address, keyIndex, uid) => {
   await admin
     .firestore()
     .collection('users')
@@ -319,7 +327,7 @@ exports.getIotaWallet = async () => {
   throw Error(`The getIotaWallet setting doesn't exist.`);
 };
 
-exports.updateWalletAddressKeyIndex = async (address: string, keyIndex: number, userId: string) => {
+exports.updateWalletAddressKeyIndex = async (address, keyIndex, userId) => {
   console.log('updateWalletAddressKeyIndex', address, keyIndex, userId);
   await admin
     .firestore()
@@ -343,7 +351,7 @@ exports.getEmailSettings = async () => {
   throw Error(`The getEmailSettings setting doesn't exist.`);
 };
 
-exports.getMatchingAssets = async (collection: string, asset: any) => {
+exports.getMatchingAssets = async (collection, asset) => {
   // Get matching assets
   // https://firebase.google.com/docs/firestore/query-data/queries
   const querySnapshot = await admin.firestore()
@@ -354,13 +362,15 @@ exports.getMatchingAssets = async (collection: string, asset: any) => {
     .orderBy('assetName', 'asc')
     .get();
 
-  if (querySnapshot.size === 0) return [];
+  if (querySnapshot.size === 0) {
+    return [];
+  }
 
   // Return data
   return querySnapshot.docs.map(doc => doc.data());
 };
 
-exports.updateChannelDetails = async (assetId: string, channelDetails: any) => {
+exports.updateChannelDetails = async (assetId, channelDetails) => {
   await admin
     .firestore()
     .collection('mam')
@@ -368,7 +378,7 @@ exports.updateChannelDetails = async (assetId: string, channelDetails: any) => {
     .set({ ...channelDetails }, { merge: true });
 };
 
-// exports.getOrdersForAsset = async (asset: any) => {
+// exports.getOrdersForAsset = async (asset) => {
 //   const queryBuilder = admin.firestore().collection('orders');
 //   let query
 
@@ -386,7 +396,7 @@ exports.updateChannelDetails = async (assetId: string, channelDetails: any) => {
 //   return querySnapshot.docs.map(doc => doc.data());
 // };
 
-exports.getChannelDetailsForAsset = async (assetId: string) => {
+exports.getChannelDetailsForAsset = async (assetId) => {
   // Get User's wallet
   const doc = await admin
     .firestore()
@@ -408,7 +418,9 @@ exports.reactivateOffers = async () => {
     .where('endTimestamp', '<', Date.now())
     .get();
 
-  if (querySnapshot.size === 0) return true;
+  if (querySnapshot.size === 0) {
+    return true;
+  }
 
   const offerIds = querySnapshot.docs.map(doc => doc.data().offerId);
   offerIds.forEach(async offerId => {
@@ -422,7 +434,7 @@ exports.reactivateOffers = async () => {
   return true;
 };
 
-exports.cancelRunningOrder = async (orderId: string, offerId: string) => {
+exports.cancelRunningOrder = async (orderId, offerId) => {
   // Update order asset
   await admin
     .firestore()
@@ -440,7 +452,7 @@ exports.cancelRunningOrder = async (orderId: string, offerId: string) => {
   return true;
 };
 
-exports.getOrdersForUser = async (userId: string) => {
+exports.getOrdersForUser = async userId => {
   // Get User's orders
   const querySnapshot = await admin
     .firestore()
@@ -449,7 +461,9 @@ exports.getOrdersForUser = async (userId: string) => {
     .collection('orders')
     .get();
 
-  if (querySnapshot.size === 0) return [];
+  if (querySnapshot.size === 0) {
+    return [];
+  }
 
   // Return data
   return querySnapshot.docs.map(doc => {

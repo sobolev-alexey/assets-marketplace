@@ -1,17 +1,8 @@
-// const axios = require('axios');
 const { getEmailSettings } = require('./firebase');
 
-// const checkRecaptcha = async (captcha: string, emailSettings: any) => {
-//   const response = await axios({
-//     method: 'post',
-//     url: `https://www.google.com/recaptcha/api/siteverify?secret=${emailSettings.googleSecretKey}&response=${captcha}`,
-//   });
-//   return response ? response.data : null;
-// };
-
-const mailgunSendEmail = (packet: any, emailSettings: any) => {
+const mailgunSendEmail = (packet, emailSettings) => {
   const {
-    apiKey, domain, emailRecepient, emailBcc, emailReplyTo, emailSender, emailList,
+    apiKey, domain, emailRecepient, emailBcc, emailReplyTo, emailSender, emailList
   } = emailSettings;
   const mg = require('mailgun-js')({ apiKey, domain });
   mg.messages().send(
@@ -32,9 +23,9 @@ const mailgunSendEmail = (packet: any, emailSettings: any) => {
         </div>
         <div>
           <p><strong>Newsletter: </strong>   ${packet.newsletter}</p>
-        </div>`,
+        </div>`
     },
-    (error: any) => {
+    (error) => {
       if (error) {
         console.log('Email callback error', error);
         return error;
@@ -47,10 +38,10 @@ const mailgunSendEmail = (packet: any, emailSettings: any) => {
     const user = {
       subscribed: true,
       address: packet.email,
-      name: packet.name,
+      name: packet.name
     };
 
-    list.members().create(user, (error: any) => {
+    list.members().create(user, error => {
       if (error) {
         console.log('Email members callback error', error);
         return error;
@@ -81,9 +72,9 @@ const mailgunSendEmail = (packet: any, emailSettings: any) => {
 
         IOTA Foundation
         <br/>
-        www.iota.org`,
+        www.iota.org`
     },
-    (error: any) => {
+    error => {
       if (error) {
         console.log('Email automatic reply error', error);
         return error;
@@ -94,14 +85,8 @@ const mailgunSendEmail = (packet: any, emailSettings: any) => {
   return 'success';
 };
 
-exports.sendEmail = async (packet: any) => {
+exports.sendEmail = async packet => {
   const emailSettings = await getEmailSettings();
-  // // Check Recaptcha
-  // const recaptcha = await checkRecaptcha(packet.captcha, emailSettings);
-  // if (!recaptcha || !recaptcha.success) {
-  //   console.log('sendEmail failed. Recaptcha is incorrect. ', recaptcha['error-codes']);
-  //   return 'Malformed Request';
-  // }
 
   // Send message
   const status = mailgunSendEmail(packet, emailSettings);
