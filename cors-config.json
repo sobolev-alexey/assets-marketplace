@@ -2,8 +2,8 @@
     {
       "origin": [
         "http://localhost:3000",
-        "http://asset-marketplace.firebaseapp.com",
-        "https://asset-marketplace.firebaseapp.com"
+        "https://asset-marketplace.firebaseapp.com",
+        "https://asset-marketplace.web.app"
       ],
       "responseHeader": ["Content-Type"],
       "method": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
