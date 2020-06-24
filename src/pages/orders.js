@@ -142,7 +142,7 @@ class Orders extends React.Component {
     const expired= [];
     let total = 0;
 
-    result.orders.forEach(order => {
+    result.orders && result.orders.forEach(order => {
       if (order.cancelled) {
         cancelled.push(order);
       } else if (order.endTimestamp < Date.now()) {
