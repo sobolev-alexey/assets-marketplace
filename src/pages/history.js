@@ -15,7 +15,7 @@ import Loading from '../components/loading';
 
 export const UserContext = React.createContext({});
 
-const mamExplorerLink = 'https://mam-explorer.firebaseapp.com/?mode=restricted';
+const mamExplorerLink = 'https://mam.lexer.dev/?mode=restricted';
  
 const AdditionalInfo = ({ channelDetails, provider }) => {
   const [message, setMessage] = useState('');
