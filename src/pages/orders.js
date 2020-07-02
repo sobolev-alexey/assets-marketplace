@@ -15,7 +15,7 @@ import Modal from '../components/modal';
 export const UserContext = React.createContext({});
 export const AssetContext = React.createContext({});
 
-const mamExplorerLink = 'https://mam-explorer.firebaseapp.com/?mode=restricted';
+const mamExplorerLink = 'https://mam.lexer.dev/?mode=restricted';
  
 const ExternalLink = ({ channelDetails, provider, children }) => {
   let link = `${mamExplorerLink}&provider=${encodeURIComponent(provider)}`;
