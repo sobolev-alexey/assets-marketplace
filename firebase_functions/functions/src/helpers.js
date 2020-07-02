@@ -54,7 +54,7 @@ const getBalance = async address => {
     }
     const { provider } = await getSettings();
     const { getBalances } = composeAPI({ provider });
-    const { balances } = await getBalances([address], 100);
+    const { balances } = await getBalances([address]);
     return balances && balances.length > 0 ? balances[0] : 0;
   } catch (error) {
     console.error('getBalance error', error);
@@ -104,13 +104,14 @@ const findTx = async (hashes, provider) => {
 const transferFunds = async (receiveAddress, address, keyIndex, seed, value, updateFn, userId = null) => {
   try {
     const { provider } = await getSettings();
-    const { sendTrytes, getLatestInclusion } = composeAPI({ provider });
+    const { sendTrytes, getInclusionStates } = composeAPI({ provider });
     const prepareTransfers = createPrepareTransfers();
-    const security = 2;
     const balance = await getBalance(address);
 
+    const security = 2;
+
     // Depth or how far to go for tip selection entry point
-    const depth = 5;
+    const depth = 3;
 
     // Difficulty of Proof-of-Work required to attach transaction to tangle.
     // Minimum value on mainnet & spamnet is `14`, `9` on devnet and other testnets.
@@ -144,7 +145,7 @@ const transferFunds = async (receiveAddress, address, keyIndex, seed, value, upd
 
               let retries = 0;
               while (retries++ < 20) {
-                const statuses = await getLatestInclusion(hashes)
+                const statuses = await getInclusionStates(hashes)
                 if (statuses.filter(status => status).length === 4) break;
                 await new Promise(resolved => setTimeout(resolved, 10000));
               }
