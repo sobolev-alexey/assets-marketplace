@@ -280,90 +280,92 @@ class Dashboard extends React.Component {
                 <ModifyAssetContext.Provider
                   value={{ ...this.state.assetToModify }}
                 >
-                  {
-                    noAssets ? (
-                      <NoAssetsOuterWrapper>
-                        <NoAssetsInnerWrapper>
-                          <Heading>You have no active offers or requests</Heading>
-                          <Text>Why not create a new one?</Text>
-                          <ButtonWrapper>
-                            <Button onClick={this.showNewOfferForm}>
-                              Create offer
-                            </Button>
-                            <Button onClick={this.showNewRequestForm}>
-                              Create request
-                            </Button> 
-                          </ButtonWrapper>
-                        </NoAssetsInnerWrapper>
-                      </NoAssetsOuterWrapper>
-                    ) : null
-                  }
-                  <AssetsWrapper>
-                    { 
-                      displayNewOfferForm && 
-                      <AddCard 
-                        createAsset={this.createOffer} 
-                        cancel={this.hideNewOfferForm} 
-                        category="offers"  
-                      /> 
-                    }
+                  <AssetcContainer>
                     {
-                      activeOffers.length > 0 ? (
-                        <React.Fragment>
-                          <Heading>Active Offers</Heading>
-                          <ActiveAssets>
-                            <AssetList
-                              assets={activeOffers}
-                            />
-                          </ActiveAssets>
-                        </React.Fragment>
+                      noAssets ? (
+                        <NoAssetsOuterWrapper>
+                          <NoAssetsInnerWrapper>
+                            <Heading>You have no active offers or requests</Heading>
+                            <Text>Why not create a new one?</Text>
+                            <ButtonWrapper>
+                              <Button onClick={this.showNewOfferForm}>
+                                Create offer
+                              </Button>
+                              <Button onClick={this.showNewRequestForm}>
+                                Create request
+                              </Button> 
+                            </ButtonWrapper>
+                          </NoAssetsInnerWrapper>
+                        </NoAssetsOuterWrapper>
                       ) : null
                     }
-                    {
-                      inactiveOffers.length > 0 ? (
-                        <React.Fragment>
-                          <Heading>Inactive Offers</Heading>
-                          <InactiveAssets>
-                            <AssetList
-                              assets={inactiveOffers}
-                            />
-                          </InactiveAssets>
-                        </React.Fragment>
-                      ) : null
-                    }
-                    { 
-                      displayNewRequestForm && 
-                      <AddCard
-                        createAsset={this.createRequest} 
-                        cancel={this.hideNewRequestForm}
-                        category="requests"
-                      /> 
-                    }
-                    {
-                      activeRequests.length > 0 ? (
-                        <React.Fragment>
-                          <Heading>Active Requests</Heading>
-                          <ActiveAssets>
-                            <AssetList
-                              assets={activeRequests}
-                            />
-                          </ActiveAssets>
-                        </React.Fragment>
-                      ) : null
-                    }
-                    {
-                      inactiveRequests.length > 0 ? (
-                        <React.Fragment>
-                          <Heading>Inactive Requests</Heading>
-                          <InactiveAssets>
-                            <AssetList
-                              assets={inactiveRequests}
-                            />
-                          </InactiveAssets>
-                        </React.Fragment>
-                      ) : null
-                    }
-                  </AssetsWrapper>
+                    <AssetsWrapper>
+                      { 
+                        displayNewOfferForm && 
+                        <AddCard 
+                          createAsset={this.createOffer} 
+                          cancel={this.hideNewOfferForm} 
+                          category="offers"  
+                        /> 
+                      }
+                      {
+                        activeOffers.length > 0 ? (
+                          <React.Fragment>
+                            <Heading>Active Offers</Heading>
+                            <ActiveAssets>
+                              <AssetList
+                                assets={activeOffers}
+                              />
+                            </ActiveAssets>
+                          </React.Fragment>
+                        ) : null
+                      }
+                      {
+                        inactiveOffers.length > 0 ? (
+                          <React.Fragment>
+                            <Heading>Inactive Offers</Heading>
+                            <InactiveAssets>
+                              <AssetList
+                                assets={inactiveOffers}
+                              />
+                            </InactiveAssets>
+                          </React.Fragment>
+                        ) : null
+                      }
+                      { 
+                        displayNewRequestForm && 
+                        <AddCard
+                          createAsset={this.createRequest} 
+                          cancel={this.hideNewRequestForm}
+                          category="requests"
+                        /> 
+                      }
+                      {
+                        activeRequests.length > 0 ? (
+                          <React.Fragment>
+                            <Heading>Active Requests</Heading>
+                            <ActiveAssets>
+                              <AssetList
+                                assets={activeRequests}
+                              />
+                            </ActiveAssets>
+                          </React.Fragment>
+                        ) : null
+                      }
+                      {
+                        inactiveRequests.length > 0 ? (
+                          <React.Fragment>
+                            <Heading>Inactive Requests</Heading>
+                            <InactiveAssets>
+                              <AssetList
+                                assets={inactiveRequests}
+                              />
+                            </InactiveAssets>
+                          </React.Fragment>
+                        ) : null
+                      }
+                    </AssetsWrapper>
+                  </AssetcContainer>
                 </ModifyAssetContext.Provider>
               </AssetContext.Provider>
             )
@@ -405,9 +407,17 @@ const Main = styled.main`
   height: 100vh;
 `;
 
+const AssetcContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: calc(100vw - 350px);
+`
+
 const AssetsWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  width: 100%;
 `
 
 const NoAssetsOuterWrapper = styled.div`
@@ -418,7 +428,7 @@ const NoAssetsInnerWrapper = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  margin: 30% 50%;
+  margin: 30% 0;
   text-align: center;
 `
 
