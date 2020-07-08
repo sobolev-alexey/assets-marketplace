@@ -31,7 +31,7 @@ const {
 const {
   generateUUID,
   generateSeed,
-  sanatiseObject,
+  sanitiseObject,
   findTx,
   faucet,
   initWallet,
@@ -82,7 +82,7 @@ exports.newAsset = functions.https.onRequest((req, res) => {
     }
 
     try {
-      const invalid = sanatiseObject(packet.asset);
+      const invalid = sanitiseObject(packet.asset);
       if (invalid) {
         throw Error(invalid);
       }

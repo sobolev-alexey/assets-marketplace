@@ -62,8 +62,9 @@ const getBalance = async address => {
   }
 };
 
-const sanatiseObject = asset => {
+const sanitiseObject = asset => {
   if (!asset.assetName) return 'Please enter asset name';
+  if (!asset.price || Number(asset.price) <= 0) return 'Please set a valid non-zero price for the asset';
   if (!asset.type) return 'Specify type of asset. eg. Weather station or Wind Vein';
   if (!asset.location || !asset.location.city || !asset.location.country)
     return 'Enter city and country';
@@ -145,7 +146,7 @@ const transferFunds = async (receiveAddress, address, keyIndex, seed, value, upd
 
               let retries = 0;
               while (retries++ < 20) {
-                const statuses = await getInclusionStates(hashes)
+                const statuses = await getInclusionStates(hashes);
                 if (statuses.filter(status => status).length === 4) break;
                 await new Promise(resolved => setTimeout(resolved, 10000));
               }
@@ -363,7 +364,7 @@ module.exports = {
   generateUUID,
   generateNewAddress,
   generateSeed,
-  sanatiseObject,
+  sanitiseObject,
   findTx,
   initWallet,
   faucet,
