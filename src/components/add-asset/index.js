@@ -93,6 +93,8 @@ export default class extends React.Component {
     const endDate = parse(this.state.assetEnd);
 
     if (!this.state.assetName) return alert('Please enter asset name');
+    if (!this.state.assetPrice || Number(this.state.assetPrice) <= 0) 
+      return alert('Please set a valid non-zero price for the asset');
     if (!this.state.assetType)
       return alert('Specify type of asset');
     if (!this.state.city || !this.state.country) return alert('Enter city and country');
