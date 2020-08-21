@@ -302,12 +302,12 @@ exports.updateBalance = async (uid, balance) => {
   return true;
 };
 
-exports.updateUserWalletAddressKeyIndex = async (address, keyIndex, uid) => {
+exports.updateUserWallet = async ({ address, balance, keyIndex, uid }) => {
   await admin
     .firestore()
     .collection('users')
     .doc(uid)
-    .set({ wallet: { address, keyIndex } }, { merge: true });
+    .set({ wallet: { address, balance, keyIndex } }, { merge: true });
   return true;
 };
 

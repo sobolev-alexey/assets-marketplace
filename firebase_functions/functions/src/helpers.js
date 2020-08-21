@@ -7,7 +7,7 @@ const { asciiToTrytes, trytesToAscii } = require('@iota/converter');
 const {
   getSettings,
   updateWalletAddressKeyIndex,
-  updateUserWalletAddressKeyIndex,
+  updateUserWallet,
   getIotaWallet,
   getUserWallet,
   getChannelDetailsForAsset,
@@ -250,6 +250,11 @@ const initWallet = async (userId = null) => {
   };
 };
 
+const updateUserWalletDetails = async (address, keyIndex, userId) => {
+  const balance = await getBalance(address);
+  await updateUserWallet({ address, balance, keyIndex, userId });
+}
+
 const purchaseData = async (userId, receiveAddress, value) => {
   let { keyIndex, seed } = await getUserWallet(userId);
   let address = await generateAddress(seed, keyIndex);
@@ -269,7 +274,7 @@ const purchaseData = async (userId, receiveAddress, value) => {
     keyIndex || 0,
     seed,
     value,
-    updateUserWalletAddressKeyIndex,
+    updateUserWalletDetails,
     userId,
   );
   return transactions;
