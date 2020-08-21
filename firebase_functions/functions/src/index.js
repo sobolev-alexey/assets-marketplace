@@ -406,6 +406,7 @@ debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price));
         endDate: requestedAsset.endDate,
         startTimestamp: requestedAsset.startTimestamp,
         endTimestamp: requestedAsset.endTimestamp,
+        dataTypes: packet.dataTypes || null
       }
 debug && console.log(1150, payload);
       const channelDetails = await initializeChannel(payload, secretKey);
