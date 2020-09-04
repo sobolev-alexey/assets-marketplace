@@ -141,7 +141,6 @@ const transferFunds = async (receiveAddress, address, keyIndex, seed, value, upd
         .then(async trytes => {
           sendTrytes(trytes, depth, minWeightMagnitude)
             .then(async transactions => {
-              await updateFn(remainderAddress, Number(keyIndex) + 1, userId);
               const hashes = transactions.map(transaction => transaction.hash);
 
               let retries = 0;
@@ -150,6 +149,8 @@ const transferFunds = async (receiveAddress, address, keyIndex, seed, value, upd
                 if (statuses.filter(status => status).length === 4) break;
                 await new Promise(resolved => setTimeout(resolved, 10000));
               }
+
+              await updateFn({ seed, keyIndex: Number(keyIndex) + 1, userId });
 
               resolve(transactions)
             })
@@ -173,14 +174,14 @@ const transferFunds = async (receiveAddress, address, keyIndex, seed, value, upd
 const repairWallet = async (seed, keyIndex) => {
   try {
     // Iterating through keyIndex ordered by likelyhood
-    for (const value of [-2, -1, 1, 2, 3, 4, -3, -4, -5, -6, -7, 5, 6, 7]) {
+    for (const value of [0, -2, -1, 1, 2, 3, 4, -3, -4, -5, -6, -7, 5, 6, 7]) {
       const newIndex = Number(keyIndex) + Number(value)
       if (newIndex >= 0) {
         const newAddress = await generateAddress(seed, newIndex)
         const newBalance = await getBalance(newAddress);
         if (newBalance > 0) {
           console.log(`Repair wallet executed. Old keyIndex: ${keyIndex}, new keyIndex: ${newIndex}. New wallet balance: ${newBalance}. New address: ${newAddress}`)
-          return { address: newAddress, keyIndex: newIndex };
+          return { address: newAddress, keyIndex: newIndex, balance: newBalance };
         }
       }
     }
@@ -209,7 +210,7 @@ const faucet = async receiveAddress => {
     keyIndex,
     seed,
     defaultBalance,
-    updateWalletAddressKeyIndex,
+    updateMainWalletDetails,
   );
 };
 
@@ -236,7 +237,7 @@ const initWallet = async (userId = null) => {
     keyIndex,
     seed,
     defaultBalance,
-    updateWalletAddressKeyIndex,
+    updateMainWalletDetails,
     userId
   );
   return {
@@ -250,10 +251,20 @@ const initWallet = async (userId = null) => {
   };
 };
 
-const updateUserWalletDetails = async (address, keyIndex, userId) => {
-  const balance = await getBalance(address);
-  await updateUserWallet({ address, balance, keyIndex, userId });
-}
+const updateUserWalletDetails = async ({ keyIndex, seed, userId }) => {
+  const wallet = await repairWallet(seed, keyIndex);
+  await updateUserWallet({ 
+    address: wallet.address, 
+    balance: wallet.balance, 
+    keyIndex: wallet.keyIndex, 
+    userId 
+  });
+};
+
+const updateMainWalletDetails = async ({ keyIndex, seed }) => {
+  const wallet = await repairWallet(seed, keyIndex);
+  await updateWalletAddressKeyIndex(wallet);
+};
 
 const purchaseData = async (userId, receiveAddress, value) => {
   let { keyIndex, seed } = await getUserWallet(userId);
@@ -378,4 +389,5 @@ module.exports = {
   initializeChannel,
   appendToChannel,
   fetchChannel,
+  updateUserWalletDetails
 }

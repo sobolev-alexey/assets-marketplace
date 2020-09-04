@@ -16,7 +16,6 @@ const {
   setApiKey,
   setWallet,
   deleteAsset,
-  updateBalance,
   getEmailSettings,
   getMatchingAssets,
   setOrder,
@@ -39,7 +38,8 @@ const {
   purchaseData,
   initializeChannel,
   appendToChannel,
-  fetchChannel
+  fetchChannel,
+  updateUserWalletDetails
 } = require('./helpers');
 
 exports.sendEmail = functions.https.onRequest((req, res) => {
@@ -382,10 +382,10 @@ debug && console.log(1113, bundle);
 
 debug && console.log(1120, 'payment completed');
       // 12. Update user wallet balance
-      await updateBalance(requestedAsset.owner, newWalletBalance);
+      await updateUserWalletDetails({ ...offerOwnerWallet, userId: offeredAsset.owner });
 
       // 13. Update recipient (request/offer owner) wallet balance
-      await updateBalance(offeredAsset.owner, Number(offerOwnerWallet.balance) + Number(price));
+      await updateUserWalletDetails({ ...requestOwnerWallet, userId: requestedAsset.owner });
 
 debug && console.log(1140, Number(offerOwnerWallet.balance) + Number(price));
       // 14. Create new order MAM channel

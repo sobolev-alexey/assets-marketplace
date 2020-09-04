@@ -327,8 +327,8 @@ exports.getIotaWallet = async () => {
   throw Error(`The getIotaWallet setting doesn't exist.`);
 };
 
-exports.updateWalletAddressKeyIndex = async (address, keyIndex, userId) => {
-  console.log('updateWalletAddressKeyIndex', address, keyIndex, userId);
+exports.updateWalletAddressKeyIndex = async ({ address, keyIndex }) => {
+  console.log('updateWalletAddressKeyIndex', address, keyIndex);
   await admin
     .firestore()
     .collection('settings')
