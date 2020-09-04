@@ -2,6 +2,8 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 admin.initializeApp(functions.config().firebase);
+const firestore = admin.firestore();
+firestore.settings({ ignoreUndefinedProperties: true });
 
 exports.getKey = async (key) => {
   // Get API key
@@ -173,6 +175,15 @@ exports.deactivateAsset = async (collection, assetId) => {
     .collection(collection)
     .doc(assetId)
     .set({ active: false }, { merge: true });
+  return true;
+};
+
+exports.changeAsset = async (collection, assetId, dataTypes, status) => {
+  await admin
+    .firestore()
+    .collection(collection)
+    .doc(assetId)
+    .set({ dataTypes, status }, { merge: true });
   return true;
 };
 

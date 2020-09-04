@@ -15,6 +15,7 @@ const {
   setAsset,
   setApiKey,
   setWallet,
+  changeAsset,
   deleteAsset,
   getEmailSettings,
   getMatchingAssets,
@@ -39,7 +40,9 @@ const {
   initializeChannel,
   appendToChannel,
   fetchChannel,
-  updateUserWalletDetails
+  updateUserWalletDetails,
+  add,
+  merge
 } = require('./helpers');
 
 exports.sendEmail = functions.https.onRequest((req, res) => {
@@ -115,6 +118,76 @@ exports.newAsset = functions.https.onRequest((req, res) => {
       });
     } catch (e) {
       console.error('newAsset failed. Error: ', e.message);
+      return res.status(403).json({ error: e.message });
+    }
+  });
+});
+
+// Update asset
+exports.changeAsset = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    const packet = req.body;
+    if (!packet 
+      || !packet.assetId 
+      || !packet.apiKey 
+      || !packet.category 
+      || !packet.changeType
+      || !packet.dataTypes
+    ) {
+      console.error('changeAsset failed. Packet: ', packet);
+      return res.status(400).json({ error: 'Ensure all fields are included' });
+    }
+
+    try {
+      const { apiKey, assetId, category, changeType, dataTypes, status } = packet;
+      const { uid } = await getKey(apiKey);
+      const asset = await getAsset(category, assetId, true);
+      if (!asset) {
+        throw Error(`Asset doesn't exist`);
+      }
+      if (asset.owner === uid) {
+        let updatedStatus = asset.status;
+        if (status && ['available', 'offered', 'requested', 'ordered'].includes(status)) {
+          updatedStatus = status;
+        }
+
+        let updatedDataTypes = asset.dataTypes;
+        if (changeType === 'replace') {
+          // replaces whole dataTypes array with the array from function call body
+          updatedDataTypes = dataTypes;
+        } else if (changeType === 'add') {
+          // adds all elements in body to the existing dataTypes array
+          updatedDataTypes = add(asset.dataTypes, dataTypes);
+        } else if (changeType === 'merge') {
+          // replaces dataTypes elements with the same “name” and adds new elements if the “name” is absent in the target dataTypes array
+          updatedDataTypes = merge(asset.dataTypes, dataTypes);;
+        }
+        
+        // Update asset in DB
+        await changeAsset(category, assetId, updatedDataTypes, updatedStatus);
+
+        // Update MAM of the asset
+        const payload = {
+          ...asset,
+          dataTypes: updatedDataTypes,
+          status: updatedStatus
+        };
+        const appendResult = await appendToChannel(packet.assetId, payload);
+        await updateChannelDetails(packet.assetId, appendResult);
+
+        const updatedAsset = await getAsset(category, assetId);
+
+        return res.json({ success: true, asset: updatedAsset });
+      } else {
+        console.error(
+          'changeAsset failed. You don\'t have permission to modify this asset',
+          asset.owner,
+          uid
+        );
+        throw Error(`You don't have permission to modify this asset`);
+      }
+    } catch (e) {
+      console.error('changeAsset failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
     }
   });
