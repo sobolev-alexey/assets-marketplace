@@ -376,6 +376,9 @@ const fetchChannel = async ({ root, secretKey }) => {
   }
 }
 
+const merge = (a, b, p = 'name') => a.filter( aa => ! b.find ( bb => aa[p] === bb[p]) ).concat(b);
+const add = (a, b, p = 'name') => b.filter( aa => ! a.find ( bb => aa[p] === bb[p]) ).concat(a);
+
 module.exports = {
   generateUUID,
   generateNewAddress,
@@ -389,5 +392,7 @@ module.exports = {
   initializeChannel,
   appendToChannel,
   fetchChannel,
-  updateUserWalletDetails
+  updateUserWalletDetails,
+  add,
+  merge
 }
