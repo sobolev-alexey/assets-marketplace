@@ -142,6 +142,18 @@ exports.setOrder = async (orderId, payload, channelDetails) => {
   return true;
 };
 
+exports.getOrder = async orderId => {
+  // Get order
+  const orderSnapshot = await admin
+    .firestore()
+    .collection('orders')
+    .doc(orderId)
+    .get();
+
+  const order = orderSnapshot.exists ? orderSnapshot.data() : null;
+  return order;
+};
+
 exports.assignOrder = async (userId, orderId, orderTimestamp, orderTime) => {
   // Add order to owners' orders list
   await admin

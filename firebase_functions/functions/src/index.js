@@ -26,7 +26,8 @@ const {
   getChannelDetailsForAsset,
   reactivateOffers,
   cancelRunningOrder,
-  getOrdersForUser
+  getOrdersForUser,
+  getOrder
 } = require('./firebase');
 const {
   generateUUID,
@@ -715,6 +716,65 @@ exports.cancel = functions.https.onRequest((req, res) => {
       return res.json({ success: true });
     } catch (e) {
       console.error('cancel failed. Error: ', e.message);
+      return res.status(403).json({ error: e.message });
+    }
+  });
+});
+
+// Update order
+exports.changeOrder = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    const packet = req.body;
+    if (!packet 
+      || !packet.orderId 
+      || !packet.apiKey 
+      || !packet.changeType
+      || !packet.dataTypes
+    ) {
+      console.error('changeOrder failed. Packet: ', packet);
+      return res.status(400).json({ error: 'Ensure all fields are included' });
+    }
+
+    try {
+      const { apiKey, changeType, dataTypes } = packet;
+      const user = await getKey(apiKey);
+      const orders = await getOrdersForUser(user.uid);
+      const orderObject = orders.find(({ orderId }) => orderId === packet.orderId);
+      if (orderObject) {
+        const order = await getOrder(orderObject.orderId);
+
+        let updatedDataTypes = order.dataTypes;
+        if (changeType === 'replace') {
+          // replaces whole dataTypes array with the array from function call body
+          updatedDataTypes = dataTypes;
+        } else if (changeType === 'add') {
+          // adds all elements in body to the existing dataTypes array
+          updatedDataTypes = add(order.dataTypes, dataTypes);
+        } else if (changeType === 'merge') {
+          // replaces dataTypes elements with the same “name” and adds new elements if the “name” is absent in the target dataTypes array
+          updatedDataTypes = merge(order.dataTypes, dataTypes);
+        } else {
+          return res.json({ success: true });
+        }
+
+        // Update MAM of the order
+        const payload = { ...order, dataTypes: updatedDataTypes };
+        const channelDetails = await appendToChannel(packet.orderId, payload);
+
+        // Update order in DB
+        await setOrder(packet.orderId, payload, channelDetails);
+
+        return res.json({ success: true, order: payload });
+      } else {
+        console.error(
+          'changeOrder failed. You don\'t have permission to modify this order',
+          packet.orderId,
+          user.uid
+        );
+        throw Error(`You don't have permission to modify this order`);
+      }
+    } catch (e) {
+      console.error('changeOrder failed. Error: ', e.message);
       return res.status(403).json({ error: e.message });
     }
   });
