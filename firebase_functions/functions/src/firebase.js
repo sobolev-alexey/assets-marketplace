@@ -2,6 +2,8 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 admin.initializeApp(functions.config().firebase);
+const firestore = admin.firestore();
+firestore.settings({ ignoreUndefinedProperties: true });
 
 exports.getKey = async (key) => {
   // Get API key
@@ -140,6 +142,18 @@ exports.setOrder = async (orderId, payload, channelDetails) => {
   return true;
 };
 
+exports.getOrder = async orderId => {
+  // Get order
+  const orderSnapshot = await admin
+    .firestore()
+    .collection('orders')
+    .doc(orderId)
+    .get();
+
+  const order = orderSnapshot.exists ? orderSnapshot.data() : null;
+  return order;
+};
+
 exports.assignOrder = async (userId, orderId, orderTimestamp, orderTime) => {
   // Add order to owners' orders list
   await admin
@@ -173,6 +187,15 @@ exports.deactivateAsset = async (collection, assetId) => {
     .collection(collection)
     .doc(assetId)
     .set({ active: false }, { merge: true });
+  return true;
+};
+
+exports.changeAsset = async (collection, assetId, dataTypes, status) => {
+  await admin
+    .firestore()
+    .collection(collection)
+    .doc(assetId)
+    .set({ dataTypes, status }, { merge: true });
   return true;
 };
 
@@ -302,12 +325,12 @@ exports.updateBalance = async (uid, balance) => {
   return true;
 };
 
-exports.updateUserWalletAddressKeyIndex = async (address, keyIndex, uid) => {
+exports.updateUserWallet = async ({ address, balance, keyIndex, userId }) => {
   await admin
     .firestore()
     .collection('users')
-    .doc(uid)
-    .set({ wallet: { address, keyIndex } }, { merge: true });
+    .doc(userId)
+    .set({ wallet: { address, balance, keyIndex } }, { merge: true });
   return true;
 };
 
@@ -327,8 +350,8 @@ exports.getIotaWallet = async () => {
   throw Error(`The getIotaWallet setting doesn't exist.`);
 };
 
-exports.updateWalletAddressKeyIndex = async (address, keyIndex, userId) => {
-  console.log('updateWalletAddressKeyIndex', address, keyIndex, userId);
+exports.updateWalletAddressKeyIndex = async ({ address, keyIndex }) => {
+  console.log('updateWalletAddressKeyIndex', address, keyIndex);
   await admin
     .firestore()
     .collection('settings')
